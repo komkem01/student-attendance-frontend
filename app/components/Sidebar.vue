@@ -36,6 +36,12 @@ const handleSelect = (id: string) => {
     navigateTo('/teachers/dashboard')
   } else if (id === 'classes') {
     navigateTo('/teachers/classroom')
+  } else if (id === 'students') {
+    navigateTo('/teachers/student')
+  } else if (id === 'reports') {
+    navigateTo('/teachers/report')
+  } else if (id === 'settings') {
+    navigateTo('/teachers/setting')
   }
 }
 </script>

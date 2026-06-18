@@ -84,44 +84,46 @@ const handleLogin = async () => {
   <div class="bg-gradient-to-br from-[#FFF0F3] via-[#FFF6E6] to-[#E6F0FA] min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-8 font-sans">
     
     <!-- Toast Notification Container (Top Right - SweetAlert style) -->
-    <div class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none max-w-sm w-full">
-      <TransitionGroup name="toast">
-        <div 
-          v-for="toast in toasts" 
-          :key="toast.id"
-          :class="[
-            'pointer-events-auto py-5 px-5 rounded-2xl shadow-xl flex items-center gap-3.5 border transition-all duration-300 transform scale-100 hover:scale-[1.02] relative overflow-hidden',
-            toast.type === 'success' ? 'bg-[#EAFDF8] border-[#A8EEDD] text-[#1E7D65]' : 
-            toast.type === 'error' ? 'bg-[#FFF0F3] border-[#FFCCD5] text-[#A3001E]' : 
-            'bg-[#FFF9E6] border-[#FFE29A] text-[#805B00]'
-          ]"
-        >
-          <!-- SweetAlert animated style bar -->
+    <Teleport to="body">
+      <div class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none max-w-sm w-full">
+        <TransitionGroup name="toast">
           <div 
+            v-for="toast in toasts" 
+            :key="toast.id"
             :class="[
-              'absolute bottom-0 left-0 h-1 animate-toast-progress w-full',
-              toast.type === 'success' ? 'bg-[#1E7D65]' : 
-              toast.type === 'error' ? 'bg-[#A3001E]' : 
-              'bg-[#805B00]'
+              'pointer-events-auto py-5 px-5 rounded-2xl shadow-xl flex items-center gap-3.5 border transition-all duration-300 transform scale-100 hover:scale-[1.02] relative overflow-hidden',
+              toast.type === 'success' ? 'bg-[#EAFDF8] border-[#A8EEDD] text-[#1E7D65]' : 
+              toast.type === 'error' ? 'bg-[#FFF0F3] border-[#FFCCD5] text-[#A3001E]' : 
+              'bg-[#FFF9E6] border-[#FFE29A] text-[#805B00]'
             ]"
-          ></div>
+          >
+            <!-- SweetAlert animated style bar -->
+            <div 
+              :class="[
+                'absolute bottom-0 left-0 h-1 animate-toast-progress w-full',
+                toast.type === 'success' ? 'bg-[#1E7D65]' : 
+                toast.type === 'error' ? 'bg-[#A3001E]' : 
+                'bg-[#805B00]'
+              ]"
+            ></div>
 
-          <!-- Professional Vector SVGs instead of Emojis -->
-          <div class="flex-shrink-0">
-            <svg v-if="toast.type === 'success'" class="w-5.5 h-5.5 text-[#1E7D65]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-            </svg>
-            <svg v-else-if="toast.type === 'error'" class="w-5.5 h-5.5 text-[#A3001E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-            <svg v-else class="w-5.5 h-5.5 text-[#805B00]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-            </svg>
+            <!-- Professional Vector SVGs instead of Emojis -->
+            <div class="flex-shrink-0">
+              <svg v-if="toast.type === 'success'" class="w-5.5 h-5.5 text-[#1E7D65]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+              <svg v-else-if="toast.type === 'error'" class="w-5.5 h-5.5 text-[#A3001E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+              <svg v-else class="w-5.5 h-5.5 text-[#805B00]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <span class="font-nunito text-xs sm:text-sm font-bold flex-1 pr-1">{{ toast.message }}</span>
           </div>
-          <span class="font-nunito text-xs sm:text-sm font-bold flex-1 pr-1">{{ toast.message }}</span>
-        </div>
-      </TransitionGroup>
-    </div>
+        </TransitionGroup>
+      </div>
+    </Teleport>
 
     <!-- Floating background decorative blur bubbles -->
     <div class="absolute top-[5%] left-[5%] w-48 h-48 bg-pink-300/20 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>

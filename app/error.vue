@@ -92,67 +92,69 @@ const showTechDetails = ref(false)
     <div class="absolute bottom-1/4 left-1/3 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
     <!-- NATIVE SWEETALERT-STYLE TOAST (Top Right) -->
-    <div class="fixed top-5 right-5 z-50 pointer-events-none w-full max-w-sm px-4 sm:px-0">
-      <transition
-        enter-active-class="transition duration-300 ease-out transform"
-        enter-from-class="translate-x-12 opacity-0 scale-95"
-        enter-to-class="translate-x-0 opacity-100 scale-100"
-        leave-active-class="transition duration-200 ease-in transform"
-        leave-from-class="translate-x-0 opacity-100 scale-100"
-        leave-to-class="translate-x-12 opacity-0 scale-95"
-      >
-        <div 
-          v-if="toastVisible" 
-          class="pointer-events-auto bg-slate-900/95 border border-slate-800 backdrop-blur-md rounded-2xl p-4 shadow-2xl relative flex items-start gap-4 overflow-hidden"
-          role="alert"
+    <Teleport to="body">
+      <div class="fixed top-5 right-5 z-[9999] pointer-events-none w-full max-w-sm px-4 sm:px-0">
+        <transition
+          enter-active-class="transition duration-300 ease-out transform"
+          enter-from-class="translate-x-12 opacity-0 scale-95"
+          enter-to-class="translate-x-0 opacity-100 scale-100"
+          leave-active-class="transition duration-200 ease-in transform"
+          leave-from-class="translate-x-0 opacity-100 scale-100"
+          leave-to-class="translate-x-12 opacity-0 scale-95"
         >
-          <!-- SweetAlert Error/Warning Icon -->
-          <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border-2"
-               :class="errorContent.type === 'error' ? 'border-rose-500/30 bg-rose-500/10 text-rose-500' : 'border-amber-500/30 bg-amber-500/10 text-amber-500'">
-            
-            <!-- Error Icon (X) -->
-            <svg v-if="errorContent.type === 'error'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 animate-pulse">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-            
-            <!-- Warning Icon (!) -->
-            <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 animate-pulse">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-            </svg>
-          </div>
-
-          <!-- Toast Content -->
-          <div class="flex-1 min-w-0 pr-4">
-            <h3 class="text-sm font-bold text-white tracking-wide">
-              {{ errorContent.title }}
-            </h3>
-            <p class="text-xs text-slate-400 mt-1 leading-relaxed line-clamp-3">
-              {{ errorContent.description }}
-            </p>
-          </div>
-
-          <!-- Close Button -->
-          <button 
-            @click="closeToast"
-            class="text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-lg hover:bg-slate-800/50 cursor-pointer"
-            aria-label="Close"
+          <div 
+            v-if="toastVisible" 
+            class="pointer-events-auto bg-slate-900/95 border border-slate-800 backdrop-blur-md rounded-2xl p-4 shadow-2xl relative flex items-start gap-4 overflow-hidden"
+            role="alert"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <!-- SweetAlert Error/Warning Icon -->
+            <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border-2"
+                 :class="errorContent.type === 'error' ? 'border-rose-500/30 bg-rose-500/10 text-rose-500' : 'border-amber-500/30 bg-amber-500/10 text-amber-500'">
+              
+              <!-- Error Icon (X) -->
+              <svg v-if="errorContent.type === 'error'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 animate-pulse">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+              
+              <!-- Warning Icon (!) -->
+              <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 animate-pulse">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+            </div>
 
-          <!-- Animated Progress Bar -->
-          <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-800">
-            <div 
-              class="h-full transition-all duration-75 ease-linear"
-              :class="errorContent.type === 'error' ? 'bg-gradient-to-r from-rose-500 to-pink-500' : 'bg-gradient-to-r from-amber-500 to-yellow-500'"
-              :style="{ width: `${progressWidth}%` }"
-            ></div>
+            <!-- Toast Content -->
+            <div class="flex-1 min-w-0 pr-4">
+              <h3 class="text-sm font-bold text-white tracking-wide">
+                {{ errorContent.title }}
+              </h3>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed line-clamp-3">
+                {{ errorContent.description }}
+              </p>
+            </div>
+
+            <!-- Close Button -->
+            <button 
+              @click="closeToast"
+              class="text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-lg hover:bg-slate-800/50 cursor-pointer"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <!-- Animated Progress Bar -->
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-800">
+              <div 
+                class="h-full transition-all duration-75 ease-linear"
+                :class="errorContent.type === 'error' ? 'bg-gradient-to-r from-rose-500 to-pink-500' : 'bg-gradient-to-r from-amber-500 to-yellow-500'"
+                :style="{ width: `${progressWidth}%` }"
+              ></div>
+            </div>
           </div>
-        </div>
-      </transition>
-    </div>
+        </transition>
+      </div>
+    </Teleport>
 
     <!-- MAIN PAGE CONTAINER -->
     <div class="max-w-xl w-full backdrop-blur-xl bg-slate-900/40 border border-slate-800/80 rounded-3xl p-8 md:p-12 shadow-2xl shadow-black/50 text-center relative z-10 transition-all duration-300 hover:border-slate-800">

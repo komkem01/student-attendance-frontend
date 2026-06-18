@@ -24,6 +24,11 @@ const handleLogout = () => {
   emit('logout')
 }
 
+const goToProfile = () => {
+  isProfileDropdownOpen.value = false
+  navigateTo('/teachers/profile')
+}
+
 // Close dropdown on click away
 const closeDropdown = (e: Event) => {
   const target = e.target as HTMLElement
@@ -89,7 +94,7 @@ onUnmounted(() => {
               <span class="text-[10px] text-slate-400 block mt-1.5 truncate">{{ teacherProfile.email }}</span>
             </div>
             <div class="py-1">
-              <button class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">ข้อมูลส่วนตัว</button>
+              <button @click="goToProfile" class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">ข้อมูลส่วนตัว</button>
               <button @click="handleLogout" class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50/50 transition-colors cursor-pointer">ออกจากระบบ</button>
             </div>
           </div>

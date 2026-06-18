@@ -176,7 +176,14 @@ const handleStartCheck = (cls: any) => {
   }, 800)
 }
 
+const isLogoutModalOpen = ref(false)
+
 const handleLogout = () => {
+  isLogoutModalOpen.value = true
+}
+
+const confirmLogout = () => {
+  isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
   setTimeout(() => {
     navigateTo('/teachers/login')
@@ -188,49 +195,51 @@ const handleLogout = () => {
   <div class="min-h-screen bg-[#F8FAFC] flex font-sans text-[#2F3E46]">
     
     <!-- Toast Notification Container (Top Right) -->
-    <div class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none max-w-sm w-full">
-      <TransitionGroup name="toast">
-        <div 
-          v-for="toast in toasts" 
-          :key="toast.id"
-          :class="[
-            'pointer-events-auto py-5 px-5 rounded-2xl shadow-xl flex items-center gap-3.5 border transition-all duration-300 transform scale-100 hover:scale-[1.02] relative overflow-hidden',
-            toast.type === 'success' ? 'bg-[#EAFDF8] border-[#A8EEDD] text-[#1E7D65]' : 
-            toast.type === 'error' ? 'bg-[#FFF0F3] border-[#FFCCD5] text-[#A3001E]' : 
-            toast.type === 'info' ? 'bg-[#EBF8FF] border-[#BEE3F8] text-[#2B6CB0]' :
-            'bg-[#FFF9E6] border-[#FFE29A] text-[#805B00]'
-          ]"
-        >
-          <!-- SweetAlert animated style bar -->
+    <Teleport to="body">
+      <div class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none max-w-sm w-full">
+        <TransitionGroup name="toast">
           <div 
+            v-for="toast in toasts" 
+            :key="toast.id"
             :class="[
-              'absolute bottom-0 left-0 h-1 animate-toast-progress w-full',
-              toast.type === 'success' ? 'bg-[#1E7D65]' : 
-              toast.type === 'error' ? 'bg-[#A3001E]' : 
-              toast.type === 'info' ? 'bg-[#2B6CB0]' :
-              'bg-[#805B00]'
+              'pointer-events-auto py-5 px-5 rounded-2xl shadow-xl flex items-center gap-3.5 border transition-all duration-300 transform scale-100 hover:scale-[1.02] relative overflow-hidden',
+              toast.type === 'success' ? 'bg-[#EAFDF8] border-[#A8EEDD] text-[#1E7D65]' : 
+              toast.type === 'error' ? 'bg-[#FFF0F3] border-[#FFCCD5] text-[#A3001E]' : 
+              toast.type === 'info' ? 'bg-[#EBF8FF] border-[#BEE3F8] text-[#2B6CB0]' :
+              'bg-[#FFF9E6] border-[#FFE29A] text-[#805B00]'
             ]"
-          ></div>
+          >
+            <!-- SweetAlert animated style bar -->
+            <div 
+              :class="[
+                'absolute bottom-0 left-0 h-1 animate-toast-progress w-full',
+                toast.type === 'success' ? 'bg-[#1E7D65]' : 
+                toast.type === 'error' ? 'bg-[#A3001E]' : 
+                toast.type === 'info' ? 'bg-[#2B6CB0]' :
+                'bg-[#805B00]'
+              ]"
+            ></div>
 
-          <!-- Professional Vector SVGs instead of Emojis -->
-          <div class="flex-shrink-0">
-            <svg v-if="toast.type === 'success'" class="w-5.5 h-5.5 text-[#1E7D65]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-            </svg>
-            <svg v-else-if="toast.type === 'error'" class="w-5.5 h-5.5 text-[#A3001E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-            <svg v-else-if="toast.type === 'info'" class="w-5.5 h-5.5 text-[#2B6CB0]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25.041-.02a.75.75 0 1 1 1.063 1.06l-.041.02-.08.04H12v.002h.008a.75.75 0 0 1 1.5 0v.008h-.008v-.008ZM12 3v18M3 12h18" />
-            </svg>
-            <svg v-else class="w-5.5 h-5.5 text-[#805B00]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-            </svg>
+            <!-- Professional Vector SVGs instead of Emojis -->
+            <div class="flex-shrink-0">
+              <svg v-if="toast.type === 'success'" class="w-5.5 h-5.5 text-[#1E7D65]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+              <svg v-else-if="toast.type === 'error'" class="w-5.5 h-5.5 text-[#A3001E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+              <svg v-else-if="toast.type === 'info'" class="w-5.5 h-5.5 text-[#2B6CB0]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25.041-.02a.75.75 0 1 1 1.063 1.06l-.041.02-.08.04H12v.002h.008a.75.75 0 0 1 1.5 0v.008h-.008v-.008ZM12 3v18M3 12h18" />
+              </svg>
+              <svg v-else class="w-5.5 h-5.5 text-[#805B00]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <span class="font-nunito text-xs sm:text-sm font-bold flex-1 pr-1">{{ toast.message }}</span>
           </div>
-          <span class="font-nunito text-xs sm:text-sm font-bold flex-1 pr-1">{{ toast.message }}</span>
-        </div>
-      </TransitionGroup>
-    </div>
+        </TransitionGroup>
+      </div>
+    </Teleport>
 
     <!-- BACKGROUND LIGHT DECORATIVE BLUR BUBBLES -->
     <div class="fixed top-0 right-0 w-[400px] h-[400px] bg-pink-100/35 rounded-full blur-3xl pointer-events-none -z-10"></div>
@@ -265,43 +274,18 @@ const handleLogout = () => {
           <div class="absolute right-0 top-0 w-80 h-80 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-20 -mt-20"></div>
           <div class="absolute left-1/3 bottom-0 w-60 h-60 bg-pink-300/20 rounded-full blur-2xl pointer-events-none -mb-20"></div>
 
-          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="space-y-2 md:max-w-xl">
-              <span class="bg-white/20 text-white text-[10px] font-extrabold tracking-widest px-3 py-1.5 rounded-full uppercase inline-block">
-                TEACHER DASHBOARD
-              </span>
-              <h2 class="font-fredoka text-2xl sm:text-3xl font-extrabold leading-tight">
-                สวัสดีครับ, ครู{{ teacherProfile.name }}
-              </h2>
-              <p class="font-nunito text-xs sm:text-sm text-pink-50/90 font-medium">
-                วันนี้มีวิชาคณิตศาสตร์ที่ต้องจัดการเช็คชื่อเข้าเรียน 3 คาบเรียน ยอดรวมนักเรียนเข้าข่ายประเมิน 120 คน
-              </p>
-            </div>
-            
-            <!-- Quick Actions Group -->
-            <div class="flex flex-wrap gap-2.5 flex-shrink-0">
-              <button 
-                @click="showToast('เข้าสู่ขั้นตอนการนำเข้าไฟล์ข้อมูลนักเรียน', 'info')"
-                class="bg-white/15 hover:bg-white/25 border border-white/20 text-white font-fredoka font-bold text-xs px-4 py-3 rounded-xl transition-all cursor-pointer flex items-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                <span>นำเข้าข้อมูลนักเรียน</span>
-              </button>
-              <button 
-                @click="showToast('กำลังเปิดแบบฟอร์มเพิ่มห้องเรียนใหม่', 'info')"
-                class="bg-white text-[#FF758F] hover:bg-pink-50 font-fredoka font-bold text-xs px-4 py-3 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span>เพิ่มห้องเรียนใหม่</span>
-              </button>
-            </div>
+          <div class="relative z-10 space-y-2 max-w-2xl">
+            <span class="bg-white/20 text-white text-[10px] font-extrabold tracking-widest px-3 py-1.5 rounded-full uppercase inline-block">
+              TEACHER DASHBOARD
+            </span>
+            <h2 class="font-fredoka text-2xl sm:text-3xl font-extrabold leading-tight">
+              สวัสดีครับ, ครู{{ teacherProfile.name }}
+            </h2>
+            <p class="font-nunito text-xs sm:text-sm text-pink-50/90 font-medium">
+              วันนี้มีวิชาคณิตศาสตร์ที่ต้องจัดการเช็คชื่อเข้าแถว 3 คาบเรียน ยอดรวมนักเรียนเข้าข่ายประเมิน 120 คน
+            </p>
           </div>
         </section>
-
         <!-- STATISTICS GRID CARD -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div 
@@ -488,6 +472,17 @@ const handleLogout = () => {
 
       </main>
 
+      <!-- Logout Confirmation Modal -->
+      <ConfirmModal 
+        :isOpen="isLogoutModalOpen"
+        title="ออกจากระบบ"
+        message="คุณครูต้องการออกจากระบบระบบเช็คชื่อนักเรียนใช่หรือไม่?"
+        confirmText="ออกจากระบบ"
+        cancelText="ยกเลิก"
+        type="danger"
+        @confirm="confirmLogout"
+        @cancel="isLogoutModalOpen = false"
+      />
     </div>
   </div>
 </template>
