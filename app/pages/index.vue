@@ -2,7 +2,7 @@
 useHead({
   title: 'ระบบเช็คชื่อและบันทึกเวลาเรียน | Student Attendance System',
   meta: [
-    { name: 'description', content: 'ยินดีต้อนรับเข้าสู่ระบบเช็คชื่อและบันทึกเวลาเรียนของนักเรียน ตรีมน่ารัก ใช้งานง่าย' }
+    { name: 'description', content: 'ยินดีต้อนรับเข้าสู่ระบบเช็คชื่อและบันทึกเวลาเรียนของนักเรียน' }
   ]
 })
 </script>
@@ -17,45 +17,36 @@ useHead({
     <div class="absolute bottom-[5%] left-[10%] w-60 h-60 bg-purple-300/20 rounded-full blur-3xl animate-drift pointer-events-none"></div>
 
     <!-- Background clouds -->
-    <div class="absolute top-[10%] left-[15%] text-6xl opacity-15 animate-drift pointer-events-none">☁️</div>
-    <div class="absolute top-[40%] right-[20%] text-5xl opacity-10 animate-float pointer-events-none">☁️</div>
-    <div class="absolute bottom-[25%] left-[5%] text-7xl opacity-10 animate-float-slow pointer-events-none">☁️</div>
+    <div class="absolute top-[10%] left-[15%] text-6xl opacity-10 animate-drift pointer-events-none">☁️</div>
+    <div class="absolute top-[40%] right-[20%] text-5xl opacity-8 animate-float pointer-events-none">☁️</div>
+    <div class="absolute bottom-[25%] left-[5%] text-7xl opacity-8 animate-float-slow pointer-events-none">☁️</div>
 
-    <!-- Small Emojis Floating in the background -->
-    <div class="absolute top-10 right-20 text-4xl opacity-35 animate-float hidden sm:block">🎒</div>
-    <div class="absolute bottom-20 left-12 text-4xl opacity-35 animate-float-slow hidden sm:block">📚</div>
-    <div class="absolute top-[60%] left-24 text-3xl opacity-35 animate-float-medium hidden sm:block">✏️</div>
-    <div class="absolute top-[25%] left-[35%] text-3xl opacity-25 animate-float hidden sm:block">⭐</div>
-    <div class="absolute bottom-40 right-[35%] text-4xl opacity-35 animate-float-slow hidden sm:block">🎈</div>
-
-    <!-- Centered Card Container (Compact sizing) -->
+    <!-- Centered Card Container -->
     <div class="max-w-3xl w-full bg-white/85 backdrop-blur-2xl border border-white rounded-[2rem] p-5 sm:p-8 shadow-2xl relative z-10 flex flex-col items-center text-center animate-fade-in-up my-auto">
       
       <!-- Logo Badge -->
       <div class="inline-flex items-center gap-2 px-3.5 py-1 bg-pink-100/60 border border-pink-200/50 rounded-full text-[#FF758F] font-fredoka text-[10px] sm:text-xs font-bold tracking-wider mb-4 animate-pulse">
-        <span>🏫</span> STUDENT PORTAL SYSTEM
+        STUDENT PORTAL SYSTEM
       </div>
 
-      <!-- School illustration with circular background (compact dimensions) -->
+      <!-- School illustration with circular background -->
       <div class="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center bg-gradient-to-br from-pink-50 to-indigo-50/50 rounded-full border border-white shadow-inner p-2.5 mb-4 group">
         <img 
           src="/images/school_hero.png" 
           alt="School Mascot" 
           class="w-full h-full object-contain drop-shadow-xl animate-float-medium group-hover:scale-105 transition-transform duration-300"
         />
-        <div class="absolute -top-1 -right-1 text-2xl animate-bounce">⭐</div>
-        <div class="absolute -bottom-1 -left-1 text-2xl animate-pulse">✨</div>
       </div>
 
-      <!-- Titles (compact sizes) -->
+      <!-- Titles -->
       <h1 class="font-fredoka text-2xl sm:text-3xl font-extrabold text-[#2F3E46] leading-tight mb-1.5">
         Attendance <span class="text-[#FF758F]">System</span>
       </h1>
       <p class="font-nunito text-[#596A7A] text-xs sm:text-sm leading-relaxed max-w-sm mb-6 font-semibold">
-        ระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียนแสนน่ารัก ช่วยจัดการชั้นเรียนของห้องเรียนคุณครูให้สดใสและง่ายดายค่ะ 💖
+        ระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียน เพื่อช่วยจัดการชั้นเรียนของคุณครูอย่างสะดวกและมีประสิทธิภาพ
       </p>
 
-      <!-- Portal Selectors (Horizontal Cards Grid, compact spacing) -->
+      <!-- Portal Selectors (Horizontal Cards Grid) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 w-full max-w-2xl mb-5">
         
         <!-- Teacher Portal Card -->
@@ -76,13 +67,13 @@ useHead({
             </h3>
             
             <p class="font-nunito text-[#596A7A] text-xs mt-1 leading-relaxed">
-              สำหรับคุณครูเพื่อเข้าเช็คชื่อเด็กนักเรียน บันทึกประวัติเวลาเข้าแถว และตรวจสอบสรุปผล
+              สำหรับคุณครูเพื่อเข้าเช็คชื่อนักเรียน บันทึกประวัติเวลาเข้าแถว และตรวจสอบสรุปผลภาพรวม
             </p>
           </div>
           
           <!-- Bottom Action Link -->
           <div class="mt-4 pt-3 border-t border-slate-100/50 flex items-center justify-between text-[#FF758F]">
-            <span class="text-xs font-bold font-fredoka">เข้าสู่ระบบคุณครู ✏️</span>
+            <span class="text-xs font-bold font-fredoka">เข้าสู่ระบบสำหรับคุณครู</span>
             <div class="w-6 h-6 rounded-full bg-white border border-pink-100 flex items-center justify-center group-hover:translate-x-1 transition-transform duration-200">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -97,7 +88,7 @@ useHead({
         >
           <!-- Coming Soon Badge -->
           <div class="absolute top-2.5 right-3 bg-[#E3F2FD] border border-blue-200 text-[#1E88E5] text-[8px] font-bold font-fredoka tracking-wider px-2 py-0.5 rounded-full uppercase">
-            เร็วๆ นี้ 🧸
+            เร็วๆ นี้
           </div>
 
           <div>
@@ -111,12 +102,12 @@ useHead({
             </h3>
             
             <p class="font-nunito text-slate-400/80 text-xs mt-1 leading-relaxed">
-              สำหรับนักเรียนและผู้ปกครองเพื่อเข้าตรวจสถิติเวลาเรียน และข้อมูลประวัติการลาเรียน
+              สำหรับนักเรียนและผู้ปกครองเพื่อเข้าตรวจสอบสถิติเวลาเรียน และข้อมูลประวัติการลาเรียน
             </p>
           </div>
           
           <!-- Bottom Action Placeholder -->
-          <div class="mt-4 pt-3 border-t border-slate-100/50 flex items-center justify-between text-slate-400/70">
+          <div class="mt-6 pt-4 border-t border-slate-100/50 flex items-center justify-between text-slate-400/70">
             <span class="text-xs font-bold font-fredoka">กำลังอยู่ระหว่างพัฒนา</span>
             <div class="w-6 h-6 rounded-full bg-white border border-slate-200/40 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3">
@@ -130,8 +121,7 @@ useHead({
 
       <!-- Help Info banner -->
       <div class="bg-[#FAF0CA]/20 border border-[#FAF0CA]/50 rounded-xl p-2.5 text-left text-slate-500 font-nunito text-xs flex gap-2 w-full max-w-2xl">
-        <span>💡</span>
-        <span>มีข้อสงสัยการใช้งาน? ติดต่อฝ่ายสนับสนุนระบบโรงเรียนได้ค่ะ</span>
+        <span>ข้อมูลเพิ่มเติม: ติดต่อฝ่ายสนับสนุนระบบของโรงเรียน</span>
       </div>
 
     </div>
@@ -139,7 +129,7 @@ useHead({
     <!-- Footer Copyright -->
     <footer class="pb-2 relative z-10 text-center mt-4">
       <div class="text-[9px] sm:text-xs text-slate-400 font-semibold bg-white/40 border border-white/60 px-4 py-1.5 rounded-full shadow-sm">
-        © 2026 Student Attendance System • Design with 💖 for sweet learning
+        © 2026 Student Attendance System • All rights reserved.
       </div>
     </footer>
 

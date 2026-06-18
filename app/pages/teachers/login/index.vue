@@ -2,9 +2,9 @@
 import { ref, reactive } from 'vue'
 
 useHead({
-  title: 'เข้าสู่ระบบสำหรับคุณครู | Student Attendance System',
+  title: 'เข้าสู่ระบบสำหรับครู | Student Attendance System',
   meta: [
-    { name: 'description', content: 'หน้าเข้าสู่ระบบสำหรับคุณครู เพื่อเข้าใช้งานระบบเช็คชื่อและบันทึกเวลาเรียนของนักเรียน ตรีมน่ารักและใช้งานง่าย' }
+    { name: 'description', content: 'หน้าเข้าสู่ระบบสำหรับครู เพื่อเข้าใช้งานระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียน' }
   ]
 })
 
@@ -18,29 +18,48 @@ const form = reactive({
 // UI State
 const isPasswordVisible = ref(false)
 const isLoading = ref(false)
-const errorMessage = ref('')
 const hasError = ref(false)
 const isSuccess = ref(false)
+
+// SweetAlert-style Toast Notifications State
+const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' }[]>([])
+let toastId = 0
+
+const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
+  const id = toastId++
+  toasts.value.push({ id, message, type })
+  
+  if (type === 'error') {
+    hasError.value = true
+    setTimeout(() => {
+      hasError.value = false
+    }, 500)
+  }
+
+  // Remove toast after 3 seconds
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(t => t.id !== id)
+  }, 3000)
+}
 
 // Handle Form Submission
 const handleLogin = async () => {
   // Reset error states
-  errorMessage.value = ''
   hasError.value = false
   
   // Basic Validation
   if (!form.emailOrId.trim()) {
-    triggerError('กรุณากรอกอีเมลหรือรหัสประจำตัวคุณครูด้วยนะคะ ✏️')
+    showToast('กรุณากรอกอีเมลหรือรหัสประจำตัวครู', 'warning')
     return
   }
   
   if (!form.password) {
-    triggerError('กรุณากรอกรหัสผ่านด้วยนะคะ 🔑')
+    showToast('กรุณากรอกรหัสผ่าน', 'warning')
     return
   }
   
   if (form.password.length < 6) {
-    triggerError('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษรค่ะ 🔒')
+    showToast('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร', 'warning')
     return
   }
   
@@ -49,67 +68,88 @@ const handleLogin = async () => {
   try {
     await new Promise(resolve => setTimeout(resolve, 1500))
     isSuccess.value = true
-    // Simulate navigation/dashboard redirect here in real implementation
+    showToast('เข้าสู่ระบบสำเร็จ', 'success')
+    setTimeout(() => {
+      navigateTo('/teachers/dashboard')
+    }, 1500)
   } catch (err) {
-    triggerError('อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ ❌')
+    showToast('อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง', 'error')
   } finally {
     isLoading.value = false
   }
-}
-
-// Visual error feedback (shake effect)
-const triggerError = (msg: string) => {
-  errorMessage.value = msg
-  hasError.value = true
-  
-  // Reset shake class after animation ends so it can shake again
-  setTimeout(() => {
-    hasError.value = false
-  }, 500)
 }
 </script>
 
 <template>
   <div class="bg-gradient-to-br from-[#FFF0F3] via-[#FFF6E6] to-[#E6F0FA] min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-8 font-sans">
+    
+    <!-- Toast Notification Container (Top Right - SweetAlert style) -->
+    <div class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none max-w-sm w-full">
+      <TransitionGroup name="toast">
+        <div 
+          v-for="toast in toasts" 
+          :key="toast.id"
+          :class="[
+            'pointer-events-auto py-5 px-5 rounded-2xl shadow-xl flex items-center gap-3.5 border transition-all duration-300 transform scale-100 hover:scale-[1.02] relative overflow-hidden',
+            toast.type === 'success' ? 'bg-[#EAFDF8] border-[#A8EEDD] text-[#1E7D65]' : 
+            toast.type === 'error' ? 'bg-[#FFF0F3] border-[#FFCCD5] text-[#A3001E]' : 
+            'bg-[#FFF9E6] border-[#FFE29A] text-[#805B00]'
+          ]"
+        >
+          <!-- SweetAlert animated style bar -->
+          <div 
+            :class="[
+              'absolute bottom-0 left-0 h-1 animate-toast-progress w-full',
+              toast.type === 'success' ? 'bg-[#1E7D65]' : 
+              toast.type === 'error' ? 'bg-[#A3001E]' : 
+              'bg-[#805B00]'
+            ]"
+          ></div>
+
+          <!-- Professional Vector SVGs instead of Emojis -->
+          <div class="flex-shrink-0">
+            <svg v-if="toast.type === 'success'" class="w-5.5 h-5.5 text-[#1E7D65]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            </svg>
+            <svg v-else-if="toast.type === 'error'" class="w-5.5 h-5.5 text-[#A3001E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+            <svg v-else class="w-5.5 h-5.5 text-[#805B00]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            </svg>
+          </div>
+          <span class="font-nunito text-xs sm:text-sm font-bold flex-1 pr-1">{{ toast.message }}</span>
+        </div>
+      </TransitionGroup>
+    </div>
+
     <!-- Floating background decorative blur bubbles -->
     <div class="absolute top-[5%] left-[5%] w-48 h-48 bg-pink-300/20 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
     <div class="absolute bottom-[8%] right-[5%] w-72 h-72 bg-sky-300/20 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute top-[35%] right-[15%] w-36 h-36 bg-amber-300/20 rounded-full blur-2xl animate-float-medium pointer-events-none"></div>
     <div class="absolute bottom-[5%] left-[10%] w-60 h-60 bg-purple-300/20 rounded-full blur-3xl animate-drift pointer-events-none"></div>
 
-    <!-- Background clouds -->
-    <div class="absolute top-[10%] left-[15%] text-6xl opacity-15 animate-drift pointer-events-none">☁️</div>
-    <div class="absolute top-[40%] right-[20%] text-5xl opacity-10 animate-float pointer-events-none">☁️</div>
-    <div class="absolute bottom-[25%] left-[5%] text-7xl opacity-10 animate-float-slow pointer-events-none">☁️</div>
-
-    <!-- Small Emojis Floating in the background -->
-    <div class="absolute top-10 right-20 text-4xl opacity-35 animate-float hidden sm:block">🎒</div>
-    <div class="absolute bottom-20 left-12 text-4xl opacity-35 animate-float-slow hidden sm:block">📚</div>
-    <div class="absolute top-[60%] left-24 text-3xl opacity-35 animate-float-medium hidden sm:block">✏️</div>
-    <div class="absolute top-[25%] left-[35%] text-3xl opacity-25 animate-float hidden sm:block">⭐</div>
-    <div class="absolute bottom-40 right-[35%] text-4xl opacity-35 animate-float-slow hidden sm:block">🎈</div>
-
     <!-- Main Container -->
     <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-white/85 backdrop-blur-2xl border border-white rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-2xl relative z-10">
       
-      <!-- Left Column - Cute Hero (Hidden on Mobile) -->
+      <!-- Left Column - Professional Hero (Hidden on Mobile) -->
       <div class="col-span-12 md:col-span-5 hidden md:flex flex-col items-center text-center justify-center p-4">
         <div class="bg-white/80 border border-white/70 rounded-3xl p-6 shadow-md max-w-sm mb-4 transform -rotate-2">
-          <h2 class="font-fredoka text-2xl font-bold text-[#FF758F] mb-1">ยินดีต้อนรับค่ะคุณครู! 👩‍🏫</h2>
+          <h2 class="font-fredoka text-2xl font-bold text-[#FF758F] mb-1">ระบบลงชื่อเข้าใช้งานสำหรับครู</h2>
           <p class="font-nunito text-[#596A7A] text-sm leading-relaxed">
-            ระบบเช็คชื่อและบันทึกเวลาเรียนนักเรียน เข้ามาจัดการชั้นเรียนด้วยความสนุกและสะดวกสบายกันนะคะ ✨
+            ระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียน สำหรับครูผู้สอนเพื่อจัดการชั้นเรียนอย่างมีประสิทธิภาพ
           </p>
         </div>
         
         <img 
           src="/images/teacher_illustration.png" 
-          alt="Cute Teacher Illustration" 
+          alt="Teacher Illustration" 
           class="w-72 h-72 object-contain my-4 drop-shadow-xl animate-float-medium"
         />
 
         <div class="text-[#FF758F] font-fredoka text-sm font-semibold tracking-wider flex items-center gap-1.5 mt-2 bg-pink-50 border border-pink-100 px-4 py-2 rounded-full shadow-inner animate-pulse">
           <span class="inline-block w-2.5 h-2.5 bg-pink-400 rounded-full"></span>
-          Let's make teaching delightful!
+          Student Attendance System
         </div>
       </div>
 
@@ -121,11 +161,11 @@ const triggerError = (msg: string) => {
         <div class="flex flex-col items-center text-center md:hidden mb-6">
           <img 
             src="/images/teacher_illustration.png" 
-            alt="Cute Teacher Illustration" 
+            alt="Teacher Illustration" 
             class="w-24 h-24 object-contain mb-3 drop-shadow-md animate-float"
           />
-          <h2 class="font-fredoka text-2xl font-bold text-[#FF758F] mb-1">เข้าสู่ระบบคุณครู 🏫</h2>
-          <p class="font-nunito text-slate-500 text-xs">ระบบเช็คชื่อและบันทึกเวลาเรียนนักเรียน</p>
+          <h2 class="font-fredoka text-2xl font-bold text-[#FF758F] mb-1">เข้าสู่ระบบสำหรับครู</h2>
+          <p class="font-nunito text-slate-500 text-xs">ระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียน</p>
         </div>
 
         <div class="hidden md:block mb-8">
@@ -133,32 +173,11 @@ const triggerError = (msg: string) => {
             TEACHER PORTAL
           </span>
           <h1 class="font-fredoka text-3xl font-extrabold text-[#2F3E46] mt-3 mb-2">
-            ลงชื่อเข้าใช้งานกันเถอะ! ✨
+            ลงชื่อเข้าใช้งาน
           </h1>
           <p class="font-nunito text-slate-500 text-sm">
-            กรุณาใช้บัญชีคุณครูเพื่อเข้าดูแลชั้นเรียนและการเช็คชื่อนักเรียน
+            กรุณาเข้าสู่ระบบด้วยบัญชีผู้ใช้งานเพื่อจัดการชั้นเรียน
           </p>
-        </div>
-
-        <!-- Success Alert -->
-        <div v-if="isSuccess" class="mb-6 bg-teal-50 border-2 border-teal-200 text-teal-800 p-4 rounded-2xl flex items-center gap-3 animate-fade-in-up">
-          <span class="text-2xl">🎉</span>
-          <div>
-            <h3 class="font-bold text-sm">เข้าสู่ระบบสำเร็จแล้วค่ะ!</h3>
-            <p class="text-xs text-teal-600 mt-0.5">ระบบกำลังนำคุณครูเข้าสู่หน้าแดชบอร์ดจัดการชั้นเรียน...</p>
-          </div>
-        </div>
-
-        <!-- Error Banner -->
-        <div v-if="errorMessage && !hasError" class="mb-6 bg-rose-50 border-2 border-rose-100 text-rose-800 p-4 rounded-2xl flex items-start gap-3 relative transition-all duration-300">
-          <span class="text-xl">⚠️</span>
-          <div class="flex-1">
-            <h3 class="font-bold text-sm font-fredoka text-rose-700">มีข้อผิดพลาดบางอย่างเกิดขึ้นนะคะ</h3>
-            <p class="text-xs text-rose-600 font-nunito mt-0.5">{{ errorMessage }}</p>
-          </div>
-          <button @click="errorMessage = ''" class="text-rose-400 hover:text-rose-700 text-sm font-semibold absolute top-2 right-3 transition-colors">
-            ✕
-          </button>
         </div>
 
         <!-- Login Form -->
@@ -166,7 +185,7 @@ const triggerError = (msg: string) => {
           <!-- Username/Email Field -->
           <div class="space-y-1.5">
             <label for="emailOrId" class="block font-fredoka text-sm font-bold text-[#4A5759] flex items-center gap-1.5 pl-1">
-              <span>📧</span> อีเมล หรือ รหัสประจำตัวคุณครู
+              อีเมล หรือ รหัสประจำตัวครู
             </label>
             <div class="relative">
               <input 
@@ -189,14 +208,14 @@ const triggerError = (msg: string) => {
           <div class="space-y-1.5">
             <div class="flex justify-between items-center pl-1">
               <label for="password" class="block font-fredoka text-sm font-bold text-[#4A5759] flex items-center gap-1.5">
-                <span>🔑</span> รหัสผ่าน
+                รหัสผ่าน
               </label>
-              <NuxtLink 
-                to="/teachers/forgot-password" 
-                class="text-xs text-[#FF758F] font-bold hover:underline hover:text-[#FF4D6D] transition-colors"
+              <span 
+                class="text-xs text-slate-400 font-semibold cursor-not-allowed opacity-60"
+                title="ระบบกู้คืนรหัสผ่านยังไม่เปิดใช้งาน"
               >
-                ลืมรหัสผ่านใช่ไหม? 🤔
-              </NuxtLink>
+                ลืมรหัสผ่าน
+              </span>
             </div>
             <div class="relative">
               <input 
@@ -248,7 +267,7 @@ const triggerError = (msg: string) => {
                   </svg>
                 </div>
               </div>
-              <span class="text-xs font-semibold group-hover:text-slate-800 transition-colors">จดจำการเข้าสู่ระบบ 🍪</span>
+              <span class="text-xs font-semibold group-hover:text-slate-800 transition-colors">จดจำการเข้าสู่ระบบ</span>
             </label>
           </div>
 
@@ -266,7 +285,7 @@ const triggerError = (msg: string) => {
               <span>กำลังตรวจสอบข้อมูล...</span>
             </template>
             <template v-else>
-              <span>เข้าสู่ระบบระบบเช็คชื่อ 🚀</span>
+              <span>เข้าสู่ระบบ</span>
             </template>
           </button>
         </form>
@@ -274,12 +293,12 @@ const triggerError = (msg: string) => {
         <!-- Register Link -->
         <div class="mt-8 text-center border-t border-slate-100 pt-6">
           <p class="text-sm font-semibold text-slate-500">
-            ยังไม่มีบัญชีสำหรับคุณครูใช่ไหม? 
+            ยังไม่มีบัญชีผู้ใช้งานใช่หรือไม่? 
             <NuxtLink 
               to="/teachers/register" 
               class="text-[#FF758F] font-extrabold hover:text-[#FF4D6D] underline hover:underline transition-colors ml-1.5 inline-block group"
             >
-              สมัครสมาชิกคุณครูที่นี่ ✏️
+              สมัครสมาชิกที่นี่
               <span class="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
             </NuxtLink>
           </p>
@@ -304,5 +323,29 @@ const triggerError = (msg: string) => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Toast animations (SweetAlert End style slide) */
+.toast-enter-active {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast-leave-active {
+  transition: all 0.25s ease-in;
+}
+.toast-enter-from {
+  opacity: 0;
+  transform: translate(50px, 0) scale(0.9);
+}
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(0, -15px) scale(0.9);
+}
+
+@keyframes toastProgress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.animate-toast-progress {
+  animation: toastProgress 3s linear forwards;
 }
 </style>
