@@ -46,8 +46,8 @@ useHead({
         ระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียน เพื่อช่วยจัดการชั้นเรียนของคุณครูอย่างสะดวกและมีประสิทธิภาพ
       </p>
 
-      <!-- Portal Selectors (Horizontal Cards Grid) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 w-full max-w-2xl mb-5">
+      <!-- Portal Selectors (Cards Grid) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full max-w-3xl mb-5">
         
         <!-- Teacher Portal Card -->
         <NuxtLink 
@@ -57,23 +57,19 @@ useHead({
           <div class="absolute top-0 right-0 w-20 h-20 bg-[#FFE5D9]/40 rounded-bl-[3.5rem] group-hover:bg-[#FFD3E0]/40 transition-colors duration-300 pointer-events-none"></div>
           
           <div class="relative">
-            <!-- Icon -->
             <div class="w-10 h-10 bg-white text-[#E07A5F] rounded-lg flex items-center justify-center text-xl border border-pink-100 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 mb-3.5 shadow-sm">
               👩‍🏫
             </div>
-            
             <h3 class="font-fredoka text-base sm:text-lg font-bold text-[#2F3E46] group-hover:text-[#FF758F] transition-colors duration-200">
-              พอร์ทัลคุณครู (Teacher Portal)
+              พอร์ทัลคุณครู
             </h3>
-            
             <p class="font-nunito text-[#596A7A] text-xs mt-1 leading-relaxed">
-              สำหรับคุณครูเพื่อเข้าเช็คชื่อนักเรียน บันทึกประวัติเวลาเข้าแถว และตรวจสอบสรุปผลภาพรวม
+              สำหรับคุณครูเพื่อเช็คชื่อนักเรียน บันทึกเวลาเข้าแถว และตรวจสอบสรุปผล
             </p>
           </div>
           
-          <!-- Bottom Action Link -->
           <div class="mt-4 pt-3 border-t border-slate-100/50 flex items-center justify-between text-[#FF758F]">
-            <span class="text-xs font-bold font-fredoka">เข้าสู่ระบบสำหรับคุณครู</span>
+            <span class="text-xs font-bold font-fredoka">เข้าสู่ระบบครู</span>
             <div class="w-6 h-6 rounded-full bg-white border border-pink-100 flex items-center justify-center group-hover:translate-x-1 transition-transform duration-200">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -82,33 +78,57 @@ useHead({
           </div>
         </NuxtLink>
 
-        <!-- Student Portal Card (Coming Soon) -->
-        <div 
-          class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm opacity-80 flex flex-col justify-between text-left relative overflow-hidden"
+        <!-- Student Inspector (Prefect) Portal Card -->
+        <NuxtLink 
+          to="/prefect/login"
+          class="group bg-gradient-to-br from-white to-indigo-50/10 hover:to-indigo-50/40 border border-slate-100 hover:border-indigo-400 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between text-left hover:-translate-y-1 active:scale-[0.99] cursor-pointer relative overflow-hidden"
         >
-          <!-- Coming Soon Badge -->
+          <div class="absolute top-0 right-0 w-20 h-20 bg-indigo-100/40 rounded-bl-[3.5rem] group-hover:bg-indigo-200/40 transition-colors duration-300 pointer-events-none"></div>
+
+          <div class="relative">
+            <div class="w-10 h-10 bg-white text-indigo-500 rounded-lg flex items-center justify-center text-xl border border-indigo-100 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 mb-3.5 shadow-sm">
+              🛡️
+            </div>
+            <h3 class="font-fredoka text-base sm:text-lg font-bold text-[#2F3E46] group-hover:text-indigo-600 transition-colors duration-200">
+              สารวัตรนักเรียน
+            </h3>
+            <p class="font-nunito text-[#596A7A] text-xs mt-1 leading-relaxed">
+              สำหรับสารวัตรนักเรียนเพื่อเช็คชื่อนักเรียนหน้าประตูโรงเรียนและบันทึกเวลาเข้าแถว
+            </p>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100/50 flex items-center justify-between text-indigo-500">
+            <span class="text-xs font-bold font-fredoka">เข้าสู่ระบบสารวัตร</span>
+            <div class="w-6 h-6 rounded-full bg-white border border-indigo-100 flex items-center justify-center group-hover:translate-x-1 transition-transform duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </div>
+        </NuxtLink>
+
+        <!-- Student/Parent Portal Card (Coming Soon) -->
+        <div 
+          class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm opacity-75 flex flex-col justify-between text-left relative overflow-hidden sm:col-span-2 lg:col-span-1"
+        >
           <div class="absolute top-2.5 right-3 bg-[#E3F2FD] border border-blue-200 text-[#1E88E5] text-[8px] font-bold font-fredoka tracking-wider px-2 py-0.5 rounded-full uppercase">
             เร็วๆ นี้
           </div>
 
           <div>
-            <!-- Icon -->
             <div class="w-10 h-10 bg-white text-slate-400 rounded-lg flex items-center justify-center text-xl border border-slate-200/50 mb-3.5 shadow-sm">
               🎒
             </div>
-            
             <h3 class="font-fredoka text-base sm:text-lg font-bold text-slate-400">
-              พอร์ทัลนักเรียน (Student Portal)
+              พอร์ทัลนักเรียน
             </h3>
-            
             <p class="font-nunito text-slate-400/80 text-xs mt-1 leading-relaxed">
-              สำหรับนักเรียนและผู้ปกครองเพื่อเข้าตรวจสอบสถิติเวลาเรียน และข้อมูลประวัติการลาเรียน
+              สำหรับนักเรียนและผู้ปกครองตรวจสอบสถิติเวลาเรียนและประวัติการลาเรียน
             </p>
           </div>
           
-          <!-- Bottom Action Placeholder -->
-          <div class="mt-6 pt-4 border-t border-slate-100/50 flex items-center justify-between text-slate-400/70">
-            <span class="text-xs font-bold font-fredoka">กำลังอยู่ระหว่างพัฒนา</span>
+          <div class="mt-4 pt-3 border-t border-slate-100/50 flex items-center justify-between text-slate-400/70">
+            <span class="text-xs font-bold font-fredoka">กำลังพัฒนา</span>
             <div class="w-6 h-6 rounded-full bg-white border border-slate-200/40 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />

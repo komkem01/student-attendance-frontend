@@ -26,7 +26,7 @@ const handleLogout = () => {
 
 const goToProfile = () => {
   isProfileDropdownOpen.value = false
-  navigateTo('/teachers/profile')
+  navigateTo('/teachers/setting')
 }
 
 // Close dropdown on click away
