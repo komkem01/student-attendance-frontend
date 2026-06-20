@@ -21,7 +21,7 @@ let toastId = 0
 const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
   const id = toastId++
   toasts.value.push({ id, message, type })
-  
+
   if (type === 'error') {
     hasError.value = true
     setTimeout(() => {
@@ -45,14 +45,14 @@ const form = reactive({
   dob: '',
   email: '',
   phone: '',
-  
+
   // Step 2: Home Address
   address: '',
   province: '',
   district: '',
   subdistrict: '',
   postalCode: '',
-  
+
   // Step 3: School Info
   schoolName: '',
   subjectTaught: '',
@@ -157,8 +157,8 @@ const dpMonth = ref(new Date().getMonth())
 const dpYear = ref(new Date().getFullYear())
 
 // Years array for selector (from 1940 to current year)
-const currentYear = new Date().getFullYear()
-const dpYears = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i)
+const curstudent-attendanceear = new Date().getFullYear()
+const dpYears = Array.from({ length: curstudent-attendanceear - 1940 + 1 }, (_, i) => curstudent-attendanceear - i)
 
 const dpMonths = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
@@ -171,14 +171,14 @@ const dpWeekDays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
 const dpGridDays = computed(() => {
   const year = dpYear.value
   const month = dpMonth.value
-  
+
   const firstDay = new Date(year, month, 1)
   const startDayOfWeek = firstDay.getDay()
   const totalDays = new Date(year, month + 1, 0).getDate()
   const prevMonthTotalDays = new Date(year, month, 0).getDate()
-  
+
   const days = []
-  
+
   // Padding from previous month
   for (let i = startDayOfWeek - 1; i >= 0; i--) {
     const d = prevMonthTotalDays - i
@@ -192,12 +192,12 @@ const dpGridDays = computed(() => {
       dateString: `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     })
   }
-  
+
   // Current month days
   const today = new Date()
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   const selectedStr = form.dob
-  
+
   for (let d = 1; d <= totalDays; d++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     days.push({
@@ -208,7 +208,7 @@ const dpGridDays = computed(() => {
       dateString: dateStr
     })
   }
-  
+
   // Padding from next month
   const remaining = 42 - days.length
   for (let d = 1; d <= remaining; d++) {
@@ -222,13 +222,13 @@ const dpGridDays = computed(() => {
       dateString: `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     })
   }
-  
+
   return days
 })
 
 const selectDate = (dayItem: { day: number; monthOffset: number; dateString: string }) => {
   form.dob = dayItem.dateString
-  
+
   const parts = dayItem.dateString.split('-').map(Number)
   if (parts.length === 3) {
     const y = parts[0]
@@ -238,7 +238,7 @@ const selectDate = (dayItem: { day: number; monthOffset: number; dateString: str
       dpMonth.value = m - 1
     }
   }
-  
+
   isDatePickerOpen.value = false
 }
 
@@ -265,9 +265,9 @@ const displayDob = computed(() => {
   const y = parseInt(parts[0] || '', 10)
   const m = parseInt(parts[1] || '', 10) - 1
   const d = parseInt(parts[2] || '', 10)
-  
+
   if (isNaN(y) || isNaN(m) || isNaN(d)) return form.dob
-  
+
   const thaiYear = y + 543
   const thaiMonth = dpMonths[m] || ''
   return `${d} ${thaiMonth} ${thaiYear}`
@@ -276,7 +276,7 @@ const displayDob = computed(() => {
 const changeMonth = (offset: number) => {
   let newMonth = dpMonth.value + offset
   let newYear = dpYear.value
-  
+
   if (newMonth < 0) {
     newMonth = 11
     newYear -= 1
@@ -284,7 +284,7 @@ const changeMonth = (offset: number) => {
     newMonth = 0
     newYear += 1
   }
-  
+
   dpMonth.value = newMonth
   dpYear.value = newYear
 }
@@ -409,7 +409,7 @@ const handleNextStep = () => {
     if (!form.dob) return showToast('กรุณาระบุวันเดือนปีเกิด', 'warning')
     if (!form.email.trim() || !form.email.includes('@')) return showToast('กรุณากรอกอีเมลให้ถูกต้อง', 'warning')
     if (!form.phone.trim()) return showToast('กรุณากรอกเบอร์โทรศัพท์', 'warning')
-    
+
     currentStep.value = 2
   } else if (currentStep.value === 2) {
     // Step 2 Validation
@@ -418,7 +418,7 @@ const handleNextStep = () => {
     if (!form.district) return showToast('กรุณาเลือกอำเภอ/เขต', 'warning')
     if (!form.subdistrict) return showToast('กรุณาเลือกตำบล/แขวง', 'warning')
     if (!form.postalCode || form.postalCode.length !== 5) return showToast('กรุณากรอกรหัสไปรษณีย์ 5 หลักให้ถูกต้อง', 'warning')
-    
+
     currentStep.value = 3
   }
 }
@@ -446,7 +446,7 @@ const handleRegister = async () => {
     await new Promise(resolve => setTimeout(resolve, 2000))
     isSuccess.value = true
     showToast('ลงทะเบียนบัญชีผู้ใช้งานสำเร็จ', 'success')
-    
+
     // Auto redirect to login page after success
     setTimeout(() => {
       navigateTo('/teachers/login')
@@ -501,72 +501,144 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-gradient-to-br from-[#FFF0F3] via-[#FFF6E6] to-[#E6F0FA] min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-8 font-sans select-none">
-    
+  <div
+    class="bg-gradient-to-br from-[#FFF0F3] via-[#FFF6E6] to-[#E6F0FA] min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-8 font-sans select-none"
+  >
     <!-- Toast Notification Container (Top Right - SweetAlert style) -->
     <Teleport to="body">
-      <div class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none max-w-sm w-full">
+      <div
+        class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none max-w-sm w-full"
+      >
         <TransitionGroup name="toast">
-          <div 
-            v-for="toast in toasts" 
+          <div
+            v-for="toast in toasts"
             :key="toast.id"
             :class="[
               'pointer-events-auto py-5 px-5 rounded-2xl shadow-xl flex items-center gap-3.5 border transition-all duration-300 transform scale-100 hover:scale-[1.02] relative overflow-hidden',
-              toast.type === 'success' ? 'bg-[#EAFDF8] border-[#A8EEDD] text-[#1E7D65]' : 
-              toast.type === 'error' ? 'bg-[#FFF0F3] border-[#FFCCD5] text-[#A3001E]' : 
-              'bg-[#FFF9E6] border-[#FFE29A] text-[#805B00]'
+              toast.type === 'success'
+                ? 'bg-[#EAFDF8] border-[#A8EEDD] text-[#1E7D65]'
+                : toast.type === 'error'
+                  ? 'bg-[#FFF0F3] border-[#FFCCD5] text-[#A3001E]'
+                  : 'bg-[#FFF9E6] border-[#FFE29A] text-[#805B00]',
             ]"
           >
             <!-- SweetAlert animated style bar -->
-            <div 
+            <div
               :class="[
                 'absolute bottom-0 left-0 h-1 animate-toast-progress w-full',
-                toast.type === 'success' ? 'bg-[#1E7D65]' : 
-                toast.type === 'error' ? 'bg-[#A3001E]' : 
-                'bg-[#805B00]'
+                toast.type === 'success'
+                  ? 'bg-[#1E7D65]'
+                  : toast.type === 'error'
+                    ? 'bg-[#A3001E]'
+                    : 'bg-[#805B00]',
               ]"
             ></div>
 
             <!-- Professional Vector SVGs instead of Emojis -->
             <div class="flex-shrink-0">
-              <svg v-if="toast.type === 'success'" class="w-5.5 h-5.5 text-[#1E7D65]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              <svg
+                v-if="toast.type === 'success'"
+                class="w-5.5 h-5.5 text-[#1E7D65]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="3"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m4.5 12.75 6 6 9-13.5"
+                />
               </svg>
-              <svg v-else-if="toast.type === 'error'" class="w-5.5 h-5.5 text-[#A3001E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              <svg
+                v-else-if="toast.type === 'error'"
+                class="w-5.5 h-5.5 text-[#A3001E]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="3"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18 18 6M6 6l12 12"
+                />
               </svg>
-              <svg v-else class="w-5.5 h-5.5 text-[#805B00]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              <svg
+                v-else
+                class="w-5.5 h-5.5 text-[#805B00]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="3"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                />
               </svg>
             </div>
-            <span class="font-nunito text-xs sm:text-sm font-bold flex-1 pr-1">{{ toast.message }}</span>
+            <span
+              class="font-nunito text-xs sm:text-sm font-bold flex-1 pr-1"
+              >{{ toast.message }}</span
+            >
           </div>
         </TransitionGroup>
       </div>
     </Teleport>
 
     <!-- Floating background decorative blur bubbles -->
-    <div class="absolute top-[5%] left-[5%] w-48 h-48 bg-pink-300/20 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
-    <div class="absolute bottom-[8%] right-[5%] w-72 h-72 bg-sky-300/20 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute top-[35%] right-[15%] w-36 h-36 bg-amber-300/20 rounded-full blur-2xl animate-float-medium pointer-events-none"></div>
-    <div class="absolute bottom-[5%] left-[10%] w-60 h-60 bg-purple-300/20 rounded-full blur-3xl animate-drift pointer-events-none"></div>
+    <div
+      class="absolute top-[5%] left-[5%] w-48 h-48 bg-pink-300/20 rounded-full blur-3xl animate-float-slow pointer-events-none"
+    ></div>
+    <div
+      class="absolute bottom-[8%] right-[5%] w-72 h-72 bg-sky-300/20 rounded-full blur-3xl pointer-events-none"
+    ></div>
+    <div
+      class="absolute top-[35%] right-[15%] w-36 h-36 bg-amber-300/20 rounded-full blur-2xl animate-float-medium pointer-events-none"
+    ></div>
+    <div
+      class="absolute bottom-[5%] left-[10%] w-60 h-60 bg-purple-300/20 rounded-full blur-3xl animate-drift pointer-events-none"
+    ></div>
 
     <!-- Background clouds -->
-    <div class="absolute top-[10%] left-[15%] text-6xl opacity-15 animate-drift pointer-events-none">☁️</div>
-    <div class="absolute top-[40%] right-[20%] text-5xl opacity-10 animate-float pointer-events-none">☁️</div>
-    <div class="absolute bottom-[25%] left-[5%] text-7xl opacity-10 animate-float-slow pointer-events-none">☁️</div>
+    <div
+      class="absolute top-[10%] left-[15%] text-6xl opacity-15 animate-drift pointer-events-none"
+    >
+      ☁️
+    </div>
+    <div
+      class="absolute top-[40%] right-[20%] text-5xl opacity-10 animate-float pointer-events-none"
+    >
+      ☁️
+    </div>
+    <div
+      class="absolute bottom-[25%] left-[5%] text-7xl opacity-10 animate-float-slow pointer-events-none"
+    >
+      ☁️
+    </div>
 
     <!-- Main Container Card -->
-    <div 
-      :class="['max-w-2xl w-full bg-white/85 backdrop-blur-2xl border border-white rounded-[2.5rem] p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col items-stretch transition-all duration-300', { 'animate-shake': hasError }]"
+    <div
+      :class="[
+        'max-w-2xl w-full bg-white/85 backdrop-blur-2xl border border-white rounded-[2.5rem] p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col items-stretch transition-all duration-300',
+        { 'animate-shake': hasError },
+      ]"
     >
-      
       <!-- Card Header -->
       <div class="text-center mb-8">
-        <span class="bg-[#FFE5D9] text-[#E07A5F] text-[10px] font-bold font-fredoka tracking-wider px-3 py-1.5 rounded-full uppercase">
+        <span
+          class="bg-[#FFE5D9] text-[#E07A5F] text-[10px] font-bold font-fredoka tracking-wider px-3 py-1.5 rounded-full uppercase"
+        >
           TEACHER PORTAL
         </span>
-        <h1 class="font-fredoka text-3xl font-extrabold text-[#2F3E46] mt-3 mb-1.5">
+        <h1
+          class="font-fredoka text-3xl font-extrabold text-[#2F3E46] mt-3 mb-1.5"
+        >
           สมัครสมาชิกครู
         </h1>
         <p class="font-nunito text-[#596A7A] text-xs sm:text-sm font-semibold">
@@ -575,99 +647,159 @@ onUnmounted(() => {
       </div>
 
       <!-- Steps Progress Indicators -->
-      <div class="relative flex items-center justify-between w-full max-w-md mx-auto mb-8 pl-4 pr-4">
+      <div
+        class="relative flex items-center justify-between w-full max-w-md mx-auto mb-8 pl-4 pr-4"
+      >
         <!-- Connector line -->
-        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 rounded -z-10">
-          <div 
+        <div
+          class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 rounded -z-10"
+        >
+          <div
             class="h-full bg-[#FF758F] transition-all duration-300"
-            :style="{ width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' }"
+            :style="{
+              width:
+                currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
+            }"
           ></div>
         </div>
 
         <!-- Step 1 -->
         <div class="flex flex-col items-center">
-          <div 
-            :class="['w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border shadow-sm', 
-              currentStep >= 1 ? 'bg-[#FF758F] text-white border-[#FF758F]' : 'bg-white text-slate-400 border-slate-200'
+          <div
+            :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border shadow-sm',
+              currentStep >= 1
+                ? 'bg-[#FF758F] text-white border-[#FF758F]'
+                : 'bg-white text-slate-400 border-slate-200',
             ]"
           >
             1
           </div>
-          <span :class="['text-[11px] font-bold mt-1.5', currentStep >= 1 ? 'text-[#FF758F]' : 'text-slate-400']">ข้อมูลส่วนตัว</span>
+          <span
+            :class="[
+              'text-[11px] font-bold mt-1.5',
+              currentStep >= 1 ? 'text-[#FF758F]' : 'text-slate-400',
+            ]"
+            >ข้อมูลส่วนตัว</span
+          >
         </div>
 
         <!-- Step 2 -->
         <div class="flex flex-col items-center">
-          <div 
-            :class="['w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border shadow-sm', 
-              currentStep >= 2 ? 'bg-[#FF758F] text-white border-[#FF758F]' : 'bg-white text-slate-400 border-slate-200'
+          <div
+            :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border shadow-sm',
+              currentStep >= 2
+                ? 'bg-[#FF758F] text-white border-[#FF758F]'
+                : 'bg-white text-slate-400 border-slate-200',
             ]"
           >
             2
           </div>
-          <span :class="['text-[11px] font-bold mt-1.5', currentStep >= 2 ? 'text-[#FF758F]' : 'text-slate-400']">ที่อยู่ติดต่อ</span>
+          <span
+            :class="[
+              'text-[11px] font-bold mt-1.5',
+              currentStep >= 2 ? 'text-[#FF758F]' : 'text-slate-400',
+            ]"
+            >ที่อยู่ติดต่อ</span
+          >
         </div>
 
         <!-- Step 3 -->
         <div class="flex flex-col items-center">
-          <div 
-            :class="['w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border shadow-sm', 
-              currentStep >= 3 ? 'bg-[#FF758F] text-white border-[#FF758F]' : 'bg-white text-slate-400 border-slate-200'
+          <div
+            :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border shadow-sm',
+              currentStep >= 3
+                ? 'bg-[#FF758F] text-white border-[#FF758F]'
+                : 'bg-white text-slate-400 border-slate-200',
             ]"
           >
             3
           </div>
-          <span :class="['text-[11px] font-bold mt-1.5', currentStep >= 3 ? 'text-[#FF758F]' : 'text-slate-400']">ข้อมูลโรงเรียน</span>
+          <span
+            :class="[
+              'text-[11px] font-bold mt-1.5',
+              currentStep >= 3 ? 'text-[#FF758F]' : 'text-slate-400',
+            ]"
+            >ข้อมูลโรงเรียน</span
+          >
         </div>
       </div>
 
       <!-- Success Alert Banner -->
-      <div v-if="isSuccess" class="mb-6 bg-teal-50 border-2 border-teal-200 text-teal-800 p-5 rounded-2xl flex items-center gap-3 animate-fade-in-up">
+      <div
+        v-if="isSuccess"
+        class="mb-6 bg-teal-50 border-2 border-teal-200 text-teal-800 p-5 rounded-2xl flex items-center gap-3 animate-fade-in-up"
+      >
         <span class="text-3xl">🎉</span>
         <div class="text-left">
           <h3 class="font-bold text-sm">ลงทะเบียนเสร็จเรียบร้อย</h3>
-          <p class="text-xs text-teal-600 mt-0.5">ระบบกำลังนำท่านไปยังหน้าเข้าสู่ระบบ...</p>
+          <p class="text-xs text-teal-600 mt-0.5">
+            ระบบกำลังนำท่านไปยังหน้าเข้าสู่ระบบ...
+          </p>
         </div>
       </div>
 
       <!-- Form Content -->
-      <form @submit.prevent="handleRegister" class="space-y-6 flex-1 text-left" v-if="!isSuccess">
-        
+      <form
+        @submit.prevent="handleRegister"
+        class="space-y-6 flex-1 text-left"
+        v-if="!isSuccess"
+      >
         <!-- STEP 1: Personal Info -->
         <div v-if="currentStep === 1" class="space-y-5 animate-fade-in-up">
-          
           <!-- Grid of Custom Gender and Prefix dropdowns -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
-            
             <!-- Custom Gender Dropdown -->
-            <div :class="['space-y-1.5 relative gender-dropdown-container', { 'z-40': isGenderDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative gender-dropdown-container',
+                { 'z-40': isGenderDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 เพศ <span class="text-rose-500">*</span>
               </label>
-              
+
               <div class="relative">
-                <button 
+                <button
                   type="button"
-                  @click="isGenderDropdownOpen = !isGenderDropdownOpen; isPrefixDropdownOpen = false"
+                  @click="
+                    isGenderDropdownOpen = !isGenderDropdownOpen;
+                    isPrefixDropdownOpen = false;
+                  "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer"
                 >
-                  <span>{{ genderOptions.find(g => g.value === form.gender)?.label || 'เลือกเพศ' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isGenderDropdownOpen }]"
+                  <span>{{
+                    genderOptions.find((g) => g.value === form.gender)?.label ||
+                    "เลือกเพศ"
+                  }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isGenderDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
 
                 <!-- Custom Dropdown list for Gender -->
                 <transition name="dropdown">
-                  <div 
-                    v-if="isGenderDropdownOpen" 
+                  <div
+                    v-if="isGenderDropdownOpen"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -685,37 +817,55 @@ onUnmounted(() => {
             </div>
 
             <!-- Custom Prefix Dropdown -->
-            <div :class="['space-y-1.5 relative prefix-dropdown-container', { 'z-40': isPrefixDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative prefix-dropdown-container',
+                { 'z-40': isPrefixDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 คำนำหน้าชื่อ <span class="text-rose-500">*</span>
               </label>
-              
+
               <div class="relative">
-                <button 
+                <button
                   type="button"
                   @click="togglePrefixDropdown"
                   :class="[
                     'w-full bg-slate-50 border rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30',
-                    form.gender ? 'border-slate-200 cursor-pointer' : 'border-slate-100 cursor-not-allowed opacity-60'
+                    form.gender
+                      ? 'border-slate-200 cursor-pointer'
+                      : 'border-slate-100 cursor-not-allowed opacity-60',
                   ]"
                 >
-                  <span class="truncate">{{ form.prefix || 'เลือกคำนำหน้า' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isPrefixDropdownOpen }]"
+                  <span class="truncate">{{
+                    form.prefix || "เลือกคำนำหน้า"
+                  }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isPrefixDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
 
                 <!-- Custom Dropdown list for Prefix -->
                 <transition name="dropdown">
-                  <div 
-                    v-if="isPrefixDropdownOpen && form.gender" 
+                  <div
+                    v-if="isPrefixDropdownOpen && form.gender"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -731,21 +881,22 @@ onUnmounted(() => {
                 </transition>
               </div>
             </div>
-
           </div>
 
           <!-- Grid of First Name, Last Name -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
             <!-- First Name Input -->
             <div class="space-y-1.5">
-              <label for="firstName" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="firstName"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 ชื่อจริง <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="firstName"
                 v-model="form.firstName"
-                type="text" 
+                type="text"
                 placeholder="เช่น สมศรี"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
               />
@@ -753,13 +904,16 @@ onUnmounted(() => {
 
             <!-- Last Name Input -->
             <div class="space-y-1.5">
-              <label for="lastName" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="lastName"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 นามสกุล <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="lastName"
                 v-model="form.lastName"
-                type="text" 
+                type="text"
                 placeholder="เช่น ใจดี"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
               />
@@ -767,73 +921,118 @@ onUnmounted(() => {
           </div>
 
           <!-- Date of Birth Input (Custom Datepicker) -->
-          <div :class="['space-y-1.5 relative datepicker-container', { 'z-40': isDatePickerOpen }]">
-            <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+          <div
+            :class="[
+              'space-y-1.5 relative datepicker-container',
+              { 'z-40': isDatePickerOpen },
+            ]"
+          >
+            <label
+              class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+            >
               วันเกิด <span class="text-rose-500">*</span>
             </label>
-            
+
             <div class="relative">
-              <button 
+              <button
                 type="button"
-                @click="isDatePickerOpen = !isDatePickerOpen; isGenderDropdownOpen = false; isPrefixDropdownOpen = false"
+                @click="
+                  isDatePickerOpen = !isDatePickerOpen;
+                  isGenderDropdownOpen = false;
+                  isPrefixDropdownOpen = false;
+                "
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer"
               >
                 <span>{{ displayDob }}</span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke-width="2.5" 
-                  stroke="currentColor" 
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2.5"
+                  stroke="currentColor"
                   class="w-4 h-4 text-slate-400 flex-shrink-0 ml-1"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                  />
                 </svg>
               </button>
 
               <!-- Custom Datepicker Dropdown Card -->
               <transition name="dropdown">
-                <div 
-                  v-if="isDatePickerOpen" 
+                <div
+                  v-if="isDatePickerOpen"
                   class="absolute z-40 bottom-full left-0 w-full max-w-sm mb-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 space-y-3"
                 >
                   <!-- Month/Year selectors -->
                   <div class="flex items-center justify-between gap-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       @click="changeMonth(-1)"
                       class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2.5"
+                        stroke="currentColor"
+                        class="w-4 h-4"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M15.75 19.5L8.25 12l7.5-7.5"
+                        />
                       </svg>
                     </button>
-                    
+
                     <div class="flex items-center gap-1.5">
                       <!-- Month Select -->
-                      <select 
+                      <select
                         v-model="dpMonth"
                         class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none"
                       >
-                        <option v-for="(m, idx) in dpMonths" :key="m" :value="idx">{{ m }}</option>
+                        <option
+                          v-for="(m, idx) in dpMonths"
+                          :key="m"
+                          :value="idx"
+                        >
+                          {{ m }}
+                        </option>
                       </select>
-                      
+
                       <!-- Year Select -->
-                      <select 
+                      <select
                         v-model="dpYear"
                         class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none"
                       >
-                        <option v-for="y in dpYears" :key="y" :value="y">{{ y + 543 }}</option>
+                        <option v-for="y in dpYears" :key="y" :value="y">
+                          {{ y + 543 }}
+                        </option>
                       </select>
                     </div>
 
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       @click="changeMonth(1)"
                       class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2.5"
+                        stroke="currentColor"
+                        class="w-4 h-4"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -842,8 +1041,8 @@ onUnmounted(() => {
                   <div>
                     <!-- Weekday labels -->
                     <div class="grid grid-cols-7 gap-1 text-center mb-1">
-                      <span 
-                        v-for="dayName in dpWeekDays" 
+                      <span
+                        v-for="dayName in dpWeekDays"
                         :key="dayName"
                         class="text-[10px] font-bold text-slate-400 uppercase py-1"
                       >
@@ -860,9 +1059,15 @@ onUnmounted(() => {
                         @click="selectDate(item)"
                         :class="[
                           'aspect-square rounded-lg text-xs font-semibold flex items-center justify-center transition-all duration-100 cursor-pointer relative',
-                          item.monthOffset !== 0 ? 'text-slate-300' : 'text-slate-700',
-                          item.isSelected ? 'bg-[#FF758F] text-white font-bold shadow-md shadow-pink-100' : 'hover:bg-pink-50 hover:text-[#FF758F]',
-                          item.isToday && !item.isSelected ? 'border border-[#FF758F] text-[#FF758F]' : ''
+                          item.monthOffset !== 0
+                            ? 'text-slate-300'
+                            : 'text-slate-700',
+                          item.isSelected
+                            ? 'bg-[#FF758F] text-white font-bold shadow-md shadow-pink-100'
+                            : 'hover:bg-pink-50 hover:text-[#FF758F]',
+                          item.isToday && !item.isSelected
+                            ? 'border border-[#FF758F] text-[#FF758F]'
+                            : '',
                         ]"
                       >
                         {{ item.day }}
@@ -876,16 +1081,18 @@ onUnmounted(() => {
 
           <!-- Grid of Email and Phone Number -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
             <!-- Email Input -->
             <div class="space-y-1.5">
-              <label for="email" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="email"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 อีเมลติดต่อ <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="email"
                 v-model="form.email"
-                type="email" 
+                type="email"
                 placeholder="เช่น somchai@email.com"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
               />
@@ -893,29 +1100,35 @@ onUnmounted(() => {
 
             <!-- Phone Input -->
             <div class="space-y-1.5">
-              <label for="phone" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="phone"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 เบอร์โทรศัพท์ <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="phone"
                 v-model="form.phone"
-                type="tel" 
+                type="tel"
                 placeholder="เช่น 0812345678"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
               />
             </div>
           </div>
-
         </div>
 
         <!-- STEP 2: Home Address Info -->
         <div v-if="currentStep === 2" class="space-y-4 animate-fade-in-up">
           <!-- Address Detail -->
           <div class="space-y-1.5">
-            <label for="address" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
-              ที่อยู่ติดต่อ (บ้านเลขที่ ถนน ซอย) <span class="text-rose-500">*</span>
+            <label
+              for="address"
+              class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+            >
+              ที่อยู่ติดต่อ (บ้านเลขที่ ถนน ซอย)
+              <span class="text-rose-500">*</span>
             </label>
-            <textarea 
+            <textarea
               id="address"
               v-model="form.address"
               rows="2"
@@ -927,31 +1140,49 @@ onUnmounted(() => {
           <!-- Province / District Synced Dropdowns -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Province Custom Dropdown -->
-            <div :class="['space-y-1.5 relative province-dropdown-container', { 'z-40': isProvinceDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative province-dropdown-container',
+                { 'z-40': isProvinceDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 จังหวัด <span class="text-rose-500">*</span>
               </label>
               <div class="relative">
-                <button 
+                <button
                   type="button"
-                  @click="isProvinceDropdownOpen = !isProvinceDropdownOpen; isDistrictDropdownOpen = false; isSubdistrictDropdownOpen = false"
+                  @click="
+                    isProvinceDropdownOpen = !isProvinceDropdownOpen;
+                    isDistrictDropdownOpen = false;
+                    isSubdistrictDropdownOpen = false;
+                  "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer"
                 >
-                  <span>{{ form.province || 'กรุณาเลือกจังหวัด' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isProvinceDropdownOpen }]"
+                  <span>{{ form.province || "กรุณาเลือกจังหวัด" }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isProvinceDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
                 <transition name="dropdown">
-                  <div 
-                    v-if="isProvinceDropdownOpen" 
+                  <div
+                    v-if="isProvinceDropdownOpen"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -969,32 +1200,50 @@ onUnmounted(() => {
             </div>
 
             <!-- District Custom Dropdown -->
-            <div :class="['space-y-1.5 relative district-dropdown-container', { 'z-40': isDistrictDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative district-dropdown-container',
+                { 'z-40': isDistrictDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 อำเภอ / เขต <span class="text-rose-500">*</span>
               </label>
               <div class="relative">
-                <button 
+                <button
                   type="button"
                   :disabled="!form.province"
-                  @click="isDistrictDropdownOpen = !isDistrictDropdownOpen; isProvinceDropdownOpen = false; isSubdistrictDropdownOpen = false"
+                  @click="
+                    isDistrictDropdownOpen = !isDistrictDropdownOpen;
+                    isProvinceDropdownOpen = false;
+                    isSubdistrictDropdownOpen = false;
+                  "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <span>{{ form.district || 'กรุณาเลือกอำเภอ' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isDistrictDropdownOpen }]"
+                  <span>{{ form.district || "กรุณาเลือกอำเภอ" }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isDistrictDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
                 <transition name="dropdown">
-                  <div 
-                    v-if="isDistrictDropdownOpen" 
+                  <div
+                    v-if="isDistrictDropdownOpen"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -1015,32 +1264,50 @@ onUnmounted(() => {
           <!-- Subdistrict / Postal Code Dropdowns -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Subdistrict Custom Dropdown -->
-            <div :class="['space-y-1.5 relative subdistrict-dropdown-container', { 'z-40': isSubdistrictDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative subdistrict-dropdown-container',
+                { 'z-40': isSubdistrictDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 ตำบล / แขวง <span class="text-rose-500">*</span>
               </label>
               <div class="relative">
-                <button 
+                <button
                   type="button"
                   :disabled="!form.district"
-                  @click="isSubdistrictDropdownOpen = !isSubdistrictDropdownOpen; isProvinceDropdownOpen = false; isDistrictDropdownOpen = false"
+                  @click="
+                    isSubdistrictDropdownOpen = !isSubdistrictDropdownOpen;
+                    isProvinceDropdownOpen = false;
+                    isDistrictDropdownOpen = false;
+                  "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <span>{{ form.subdistrict || 'กรุณาเลือกตำบล' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isSubdistrictDropdownOpen }]"
+                  <span>{{ form.subdistrict || "กรุณาเลือกตำบล" }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isSubdistrictDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
                 <transition name="dropdown">
-                  <div 
-                    v-if="isSubdistrictDropdownOpen" 
+                  <div
+                    v-if="isSubdistrictDropdownOpen"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -1059,13 +1326,16 @@ onUnmounted(() => {
 
             <!-- Postal Code Input (Readonly) -->
             <div class="space-y-1.5">
-              <label for="postalCode" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="postalCode"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 รหัสไปรษณีย์ <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="postalCode"
                 v-model="form.postalCode"
-                type="text" 
+                type="text"
                 placeholder="กรอกข้อมูลอัตโนมัติ"
                 readonly
                 class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:outline-none transition-all duration-200 text-sm cursor-not-allowed opacity-80"
@@ -1079,13 +1349,16 @@ onUnmounted(() => {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- School Name Input -->
             <div class="space-y-1.5">
-              <label for="schoolName" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="schoolName"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 ชื่อโรงเรียน <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="schoolName"
                 v-model="form.schoolName"
-                type="text" 
+                type="text"
                 placeholder="เช่น โรงเรียนสตรีวิทยา"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
               />
@@ -1093,13 +1366,16 @@ onUnmounted(() => {
 
             <!-- Subject Taught Input -->
             <div class="space-y-1.5">
-              <label for="subjectTaught" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="subjectTaught"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 วิชาที่สอน <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="subjectTaught"
                 v-model="form.subjectTaught"
-                type="text" 
+                type="text"
                 placeholder="เช่น คณิตศาสตร์ ม.1"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
               />
@@ -1108,10 +1384,14 @@ onUnmounted(() => {
 
           <!-- School Address Detail -->
           <div class="space-y-1.5">
-            <label for="schoolAddress" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
-              ที่ตั้งโรงเรียน (เลขที่ ถนน ซอย) <span class="text-rose-500">*</span>
+            <label
+              for="schoolAddress"
+              class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+            >
+              ที่ตั้งโรงเรียน (เลขที่ ถนน ซอย)
+              <span class="text-rose-500">*</span>
             </label>
-            <textarea 
+            <textarea
               id="schoolAddress"
               v-model="form.schoolAddress"
               rows="2"
@@ -1123,31 +1403,52 @@ onUnmounted(() => {
           <!-- School Province / District Synced Dropdowns -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- School Province Custom Dropdown -->
-            <div :class="['space-y-1.5 relative school-province-dropdown-container', { 'z-40': isSchoolProvinceDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative school-province-dropdown-container',
+                { 'z-40': isSchoolProvinceDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 จังหวัด (โรงเรียน) <span class="text-rose-500">*</span>
               </label>
               <div class="relative">
-                <button 
+                <button
                   type="button"
-                  @click="isSchoolProvinceDropdownOpen = !isSchoolProvinceDropdownOpen; isSchoolDistrictDropdownOpen = false; isSchoolSubdistrictDropdownOpen = false"
+                  @click="
+                    isSchoolProvinceDropdownOpen =
+                      !isSchoolProvinceDropdownOpen;
+                    isSchoolDistrictDropdownOpen = false;
+                    isSchoolSubdistrictDropdownOpen = false;
+                  "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer"
                 >
-                  <span>{{ form.schoolProvince || 'กรุณาเลือกจังหวัดโรงเรียน' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isSchoolProvinceDropdownOpen }]"
+                  <span>{{
+                    form.schoolProvince || "กรุณาเลือกจังหวัดโรงเรียน"
+                  }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isSchoolProvinceDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
                 <transition name="dropdown">
-                  <div 
-                    v-if="isSchoolProvinceDropdownOpen" 
+                  <div
+                    v-if="isSchoolProvinceDropdownOpen"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -1165,32 +1466,53 @@ onUnmounted(() => {
             </div>
 
             <!-- School District Custom Dropdown -->
-            <div :class="['space-y-1.5 relative school-district-dropdown-container', { 'z-40': isSchoolDistrictDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative school-district-dropdown-container',
+                { 'z-40': isSchoolDistrictDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 อำเภอ / เขต (โรงเรียน) <span class="text-rose-500">*</span>
               </label>
               <div class="relative">
-                <button 
+                <button
                   type="button"
                   :disabled="!form.schoolProvince"
-                  @click="isSchoolDistrictDropdownOpen = !isSchoolDistrictDropdownOpen; isSchoolProvinceDropdownOpen = false; isSchoolSubdistrictDropdownOpen = false"
+                  @click="
+                    isSchoolDistrictDropdownOpen =
+                      !isSchoolDistrictDropdownOpen;
+                    isSchoolProvinceDropdownOpen = false;
+                    isSchoolSubdistrictDropdownOpen = false;
+                  "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <span>{{ form.schoolDistrict || 'กรุณาเลือกอำเภอโรงเรียน' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isSchoolDistrictDropdownOpen }]"
+                  <span>{{
+                    form.schoolDistrict || "กรุณาเลือกอำเภอโรงเรียน"
+                  }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isSchoolDistrictDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
                 <transition name="dropdown">
-                  <div 
-                    v-if="isSchoolDistrictDropdownOpen" 
+                  <div
+                    v-if="isSchoolDistrictDropdownOpen"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -1211,32 +1533,53 @@ onUnmounted(() => {
           <!-- School Subdistrict / Postal Code Dropdowns -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- School Subdistrict Custom Dropdown -->
-            <div :class="['space-y-1.5 relative school-subdistrict-dropdown-container', { 'z-40': isSchoolSubdistrictDropdownOpen }]">
-              <label class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+            <div
+              :class="[
+                'space-y-1.5 relative school-subdistrict-dropdown-container',
+                { 'z-40': isSchoolSubdistrictDropdownOpen },
+              ]"
+            >
+              <label
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 ตำบล / แขวง (โรงเรียน) <span class="text-rose-500">*</span>
               </label>
               <div class="relative">
-                <button 
+                <button
                   type="button"
                   :disabled="!form.schoolDistrict"
-                  @click="isSchoolSubdistrictDropdownOpen = !isSchoolSubdistrictDropdownOpen; isSchoolProvinceDropdownOpen = false; isSchoolDistrictDropdownOpen = false"
+                  @click="
+                    isSchoolSubdistrictDropdownOpen =
+                      !isSchoolSubdistrictDropdownOpen;
+                    isSchoolProvinceDropdownOpen = false;
+                    isSchoolDistrictDropdownOpen = false;
+                  "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <span>{{ form.schoolSubdistrict || 'กรุณาเลือกตำบลโรงเรียน' }}</span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke-width="2.5" 
-                    stroke="currentColor" 
-                    :class="['w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1', { 'rotate-180': isSchoolSubdistrictDropdownOpen }]"
+                  <span>{{
+                    form.schoolSubdistrict || "กรุณาเลือกตำบลโรงเรียน"
+                  }}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    :class="[
+                      'w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-1',
+                      { 'rotate-180': isSchoolSubdistrictDropdownOpen },
+                    ]"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
                   </svg>
                 </button>
                 <transition name="dropdown">
-                  <div 
-                    v-if="isSchoolSubdistrictDropdownOpen" 
+                  <div
+                    v-if="isSchoolSubdistrictDropdownOpen"
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
@@ -1255,13 +1598,16 @@ onUnmounted(() => {
 
             <!-- School Postal Code Input (Readonly) -->
             <div class="space-y-1.5">
-              <label for="schoolPostalCode" class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1">
+              <label
+                for="schoolPostalCode"
+                class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+              >
                 รหัสไปรษณีย์ (โรงเรียน) <span class="text-rose-500">*</span>
               </label>
-              <input 
+              <input
                 id="schoolPostalCode"
                 v-model="form.schoolPostalCode"
-                type="text" 
+                type="text"
                 placeholder="กรอกข้อมูลอัตโนมัติ"
                 readonly
                 class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:outline-none transition-all duration-200 text-sm cursor-not-allowed opacity-80"
@@ -1272,7 +1618,7 @@ onUnmounted(() => {
 
         <!-- Navigation Buttons -->
         <div class="flex items-center gap-4 pt-4 border-t border-slate-100/60">
-          <button 
+          <button
             v-if="currentStep > 1"
             type="button"
             @click="handlePrevStep"
@@ -1282,7 +1628,7 @@ onUnmounted(() => {
             ย้อนกลับ
           </button>
 
-          <button 
+          <button
             v-if="currentStep < 3"
             type="button"
             @click="handleNextStep"
@@ -1291,16 +1637,32 @@ onUnmounted(() => {
             ขั้นตอนถัดไป
           </button>
 
-          <button 
+          <button
             v-if="currentStep === 3"
             type="submit"
             class="flex-1 bg-gradient-to-r from-[#FF758F] to-[#FF4D6D] text-white font-fredoka font-bold text-sm py-3.5 px-5 rounded-2xl shadow-lg transition-all duration-300 cursor-pointer active:scale-98 hover:shadow-xl hover:shadow-pink-200 flex items-center justify-center gap-2"
             :disabled="isLoading"
           >
             <template v-if="isLoading">
-              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                class="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               <span>กำลังบันทึกข้อมูล...</span>
             </template>
@@ -1312,18 +1674,20 @@ onUnmounted(() => {
       </form>
 
       <!-- Bottom Redirect Link to Login -->
-      <div class="mt-6 text-center border-t border-slate-100 pt-4" v-if="!isSuccess">
+      <div
+        class="mt-6 text-center border-t border-slate-100 pt-4"
+        v-if="!isSuccess"
+      >
         <p class="text-xs sm:text-sm font-semibold text-slate-400">
-          มีบัญชีผู้ใช้งานอยู่แล้วใช่ไหม? 
-          <NuxtLink 
-            to="/teachers/login" 
+          มีบัญชีผู้ใช้งานอยู่แล้วใช่ไหม?
+          <NuxtLink
+            to="/teachers/login"
             class="text-[#FF758F] font-bold hover:text-[#FF4D6D] underline ml-1 cursor-pointer"
           >
             เข้าสู่ระบบที่นี่
           </NuxtLink>
         </p>
       </div>
-
     </div>
   </div>
 </template>
@@ -1361,18 +1725,24 @@ onUnmounted(() => {
 }
 
 @keyframes toastProgress {
-  from { width: 100%; }
-  to { width: 0%; }
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 .animate-toast-progress {
   animation: toastProgress 3s linear forwards;
 }
 
 /* Dropdown transition */
-.dropdown-enter-active, .dropdown-leave-active {
+.dropdown-enter-active,
+.dropdown-leave-active {
   transition: all 0.2s ease-out;
 }
-.dropdown-enter-from, .dropdown-leave-to {
+.dropdown-enter-from,
+.dropdown-leave-to {
   opacity: 0;
   transform: translateY(-8px);
 }
