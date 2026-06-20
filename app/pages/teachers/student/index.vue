@@ -14,15 +14,8 @@ const isMobileSidebarOpen = ref(false)
 // State for Logout Confirmation Modal
 const isLogoutModalOpen = ref(false)
 
-// Mock Teacher Profile Data
-const teacherProfile = ref({
-  name: 'สมชาย ใจดี',
-  title: 'คุณครูประจำวิชาคณิตศาสตร์',
-  school: 'โรงเรียนสตรีวิทยา',
-  subject: 'คณิตศาสตร์',
-  email: 'somchai.jai@email.com',
-  avatarInitials: 'สช'
-})
+const { teacherProfile, requireAuth, logout } = useTeacherSession()
+requireAuth()
 
 // Current date display in Thai format
 const currentDateText = computed(() => {
@@ -282,7 +275,7 @@ const handleAddStudent = async () => {
     targetClass.students.sort((a, b) => a.no - b.no)
     targetClass.studentsCount = targetClass.students.length
     
-    showToast(`เพิ่ม ด.ช./ด.ญ. ${newStudentFirstName.value} เรียบร้อยแล้ว!`, 'success')
+    showToast(`เพิ่ม ${newStudentFirstName.value} เรียบร้อยแล้ว!`, 'success')
   }
   
   isSubmitting.value = false
@@ -402,9 +395,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
-  setTimeout(() => {
-    navigateTo('/teachers/login')
-  }, 1000)
+  logout()
 }
 </script>
 
@@ -926,7 +917,7 @@ const confirmLogout = () => {
                 <div class="space-y-1">
                   <label class="text-[10px] text-slate-400 font-bold block uppercase tracking-wide">เลขที่นักเรียน</label>
                   <input 
-                    type="number" 
+                    type="text" 
                     v-model="newStudentNo"
                     placeholder="เช่น 16"
                     min="1"

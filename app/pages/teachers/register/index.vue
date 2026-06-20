@@ -1,503 +1,377 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
 
 useHead({
-  title: 'สมัครสมาชิกครู - Student Attendance System',
+  title: "สมัครสมาชิกครู - Student Attendance System",
   meta: [
-    { name: 'description', content: 'ลงทะเบียนสมัครสมาชิกสำหรับครู เพื่อเข้าใช้งานระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียน' }
-  ]
-})
+    {
+      name: "description",
+      content:
+        "ลงทะเบียนสมัครสมาชิกสำหรับครู เพื่อเข้าใช้งานระบบบันทึกเวลาเรียนและเช็คชื่อนักเรียน",
+    },
+  ],
+});
 
 // Wizard Steps State
-const currentStep = ref(1)
-const isLoading = ref(false)
-const isSuccess = ref(false)
-const hasError = ref(false)
+const currentStep = ref(1);
+const isLoading = ref(false);
+const isSuccess = ref(false);
+const hasError = ref(false);
 
 // SweetAlert-style Toast Notifications State
-const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' }[]>([])
-let toastId = 0
+const toasts = ref<
+  { id: number; message: string; type: "success" | "error" | "warning" }[]
+>([]);
+let toastId = 0;
 
-const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
-  const id = toastId++
-  toasts.value.push({ id, message, type })
+const showToast = (
+  message: string,
+  type: "success" | "error" | "warning" = "success",
+) => {
+  const id = toastId++;
+  toasts.value.push({ id, message, type });
 
-  if (type === 'error') {
-    hasError.value = true
+  if (type === "error") {
+    hasError.value = true;
     setTimeout(() => {
-      hasError.value = false
-    }, 500)
+      hasError.value = false;
+    }, 500);
   }
 
   // Remove toast after 3 seconds
   setTimeout(() => {
-    toasts.value = toasts.value.filter(t => t.id !== id)
-  }, 3000)
-}
+    toasts.value = toasts.value.filter((t) => t.id !== id);
+  }, 3000);
+};
 
 // Form Registration State
 const form = reactive({
   // Step 1: Personal Info
-  prefix: '',
-  gender: '',
-  firstName: '',
-  lastName: '',
-  dob: '',
-  email: '',
-  phone: '',
+  prefix: "",
+  gender: "",
+  firstName: "",
+  lastName: "",
+  dob: "",
+  email: "",
+  phone: "",
+  password: "",
 
   // Step 2: Home Address
-  address: '',
-  province: '',
-  district: '',
-  subdistrict: '',
-  postalCode: '',
+  address: "",
+  province: "",
+  district: "",
+  subdistrict: "",
+  postalCode: "",
 
   // Step 3: School Info
-  schoolName: '',
-  subjectTaught: '',
-  schoolAddress: '',
-  schoolProvince: '',
-  schoolDistrict: '',
-  schoolSubdistrict: '',
-  schoolPostalCode: ''
-})
+  schoolName: "",
+  subjectTaught: "",
+  schoolAddress: "",
+  schoolProvince: "",
+  schoolDistrict: "",
+  schoolSubdistrict: "",
+  schoolPostalCode: "",
+});
 
 // Custom Dropdowns States
-const isGenderDropdownOpen = ref(false)
-const isPrefixDropdownOpen = ref(false)
+const isGenderDropdownOpen = ref(false);
+const isPrefixDropdownOpen = ref(false);
 
 // Custom Address Dropdowns States
-const isProvinceDropdownOpen = ref(false)
-const isDistrictDropdownOpen = ref(false)
-const isSubdistrictDropdownOpen = ref(false)
+const isProvinceDropdownOpen = ref(false);
+const isDistrictDropdownOpen = ref(false);
+const isSubdistrictDropdownOpen = ref(false);
 
-const isSchoolProvinceDropdownOpen = ref(false)
-const isSchoolDistrictDropdownOpen = ref(false)
-const isSchoolSubdistrictDropdownOpen = ref(false)
+const isSchoolProvinceDropdownOpen = ref(false);
+const isSchoolDistrictDropdownOpen = ref(false);
+const isSchoolSubdistrictDropdownOpen = ref(false);
 
-const genderOptions = [
-  { label: 'ชาย', value: 'ชาย' },
-  { label: 'หญิง', value: 'หญิง' },
-  { label: 'อื่นๆ / ไม่ระบุ', value: 'อื่นๆ' }
-]
+// Backend states
+const gendersList = ref<{ id: string; name: string }[]>([]);
+const prefixesList = ref<{ id: string; name: string }[]>([]);
+const provincesList = ref<{ id: string; name: string }[]>([]);
 
-const selectGender = (val: string) => {
-  form.gender = val
-  isGenderDropdownOpen.value = false
-}
+// Reference IDs
+const selectedGenderID = ref("");
+const selectedPrefixID = ref("");
+
+// Location composables
+const homeAddress = useAddressSelector();
+const schoolAddress = useAddressSelector();
+
+const fetchGenders = async () => {
+  try {
+    const res: any = await $fetch("http://localhost:8080/api/v1/system/gender");
+    gendersList.value = res.data || [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const fetchPrefixes = async (genderID: string) => {
+  try {
+    const res: any = await $fetch(
+      `http://localhost:8080/api/v1/system/prefix?gender_id=${genderID}`,
+    );
+    prefixesList.value = res.data || [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const fetchProvinces = async () => {
+  try {
+    const res: any = await $fetch(
+      "http://localhost:8080/api/v1/system/province",
+    );
+    provincesList.value = res.data || [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const genderOptions = computed(() => {
+  return gendersList.value.map((g) => ({ label: g.name, value: g.id }));
+});
+
+const selectGender = (genderID: string) => {
+  const g = gendersList.value.find((item) => item.id === genderID);
+  if (g) {
+    form.gender = g.name;
+    selectedGenderID.value = g.id;
+    form.prefix = "";
+    selectedPrefixID.value = "";
+    prefixesList.value = [];
+    isGenderDropdownOpen.value = false;
+    fetchPrefixes(g.id);
+  }
+};
 
 const prefixOptions = computed(() => {
-  if (form.gender === 'ชาย') {
-    return ['นาย', 'ดร.', 'ครู', 'คุณ']
-  }
-  if (form.gender === 'หญิง') {
-    return ['นางสาว', 'นาง', 'ดร.', 'ครู', 'คุณ']
-  }
-  if (form.gender === 'อื่นๆ') {
-    return ['นาย', 'นางสาว', 'นาง', 'ดร.', 'ครู', 'คุณ']
-  }
-  return []
-})
+  return prefixesList.value;
+});
 
-const selectPrefix = (pref: string) => {
-  form.prefix = pref
-  isPrefixDropdownOpen.value = false
-}
+const selectPrefix = (pref: { id: string; name: string }) => {
+  form.prefix = pref.name;
+  selectedPrefixID.value = pref.id;
+  isPrefixDropdownOpen.value = false;
+};
 
 const togglePrefixDropdown = () => {
   if (form.gender) {
-    isPrefixDropdownOpen.value = !isPrefixDropdownOpen.value
-    isGenderDropdownOpen.value = false
+    isPrefixDropdownOpen.value = !isPrefixDropdownOpen.value;
+    isGenderDropdownOpen.value = false;
   } else {
-    showToast('กรุณาเลือกเพศก่อนระบุคำนำหน้าชื่อ', 'warning')
+    showToast("กรุณาเลือกเพศก่อนระบุคำนำหน้าชื่อ", "warning");
   }
-}
+};
 
 // Watch gender changes to reset selected prefix
-watch(() => form.gender, () => {
-  form.prefix = ''
-  isPrefixDropdownOpen.value = false
-})
+watch(
+  () => form.gender,
+  () => {
+    form.prefix = "";
+    isPrefixDropdownOpen.value = false;
+  },
+);
 
 // Custom Address Select Handlers
-const selectProvince = (prov: string) => {
-  form.province = prov
-  isProvinceDropdownOpen.value = false
-}
+const selectProvince = (prov: { id: string; name: string }) => {
+  form.province = prov.name;
+  form.district = "";
+  form.subdistrict = "";
+  form.postalCode = "";
+  homeAddress.reset();
+  isProvinceDropdownOpen.value = false;
+  homeAddress.fetchDistricts(prov.id);
+};
 
-const selectDistrict = (dist: string) => {
-  form.district = dist
-  isDistrictDropdownOpen.value = false
-}
+const selectDistrict = (dist: { id: string; name: string }) => {
+  form.district = dist.name;
+  form.subdistrict = "";
+  form.postalCode = "";
+  homeAddress.subdistrictsList.value = [];
+  isDistrictDropdownOpen.value = false;
+  homeAddress.fetchSubdistricts(dist.id);
+};
 
-const selectSubdistrict = (sub: string) => {
-  form.subdistrict = sub
-  isSubdistrictDropdownOpen.value = false
-}
+const selectSubdistrict = async (sub: { id: string; name: string }) => {
+  form.subdistrict = sub.name;
+  form.postalCode = "";
+  isSubdistrictDropdownOpen.value = false;
+  form.postalCode = await homeAddress.fetchZipcode(sub.id);
+};
 
-const selectSchoolProvince = (prov: string) => {
-  form.schoolProvince = prov
-  isSchoolProvinceDropdownOpen.value = false
-}
+const selectSchoolProvince = (prov: { id: string; name: string }) => {
+  form.schoolProvince = prov.name;
+  form.schoolDistrict = "";
+  form.schoolSubdistrict = "";
+  form.schoolPostalCode = "";
+  schoolAddress.reset();
+  isSchoolProvinceDropdownOpen.value = false;
+  schoolAddress.fetchDistricts(prov.id);
+};
 
-const selectSchoolDistrict = (dist: string) => {
-  form.schoolDistrict = dist
-  isSchoolDistrictDropdownOpen.value = false
-}
+const selectSchoolDistrict = (dist: { id: string; name: string }) => {
+  form.schoolDistrict = dist.name;
+  form.schoolSubdistrict = "";
+  form.schoolPostalCode = "";
+  schoolAddress.subdistrictsList.value = [];
+  isSchoolDistrictDropdownOpen.value = false;
+  schoolAddress.fetchSubdistricts(dist.id);
+};
 
-const selectSchoolSubdistrict = (sub: string) => {
-  form.schoolSubdistrict = sub
-  isSchoolSubdistrictDropdownOpen.value = false
-}
-
-// Custom Datepicker State
-const isDatePickerOpen = ref(false)
-const dpMonth = ref(new Date().getMonth())
-const dpYear = ref(new Date().getFullYear())
-
-// Years array for selector (from 1940 to current year)
-const currentYear = new Date().getFullYear()
-const dpYears = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i)
-
-const dpMonths = [
-  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-]
-
-const dpWeekDays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
-
-// Days calculation for calendar grid
-const dpGridDays = computed(() => {
-  const year = dpYear.value
-  const month = dpMonth.value
-
-  const firstDay = new Date(year, month, 1)
-  const startDayOfWeek = firstDay.getDay()
-  const totalDays = new Date(year, month + 1, 0).getDate()
-  const prevMonthTotalDays = new Date(year, month, 0).getDate()
-
-  const days = []
-
-  // Padding from previous month
-  for (let i = startDayOfWeek - 1; i >= 0; i--) {
-    const d = prevMonthTotalDays - i
-    const prevMonth = month === 0 ? 11 : month - 1
-    const prevYear = month === 0 ? year - 1 : year
-    days.push({
-      day: d,
-      monthOffset: -1,
-      isToday: false,
-      isSelected: false,
-      dateString: `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-    })
-  }
-
-  // Current month days
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  const selectedStr = form.dob
-
-  for (let d = 1; d <= totalDays; d++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-    days.push({
-      day: d,
-      monthOffset: 0,
-      isToday: dateStr === todayStr,
-      isSelected: dateStr === selectedStr,
-      dateString: dateStr
-    })
-  }
-
-  // Padding from next month
-  const remaining = 42 - days.length
-  for (let d = 1; d <= remaining; d++) {
-    const nextMonth = month === 11 ? 0 : month + 1
-    const nextYear = month === 11 ? year + 1 : year
-    days.push({
-      day: d,
-      monthOffset: 1,
-      isToday: false,
-      isSelected: false,
-      dateString: `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-    })
-  }
-
-  return days
-})
-
-const selectDate = (dayItem: { day: number; monthOffset: number; dateString: string }) => {
-  form.dob = dayItem.dateString
-
-  const parts = dayItem.dateString.split('-').map(Number)
-  if (parts.length === 3) {
-    const y = parts[0]
-    const m = parts[1]
-    if (y !== undefined && m !== undefined) {
-      dpYear.value = y
-      dpMonth.value = m - 1
-    }
-  }
-
-  isDatePickerOpen.value = false
-}
-
-// Watch form.dob to update picker view
-watch(() => form.dob, (newVal) => {
-  if (newVal) {
-    const parts = newVal.split('-')
-    if (parts.length === 3) {
-      const y = parseInt(parts[0] || '', 10)
-      const m = parseInt(parts[1] || '', 10) - 1
-      if (!isNaN(y) && !isNaN(m)) {
-        dpYear.value = y
-        dpMonth.value = m
-      }
-    }
-  }
-})
-
-// Helper to format date for display on button
-const displayDob = computed(() => {
-  if (!form.dob) return 'เลือกวันเกิด'
-  const parts = form.dob.split('-')
-  if (parts.length !== 3) return form.dob
-  const y = parseInt(parts[0] || '', 10)
-  const m = parseInt(parts[1] || '', 10) - 1
-  const d = parseInt(parts[2] || '', 10)
-
-  if (isNaN(y) || isNaN(m) || isNaN(d)) return form.dob
-
-  const thaiYear = y + 543
-  const thaiMonth = dpMonths[m] || ''
-  return `${d} ${thaiMonth} ${thaiYear}`
-})
-
-const changeMonth = (offset: number) => {
-  let newMonth = dpMonth.value + offset
-  let newYear = dpYear.value
-
-  if (newMonth < 0) {
-    newMonth = 11
-    newYear -= 1
-  } else if (newMonth > 11) {
-    newMonth = 0
-    newYear += 1
-  }
-
-  dpMonth.value = newMonth
-  dpYear.value = newYear
-}
-
-// Synced Location Data Mock Database
-const thaiLocations: Record<string, { districts: Record<string, string[]>; defaultPostal: string }> = {
-  'กรุงเทพมหานคร': {
-    districts: {
-      'เขตปทุมวัน': ['แขวงปทุมวัน', 'แขวงลุมพินี', 'แขวงรองเมือง', 'แขวงวังใหม่'],
-      'เขตจตุจักร': ['แขวงจตุจักร', 'แขวงลาดยาว', 'แขวงเสนานิคม', 'แขวงจันทรเกษม'],
-      'เขตบางรัก': ['แขวงบางรัก', 'แขวงสีลม', 'แขวงสุริยวงศ์', 'แขวงมหาพฤฒาราม'],
-      'เขตห้วยขวาง': ['แขวงห้วยขวาง', 'แขวงบางกะปิ', 'แขวงสามเสนนอก']
-    },
-    defaultPostal: '10330'
-  },
-  'เชียงใหม่': {
-    districts: {
-      'อำเภอเมืองเชียงใหม่': ['ตำบลช้างคลาน', 'ตำบลศรีภูมิ', 'ตำบลสุเทพ', 'ตำบลวัดเกต'],
-      'อำเภอแม่ริม': ['ตำบลแม่สา', 'ตำบลริมใต้', 'ตำบลโป่งแยง', 'ตำบลห้วยทราย'],
-      'อำเภอหางดง': ['ตำบลหางดง', 'ตำบลหนองควาย', 'ตำบลบ้านปง', 'ตำบลน้ำแพร่']
-    },
-    defaultPostal: '50000'
-  },
-  'ชลบุรี': {
-    districts: {
-      'อำเภอเมืองชลบุรี': ['ตำบลแสนสุข', 'ตำบลบ้านสวน', 'ตำบลหนองไม้แดง', 'ตำบลอ่างศิลา'],
-      'อำเภอบางละมุง': ['ตำบลพัทยา', 'ตำบลหนองปรือ', 'ตำบลห้วยใหญ่', 'ตำบลนาเกลือ'],
-      'อำเภอศรีราชา': ['ตำบลศรีราชา', 'ตำบลสุรศักดิ์', 'ตำบลบึง', 'ตำบลบ่อวิน']
-    },
-    defaultPostal: '20000'
-  },
-  'ขอนแก่น': {
-    districts: {
-      'อำเภอเมืองขอนแก่น': ['ตำบลในเมือง', 'ตำบลศิลา', 'ตำบลบ้านเป็ด', 'ตำบลบึงเนียม'],
-      'อำเภอกระนวน': ['ตำบลหนองโก', 'ตำบลหนองกุงใหญ่', 'ตำบลห้วยยาง'],
-      'อำเภอชุมแพ': ['ตำบลชุมแพ', 'ตำบลไชยสอ', 'ตำบลหนองไผ่']
-    },
-    defaultPostal: '40000'
-  },
-  'ภูเก็ต': {
-    districts: {
-      'อำเภอเมืองภูเก็ต': ['ตำบลตลาดใหญ่', 'ตำบลตลาดเหนือ', 'ตำบลเกาะแก้ว', 'ตำบลราไวย์'],
-      'อำเภอกะทู้': ['ตำบลกะทู้', 'ตำบลป่าตอง', 'ตำบลกมลา'],
-      'อำเภอถลาง': ['ตำบลเทพกระษัตรี', 'ตำบลศรีสุนทร', 'ตำบลเชิงทะเล']
-    },
-    defaultPostal: '83000'
-  }
-}
-
-// Lists of Provinces
-const provincesList = Object.keys(thaiLocations)
-
-// Synced Address Dropdown Computeds
-const homeDistricts = computed(() => {
-  if (!form.province) return []
-  return Object.keys(thaiLocations[form.province]?.districts || {})
-})
-
-const homeSubdistricts = computed(() => {
-  if (!form.province || !form.district) return []
-  return thaiLocations[form.province]?.districts[form.district] || []
-})
-
-// Watchers for home location reset
-watch(() => form.province, (newVal) => {
-  form.district = ''
-  form.subdistrict = ''
-  if (newVal) {
-    form.postalCode = thaiLocations[newVal]?.defaultPostal || ''
-  } else {
-    form.postalCode = ''
-  }
-})
-
-watch(() => form.district, () => {
-  form.subdistrict = ''
-})
-
-// Synced School Dropdown Computeds
-const schoolDistricts = computed(() => {
-  if (!form.schoolProvince) return []
-  return Object.keys(thaiLocations[form.schoolProvince]?.districts || {})
-})
-
-const schoolSubdistricts = computed(() => {
-  if (!form.schoolProvince || !form.schoolDistrict) return []
-  return thaiLocations[form.schoolProvince]?.districts[form.schoolDistrict] || []
-})
-
-// Watchers for school location reset
-watch(() => form.schoolProvince, (newVal) => {
-  form.schoolDistrict = ''
-  form.schoolSubdistrict = ''
-  if (newVal) {
-    form.schoolPostalCode = thaiLocations[newVal]?.defaultPostal || ''
-  } else {
-    form.schoolPostalCode = ''
-  }
-})
-
-watch(() => form.schoolDistrict, () => {
-  form.schoolSubdistrict = ''
-})
-
-// Input format helper
-const onPostalInput = (type: 'home' | 'school') => {
-  if (type === 'home') {
-    form.postalCode = form.postalCode.replace(/\D/g, '').slice(0, 5)
-  } else {
-    form.schoolPostalCode = form.schoolPostalCode.replace(/\D/g, '').slice(0, 5)
-  }
-}
+const selectSchoolSubdistrict = async (sub: { id: string; name: string }) => {
+  form.schoolSubdistrict = sub.name;
+  form.schoolPostalCode = "";
+  isSchoolSubdistrictDropdownOpen.value = false;
+  form.schoolPostalCode = await schoolAddress.fetchZipcode(sub.id);
+};
 
 // Wizard Navigations Validation
 const handleNextStep = () => {
   if (currentStep.value === 1) {
-    // Step 1 Validation
-    if (!form.gender) return showToast('กรุณาระบุเพศ', 'warning')
-    if (!form.prefix) return showToast('กรุณาเลือกคำนำหน้าชื่อ', 'warning')
-    if (!form.firstName.trim()) return showToast('กรุณากรอกชื่อจริง', 'warning')
-    if (!form.lastName.trim()) return showToast('กรุณากรอกนามสกุล', 'warning')
-    if (!form.dob) return showToast('กรุณาระบุวันเดือนปีเกิด', 'warning')
-    if (!form.email.trim() || !form.email.includes('@')) return showToast('กรุณากรอกอีเมลให้ถูกต้อง', 'warning')
-    if (!form.phone.trim()) return showToast('กรุณากรอกเบอร์โทรศัพท์', 'warning')
+    if (!form.gender) return showToast("กรุณาระบุเพศ", "warning");
+    if (!form.prefix) return showToast("กรุณาเลือกคำนำหน้าชื่อ", "warning");
+    if (!form.firstName.trim())
+      return showToast("กรุณากรอกชื่อจริง", "warning");
+    if (!form.lastName.trim()) return showToast("กรุณากรอกนามสกุล", "warning");
+    if (!form.dob) return showToast("กรุณาระบุวันเดือนปีเกิด", "warning");
+    if (!form.email.trim() || !form.email.includes("@"))
+      return showToast("กรุณากรอกอีเมลให้ถูกต้อง", "warning");
+    if (!form.phone.trim())
+      return showToast("กรุณากรอกเบอร์โทรศัพท์", "warning");
+    if (!form.password || form.password.length < 6)
+      return showToast("กรุณากรอกรหัสผ่านอย่างน้อย 6 ตัวอักษร", "warning");
 
-    currentStep.value = 2
+    currentStep.value = 2;
   } else if (currentStep.value === 2) {
-    // Step 2 Validation
-    if (!form.address.trim()) return showToast('กรุณากรอกรายละเอียดที่อยู่ติดต่อ', 'warning')
-    if (!form.province) return showToast('กรุณาเลือกจังหวัด', 'warning')
-    if (!form.district) return showToast('กรุณาเลือกอำเภอ/เขต', 'warning')
-    if (!form.subdistrict) return showToast('กรุณาเลือกตำบล/แขวง', 'warning')
-    if (!form.postalCode || form.postalCode.length !== 5) return showToast('กรุณากรอกรหัสไปรษณีย์ 5 หลักให้ถูกต้อง', 'warning')
+    if (!form.address.trim())
+      return showToast("กรุณากรอกรายละเอียดที่อยู่ติดต่อ", "warning");
+    if (!form.province) return showToast("กรุณาเลือกจังหวัด", "warning");
+    if (!form.district) return showToast("กรุณาเลือกอำเภอ/เขต", "warning");
+    if (!form.subdistrict) return showToast("กรุณาเลือกตำบล/แขวง", "warning");
+    if (!form.postalCode || form.postalCode.length !== 5)
+      return showToast("กรุณากรอกรหัสไปรษณีย์ 5 หลักให้ถูกต้อง", "warning");
 
-    currentStep.value = 3
+    currentStep.value = 3;
   }
-}
+};
 
 const handlePrevStep = () => {
   if (currentStep.value > 1) {
-    currentStep.value--
+    currentStep.value--;
   }
-}
+};
 
 // Submit Form Registration
 const handleRegister = async () => {
-  // Step 3 Validation
-  if (!form.schoolName.trim()) return showToast('กรุณากรอกชื่อโรงเรียน', 'warning')
-  if (!form.subjectTaught.trim()) return showToast('กรุณากรอกวิชาที่รับผิดชอบสอน', 'warning')
-  if (!form.schoolAddress.trim()) return showToast('กรุณากรอกที่ตั้งโรงเรียน', 'warning')
-  if (!form.schoolProvince) return showToast('กรุณาเลือกจังหวัดของโรงเรียน', 'warning')
-  if (!form.schoolDistrict) return showToast('กรุณาเลือกอำเภอ/เขตของโรงเรียน', 'warning')
-  if (!form.schoolSubdistrict) return showToast('กรุณาเลือกตำบล/แขวงของโรงเรียน', 'warning')
-  if (!form.schoolPostalCode || form.schoolPostalCode.length !== 5) return showToast('กรุณากรอกรหัสไปรษณีย์โรงเรียน 5 หลักให้ถูกต้อง', 'warning')
+  if (!form.schoolName.trim())
+    return showToast("กรุณากรอกชื่อโรงเรียน", "warning");
+  if (!form.subjectTaught.trim())
+    return showToast("กรุณากรอกวิชาที่รับผิดชอบสอน", "warning");
+  if (!form.schoolAddress.trim())
+    return showToast("กรุณากรอกที่ตั้งโรงเรียน", "warning");
+  if (!form.schoolProvince)
+    return showToast("กรุณาเลือกจังหวัดของโรงเรียน", "warning");
+  if (!form.schoolDistrict)
+    return showToast("กรุณาเลือกอำเภอ/เขตของโรงเรียน", "warning");
+  if (!form.schoolSubdistrict)
+    return showToast("กรุณาเลือกตำบล/แขวงของโรงเรียน", "warning");
+  if (!form.schoolPostalCode || form.schoolPostalCode.length !== 5)
+    return showToast(
+      "กรุณากรอกรหัสไปรษณีย์โรงเรียน 5 หลักให้ถูกต้อง",
+      "warning",
+    );
 
-  isLoading.value = true
+  isLoading.value = true;
   try {
-    // Simulate Registration API
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    isSuccess.value = true
-    showToast('ลงทะเบียนบัญชีผู้ใช้งานสำเร็จ', 'success')
+    const response: any = await $fetch(
+      "http://localhost:8080/api/v1/auth/register",
+      {
+        method: "POST",
+        body: {
+          prefix: form.prefix,
+          gender: form.gender,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          dob: form.dob,
+          email: form.email,
+          phone: form.phone || undefined,
+          password: form.password,
+          address: form.address,
+          province: form.province,
+          district: form.district,
+          subdistrict: form.subdistrict,
+          postalCode: form.postalCode,
+          schoolName: form.schoolName,
+          subjectTaught: form.subjectTaught,
+          schoolAddress: form.schoolAddress,
+          schoolProvince: form.schoolProvince,
+          schoolDistrict: form.schoolDistrict,
+          schoolSubdistrict: form.schoolSubdistrict,
+          schoolPostalCode: form.schoolPostalCode,
+        },
+      },
+    );
 
-    // Auto redirect to login page after success
+    isSuccess.value = true;
+    showToast(
+      `ลงทะเบียนบัญชีสำเร็จ! รหัสครูของคุณคือ ${response.data?.code || ""}`,
+      "success",
+    );
+
     setTimeout(() => {
-      navigateTo('/teachers/login')
-    }, 2000)
-  } catch (err) {
-    showToast('เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง', 'error')
+      navigateTo("/teachers/login");
+    }, 3000);
+  } catch (err: any) {
+    const errorMsg =
+      err.data?.message || "เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง";
+    showToast(errorMsg, "error");
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 // Close dropdowns on click away
 const closeAllDropdowns = (e: Event) => {
-  const target = e.target as HTMLElement
-  if (!target) return
-  if (!target.closest('.gender-dropdown-container')) {
-    isGenderDropdownOpen.value = false
+  const target = e.target as HTMLElement;
+  if (!target) return;
+  if (!target.closest(".gender-dropdown-container")) {
+    isGenderDropdownOpen.value = false;
   }
-  if (!target.closest('.prefix-dropdown-container')) {
-    isPrefixDropdownOpen.value = false
+  if (!target.closest(".prefix-dropdown-container")) {
+    isPrefixDropdownOpen.value = false;
   }
-  if (!target.closest('.datepicker-container')) {
-    isDatePickerOpen.value = false
+  if (!target.closest(".province-dropdown-container")) {
+    isProvinceDropdownOpen.value = false;
   }
-  if (!target.closest('.province-dropdown-container')) {
-    isProvinceDropdownOpen.value = false
+  if (!target.closest(".district-dropdown-container")) {
+    isDistrictDropdownOpen.value = false;
   }
-  if (!target.closest('.district-dropdown-container')) {
-    isDistrictDropdownOpen.value = false
+  if (!target.closest(".subdistrict-dropdown-container")) {
+    isSubdistrictDropdownOpen.value = false;
   }
-  if (!target.closest('.subdistrict-dropdown-container')) {
-    isSubdistrictDropdownOpen.value = false
+  if (!target.closest(".school-province-dropdown-container")) {
+    isSchoolProvinceDropdownOpen.value = false;
   }
-  if (!target.closest('.school-province-dropdown-container')) {
-    isSchoolProvinceDropdownOpen.value = false
+  if (!target.closest(".school-district-dropdown-container")) {
+    isSchoolDistrictDropdownOpen.value = false;
   }
-  if (!target.closest('.school-district-dropdown-container')) {
-    isSchoolDistrictDropdownOpen.value = false
+  if (!target.closest(".school-subdistrict-dropdown-container")) {
+    isSchoolSubdistrictDropdownOpen.value = false;
   }
-  if (!target.closest('.school-subdistrict-dropdown-container')) {
-    isSchoolSubdistrictDropdownOpen.value = false
-  }
-}
+};
 
-onMounted(() => {
-  window.addEventListener('click', closeAllDropdowns)
-})
+onMounted(async () => {
+  window.addEventListener("click", closeAllDropdowns);
+  await fetchGenders();
+  await fetchProvinces();
+});
 
 onUnmounted(() => {
-  window.removeEventListener('click', closeAllDropdowns)
-})
+  window.removeEventListener("click", closeAllDropdowns);
+});
 </script>
 
 <template>
@@ -773,10 +647,7 @@ onUnmounted(() => {
                   "
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer"
                 >
-                  <span>{{
-                    genderOptions.find((g) => g.value === form.gender)?.label ||
-                    "เลือกเพศ"
-                  }}</span>
+                  <span>{{ form.gender || "เลือกเพศ" }}</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -870,12 +741,12 @@ onUnmounted(() => {
                   >
                     <button
                       v-for="pref in prefixOptions"
-                      :key="pref"
+                      :key="pref.id"
                       type="button"
                       @click="selectPrefix(pref)"
                       class="w-full text-left font-nunito text-xs sm:text-sm font-semibold rounded-lg px-3.5 py-2 text-slate-700 hover:bg-pink-50/50 hover:text-[#FF758F] transition-all duration-150 cursor-pointer"
                     >
-                      {{ pref }}
+                      {{ pref.name }}
                     </button>
                   </div>
                 </transition>
@@ -920,163 +791,14 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Date of Birth Input (Custom Datepicker) -->
-          <div
-            :class="[
-              'space-y-1.5 relative datepicker-container',
-              { 'z-40': isDatePickerOpen },
-            ]"
-          >
+          <!-- Date of Birth Input (BaseDatePicker Component) -->
+          <div class="space-y-1.5 relative">
             <label
               class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
             >
               วันเกิด <span class="text-rose-500">*</span>
             </label>
-
-            <div class="relative">
-              <button
-                type="button"
-                @click="
-                  isDatePickerOpen = !isDatePickerOpen;
-                  isGenderDropdownOpen = false;
-                  isPrefixDropdownOpen = false;
-                "
-                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] text-left text-sm flex items-center justify-between focus:bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-pink-100/50 relative z-30 cursor-pointer"
-              >
-                <span>{{ displayDob }}</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="2.5"
-                  stroke="currentColor"
-                  class="w-4 h-4 text-slate-400 flex-shrink-0 ml-1"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                  />
-                </svg>
-              </button>
-
-              <!-- Custom Datepicker Dropdown Card -->
-              <transition name="dropdown">
-                <div
-                  v-if="isDatePickerOpen"
-                  class="absolute z-40 bottom-full left-0 w-full max-w-sm mb-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 space-y-3"
-                >
-                  <!-- Month/Year selectors -->
-                  <div class="flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      @click="changeMonth(-1)"
-                      class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="2.5"
-                        stroke="currentColor"
-                        class="w-4 h-4"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M15.75 19.5L8.25 12l7.5-7.5"
-                        />
-                      </svg>
-                    </button>
-
-                    <div class="flex items-center gap-1.5">
-                      <!-- Month Select -->
-                      <select
-                        v-model="dpMonth"
-                        class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none"
-                      >
-                        <option
-                          v-for="(m, idx) in dpMonths"
-                          :key="m"
-                          :value="idx"
-                        >
-                          {{ m }}
-                        </option>
-                      </select>
-
-                      <!-- Year Select -->
-                      <select
-                        v-model="dpYear"
-                        class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none"
-                      >
-                        <option v-for="y in dpYears" :key="y" :value="y">
-                          {{ y + 543 }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="button"
-                      @click="changeMonth(1)"
-                      class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="2.5"
-                        stroke="currentColor"
-                        class="w-4 h-4"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <!-- Calendar Grid -->
-                  <div>
-                    <!-- Weekday labels -->
-                    <div class="grid grid-cols-7 gap-1 text-center mb-1">
-                      <span
-                        v-for="dayName in dpWeekDays"
-                        :key="dayName"
-                        class="text-[10px] font-bold text-slate-400 uppercase py-1"
-                      >
-                        {{ dayName }}
-                      </span>
-                    </div>
-
-                    <!-- Days grid -->
-                    <div class="grid grid-cols-7 gap-1">
-                      <button
-                        v-for="item in dpGridDays"
-                        :key="item.dateString"
-                        type="button"
-                        @click="selectDate(item)"
-                        :class="[
-                          'aspect-square rounded-lg text-xs font-semibold flex items-center justify-center transition-all duration-100 cursor-pointer relative',
-                          item.monthOffset !== 0
-                            ? 'text-slate-300'
-                            : 'text-slate-700',
-                          item.isSelected
-                            ? 'bg-[#FF758F] text-white font-bold shadow-md shadow-pink-100'
-                            : 'hover:bg-pink-50 hover:text-[#FF758F]',
-                          item.isToday && !item.isSelected
-                            ? 'border border-[#FF758F] text-[#FF758F]'
-                            : '',
-                        ]"
-                      >
-                        {{ item.day }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </transition>
-            </div>
+            <BaseDatePicker v-model="form.dob" />
           </div>
 
           <!-- Grid of Email and Phone Number -->
@@ -1112,8 +834,27 @@ onUnmounted(() => {
                 type="tel"
                 placeholder="เช่น 0812345678"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
+                :maxlength="10"
+                :minlength="10"
               />
             </div>
+          </div>
+
+          <!-- Password Input -->
+          <div class="space-y-1.5">
+            <label
+              for="password"
+              class="block font-fredoka text-xs font-bold text-[#4A5759] pl-1"
+            >
+              รหัสผ่าน <span class="text-rose-500">*</span>
+            </label>
+            <input
+              id="password"
+              v-model="form.password"
+              type="password"
+              placeholder="ความยาวอย่างน้อย 6 ตัวอักษร"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#2F3E46] placeholder-slate-400 focus:bg-white focus:border-[#FF758F] focus:ring-4 focus:ring-pink-100/50 focus:outline-none transition-all duration-200 text-sm"
+            />
           </div>
         </div>
 
@@ -1187,12 +928,12 @@ onUnmounted(() => {
                   >
                     <button
                       v-for="prov in provincesList"
-                      :key="prov"
+                      :key="prov.id"
                       type="button"
                       @click="selectProvince(prov)"
                       class="w-full text-left font-nunito text-xs sm:text-sm font-semibold rounded-lg px-3.5 py-2 text-slate-700 hover:bg-pink-50/50 hover:text-[#FF758F] transition-all duration-150 cursor-pointer"
                     >
-                      {{ prov }}
+                      {{ prov.name }}
                     </button>
                   </div>
                 </transition>
@@ -1247,13 +988,13 @@ onUnmounted(() => {
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
-                      v-for="dist in homeDistricts"
-                      :key="dist"
+                      v-for="dist in homeAddress.districtsList.value"
+                      :key="dist.id"
                       type="button"
                       @click="selectDistrict(dist)"
                       class="w-full text-left font-nunito text-xs sm:text-sm font-semibold rounded-lg px-3.5 py-2 text-slate-700 hover:bg-pink-50/50 hover:text-[#FF758F] transition-all duration-150 cursor-pointer"
                     >
-                      {{ dist }}
+                      {{ dist.name }}
                     </button>
                   </div>
                 </transition>
@@ -1311,13 +1052,13 @@ onUnmounted(() => {
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
-                      v-for="sub in homeSubdistricts"
-                      :key="sub"
+                      v-for="sub in homeAddress.subdistrictsList.value"
+                      :key="sub.id"
                       type="button"
                       @click="selectSubdistrict(sub)"
                       class="w-full text-left font-nunito text-xs sm:text-sm font-semibold rounded-lg px-3.5 py-2 text-slate-700 hover:bg-pink-50/50 hover:text-[#FF758F] transition-all duration-150 cursor-pointer"
                     >
-                      {{ sub }}
+                      {{ sub.name }}
                     </button>
                   </div>
                 </transition>
@@ -1453,12 +1194,12 @@ onUnmounted(() => {
                   >
                     <button
                       v-for="prov in provincesList"
-                      :key="prov"
+                      :key="prov.id"
                       type="button"
                       @click="selectSchoolProvince(prov)"
                       class="w-full text-left font-nunito text-xs sm:text-sm font-semibold rounded-lg px-3.5 py-2 text-slate-700 hover:bg-pink-50/50 hover:text-[#FF758F] transition-all duration-150 cursor-pointer"
                     >
-                      {{ prov }}
+                      {{ prov.name }}
                     </button>
                   </div>
                 </transition>
@@ -1516,13 +1257,13 @@ onUnmounted(() => {
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
-                      v-for="dist in schoolDistricts"
-                      :key="dist"
+                      v-for="dist in schoolAddress.districtsList.value"
+                      :key="dist.id"
                       type="button"
                       @click="selectSchoolDistrict(dist)"
                       class="w-full text-left font-nunito text-xs sm:text-sm font-semibold rounded-lg px-3.5 py-2 text-slate-700 hover:bg-pink-50/50 hover:text-[#FF758F] transition-all duration-150 cursor-pointer"
                     >
-                      {{ dist }}
+                      {{ dist.name }}
                     </button>
                   </div>
                 </transition>
@@ -1583,13 +1324,13 @@ onUnmounted(() => {
                     class="absolute z-40 top-full left-0 w-full mt-1.5 bg-white border border-slate-100 rounded-xl shadow-xl p-1.5 space-y-1 max-h-48 overflow-y-auto"
                   >
                     <button
-                      v-for="sub in schoolSubdistricts"
-                      :key="sub"
+                      v-for="sub in schoolAddress.subdistrictsList.value"
+                      :key="sub.id"
                       type="button"
                       @click="selectSchoolSubdistrict(sub)"
                       class="w-full text-left font-nunito text-xs sm:text-sm font-semibold rounded-lg px-3.5 py-2 text-slate-700 hover:bg-pink-50/50 hover:text-[#FF758F] transition-all duration-150 cursor-pointer"
                     >
-                      {{ sub }}
+                      {{ sub.name }}
                     </button>
                   </div>
                 </transition>

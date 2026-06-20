@@ -346,12 +346,8 @@ const currentDateText = computed(() => {
   return new Date().toLocaleDateString("th-TH", options);
 });
 
-const teacherProfile = ref({
-  name: "สมชาย ใจดี",
-  school: "โรงเรียนสตรีวิทยา",
-  email: "somchai.jai@email.com",
-  avatarInitials: "สช",
-});
+const { teacherProfile, requireAuth, logout } = useTeacherSession()
+requireAuth()
 
 // Edit prefect handler
 const handleEdit = () => {
@@ -418,7 +414,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false;
   showToast("กำลังออกจากระบบ...", "success");
-  setTimeout(() => navigateTo("/teachers/login"), 1000);
+  logout();
 };
 
 const getInitials = (first: string, last: string) =>

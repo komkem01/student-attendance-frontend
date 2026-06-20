@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useClassroomList } from '~/composables/useClassroomList'
 
 useHead({
   title: 'จัดการชั้นเรียนและเช็คชื่อ - Student Attendance System',
@@ -16,15 +17,8 @@ const isMobileSidebarOpen = ref(false)
 // State for Logout Modal
 const isLogoutModalOpen = ref(false)
 
-// Mock Teacher Profile Data
-const teacherProfile = ref({
-  name: 'สมชาย ใจดี',
-  title: 'คุณครูประจำวิชาคณิตศาสตร์',
-  school: 'โรงเรียนสตรีวิทยา',
-  subject: 'คณิตศาสตร์',
-  email: 'somchai.jai@email.com',
-  avatarInitials: 'สช'
-})
+const { teacherProfile, requireAuth, logout } = useTeacherSession()
+requireAuth()
 
 // Current date display in Thai format
 const currentDateText = computed(() => {
@@ -35,130 +29,6 @@ const currentDateText = computed(() => {
     day: 'numeric' 
   }
   return new Date().toLocaleDateString('th-TH', options)
-})
-
-// Detailed Classrooms List with Nested Students Data shared globally
-const classrooms = useState('classrooms', () => [
-  {
-    id: 1,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/1',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 15,
-    status: 'completed',
-    time: '08:15 - 09:10 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 08:30 น.',
-    students: [
-      { id: 101, no: 1, prefix: 'ด.ช.', firstName: 'นันทวัฒน์', lastName: 'สมบูรณ์', status: 'absent', details: '' },
-      { id: 102, no: 2, prefix: 'ด.ช.', firstName: 'กิตติพงษ์', lastName: 'แก้วมณี', status: 'present', details: '' },
-      { id: 103, no: 3, prefix: 'ด.ช.', firstName: 'จิรภัทร', lastName: 'ดีใจ', status: 'present', details: '' },
-      { id: 104, no: 4, prefix: 'ด.ช.', firstName: 'ธนากร', lastName: 'รักสงบ', status: 'present', details: '' },
-      { id: 105, no: 5, prefix: 'ด.ช.', firstName: 'ปกรณ์', lastName: 'งามสมบูรณ์', status: 'late', details: '15' },
-      { id: 106, no: 6, prefix: 'ด.ญ.', firstName: 'กรกนก', lastName: 'สุขใจ', status: 'present', details: '' },
-      { id: 107, no: 7, prefix: 'ด.ญ.', firstName: 'ชนิกานต์', lastName: 'รุ่งเรือง', status: 'present', details: '' },
-      { id: 108, no: 8, prefix: 'ด.ญ.', firstName: 'ณิชชา', lastName: 'พาณิชย์', status: 'leave', details: 'sick' },
-      { id: 109, no: 9, prefix: 'ด.ญ.', firstName: 'ธนัญชนก', lastName: 'แสงทอง', status: 'present', details: '' },
-      { id: 110, no: 10, prefix: 'ด.ญ.', firstName: 'ปรียาภรณ์', lastName: 'ทิพย์สุวรรณ', status: 'present', details: '' },
-      { id: 111, no: 11, prefix: 'ด.ญ.', firstName: 'วรินดา', lastName: 'ยอดรัก', status: 'present', details: '' },
-      { id: 112, no: 12, prefix: 'ด.ญ.', firstName: 'สุภัสสรา', lastName: 'ทองคำ', status: 'present', details: '' },
-      { id: 113, no: 13, prefix: 'ด.ช.', firstName: 'พีรพงษ์', lastName: 'มั่นคง', status: 'present', details: '' },
-      { id: 114, no: 14, prefix: 'ด.ช.', firstName: 'อัครพงษ์', lastName: 'เจริญกุล', status: 'present', details: '' },
-      { id: 115, no: 15, prefix: 'ด.ญ.', firstName: 'อารียา', lastName: 'ทิพย์สุวรรณ', status: 'present', details: '' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/2',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 12,
-    status: 'completed',
-    time: '09:10 - 10:05 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 09:20 น.',
-    students: [
-      { id: 201, no: 1, prefix: 'ด.ช.', firstName: 'กิตติพงษ์', lastName: 'รักดี', status: 'late', details: '15' },
-      { id: 202, no: 2, prefix: 'ด.ช.', firstName: 'ชยุต', lastName: 'สุวรรณ', status: 'present', details: '' },
-      { id: 203, no: 3, prefix: 'ด.ช.', firstName: 'ณัฐกร', lastName: 'ใจกว้าง', status: 'present', details: '' },
-      { id: 204, no: 4, prefix: 'ด.ช.', firstName: 'ทศพล', lastName: 'ประเสริฐ', status: 'present', details: '' },
-      { id: 205, no: 5, prefix: 'ด.ช.', firstName: 'นนทพัทธ์', lastName: 'จันทร์โอชา', status: 'present', details: '' },
-      { id: 206, no: 6, prefix: 'ด.ญ.', firstName: 'กมลชนก', lastName: 'พุ่มพวง', status: 'present', details: '' },
-      { id: 207, no: 7, prefix: 'ด.ญ.', firstName: 'จิราภรณ์', lastName: 'เพ็ญดี', status: 'present', details: '' },
-      { id: 208, no: 8, prefix: 'ด.ญ.', firstName: 'ชลดา', lastName: 'ศรีทอง', status: 'leave', details: 'business' },
-      { id: 209, no: 9, prefix: 'ด.ญ.', firstName: 'ณัฐณิชา', lastName: 'สุขเสมอ', status: 'present', details: '' },
-      { id: 210, no: 10, prefix: 'ด.ญ.', firstName: 'ทิพวรรณ', lastName: 'สมควร', status: 'present', details: '' },
-      { id: 211, no: 11, prefix: 'ด.ช.', firstName: 'ภานุเดช', lastName: 'รักไทย', status: 'present', details: '' },
-      { id: 212, no: 12, prefix: 'ด.ญ.', firstName: 'มุทิตา', lastName: 'สง่างาม', status: 'present', details: '' }
-    ]
-  },
-  {
-    id: 3,
-    name: 'ชั้นมัธยมศึกษาปีที่ 2/3',
-    subject: 'คณิตศาสตร์เพิ่มเติม (ค22201)',
-    studentsCount: 15,
-    status: 'pending',
-    time: '13:00 - 13:55 น.',
-    checkedTime: 'ยังไม่ได้เช็คชื่อ',
-    students: [
-      { id: 301, no: 1, prefix: 'ด.ช.', firstName: 'เกริกเกียรติ', lastName: 'มานะดี', status: '', details: '' },
-      { id: 302, no: 2, prefix: 'ด.ช.', firstName: 'จักรกฤษณ์', lastName: 'เรียนเก่ง', status: '', details: '' },
-      { id: 303, no: 3, prefix: 'ด.ช.', firstName: 'ชานนท์', lastName: 'ปัญญาดี', status: '', details: '' },
-      { id: 304, no: 4, prefix: 'ด.ช.', firstName: 'เดชาพล', lastName: 'มั่นคง', status: '', details: '' },
-      { id: 305, no: 5, prefix: 'ด.ช.', firstName: 'ทรงพล', lastName: 'ทองแท้', status: '', details: '' },
-      { id: 306, no: 6, prefix: 'ด.ญ.', firstName: 'กนิษฐา', lastName: 'สวยงาม', status: '', details: '' },
-      { id: 307, no: 7, prefix: 'ด.ญ.', firstName: 'จารุวรรณ', lastName: 'สายสมร', status: '', details: '' },
-      { id: 308, no: 8, prefix: 'ด.ญ.', firstName: 'ชนิตา', lastName: 'พึ่งธรรม', status: '', details: '' },
-      { id: 309, no: 9, prefix: 'ด.ญ.', firstName: 'ณิชนันทน์', lastName: 'เก่งการค้า', status: '', details: '' },
-      { id: 310, no: 10, prefix: 'ด.ญ.', firstName: 'ณิชาภัทร', lastName: 'ว่องไว', status: '', details: '' },
-      { id: 311, no: 11, prefix: 'ด.ญ.', firstName: 'ดลลชา', lastName: 'มีโชค', status: '', details: '' },
-      { id: 312, no: 12, prefix: 'ด.ญ.', firstName: 'ทักษอร', lastName: 'เปี่ยมสุข', status: '', details: '' },
-      { id: 313, no: 13, prefix: 'ด.ช.', firstName: 'นพคุณ', lastName: 'ขยันตั้งใจ', status: '', details: '' },
-      { id: 314, no: 14, prefix: 'ด.ญ.', firstName: 'เบญจวรรณ', lastName: 'สมบัติพูน', status: '', details: '' },
-      { id: 315, no: 15, prefix: 'ด.ญ.', firstName: 'พิมลภัส', lastName: 'วรโชติ', status: '', details: '' }
-    ]
-  }
-])
-
-// Calculate helper stats dynamically
-const computedClassrooms = computed(() => {
-  return classrooms.value.map(cls => {
-    const studentsCount = cls.students.length
-    const checkedCount = cls.students.filter(s => s.status !== '').length
-    const presentCount = cls.students.filter(s => s.status === 'present').length
-    const attendanceRate = checkedCount > 0 ? Math.round((presentCount / checkedCount) * 1000) / 10 : 0
-    return {
-      ...cls,
-      studentsCount,
-      checkedCount,
-      attendanceRate
-    }
-  })
-})
-
-// Filters and search state for classroom list
-const classSearchQuery = ref('')
-const classFilterStatus = ref<'all' | 'completed' | 'pending'>('all')
-
-// Filtered classrooms list
-const filteredClassrooms = computed(() => {
-  return computedClassrooms.value.filter(cls => {
-    const matchesSearch = cls.name.toLowerCase().includes(classSearchQuery.value.toLowerCase()) || 
-                          cls.subject.toLowerCase().includes(classSearchQuery.value.toLowerCase())
-    
-    const matchesStatus = classFilterStatus.value === 'all' || 
-                          (classFilterStatus.value === 'completed' && cls.status === 'completed') ||
-                          (classFilterStatus.value === 'pending' && cls.status === 'pending')
-                          
-    return matchesSearch && matchesStatus
-  })
-})
-
-// Statistics Overview for Classes Page
-const totalClassesCount = computed(() => classrooms.value.length)
-const completedClassesCount = computed(() => classrooms.value.filter(c => c.status === 'completed').length)
-const pendingClassesCount = computed(() => classrooms.value.filter(c => c.status === 'pending').length)
-const averageAttendanceRate = computed(() => {
-  const completed = computedClassrooms.value.filter(c => c.status === 'completed')
-  if (completed.length === 0) return '0%'
-  const totalRate = completed.reduce((sum, c) => sum + c.attendanceRate, 0)
-  return `${(totalRate / completed.length).toFixed(1)}%`
 })
 
 // SweetAlert-style Toast Notifications State
@@ -173,41 +43,47 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'inf
   }, 3000)
 }
 
-// Redirect to dynamic check-in page
-const startCheckIn = (cls: any) => {
-  showToast(`เริ่มเช็คชื่อสำหรับ ${cls.name}`, 'success')
-  setTimeout(() => {
-    navigateTo(`/teachers/classroom/${cls.id}`)
-  }, 500)
-}
+// Call classroom composable
+const {
+  classrooms,
+  isFetching,
+  isImporting,
+  fetchClassroomsData,
 
-// Handle query parameters (e.g. from Dashboard click redirects)
-const handleQuery = () => {
-  const qClassId = route.query.classId
-  if (qClassId) {
-    const id = parseInt(qClassId as string)
-    navigateTo(`/teachers/classroom/${id}`)
-  }
-}
+  // Modal adding states
+  isAddClassModalOpen,
+  newClassName,
+  newClassSubject,
+  newClassDate,
+  newClassStartTime,
+  newClassEndTime,
+  openAddClassModal,
+  createClassroom,
 
-onMounted(() => {
-  handleQuery()
-})
+  // Filters
+  classSearchQuery,
+  classFilterStatus,
+  filteredClassrooms,
+  totalClassesCount,
+  completedClassesCount,
+  pendingClassesCount,
+  averageAttendanceRate,
 
-watch(() => route.query.classId, () => {
-  handleQuery()
-})
+  // Imports
+  isImportModalOpen,
+  importSelectedClassId,
+  showClassSelectPopover,
+  importFileName,
+  importStudentsFile,
+  isImportLoading,
+  openImportModal,
+  importSelectedClassroom,
+  simulateImportFile,
+  removeImportFile,
+  executeImport
+} = useClassroomList(showToast)
 
-// State for Adding Classroom Modal (without student list upload)
-const isAddClassModalOpen = ref(false)
-const newClassName = ref('')
-const newClassSubject = ref('')
-const newClassDate = ref('')
-const newClassStartTime = ref('08:15')
-const newClassEndTime = ref('09:10')
-const isImporting = ref(false)
-
-// Custom Date/Time Popovers state
+// Local UI States for Popovers
 const showDatePickerPopover = ref(false)
 const showStartTimePopover = ref(false)
 const showEndTimePopover = ref(false)
@@ -343,148 +219,30 @@ const decrementEndMinute = () => {
   newClassEndTime.value = `${parts[0]}:${String(val).padStart(2, '0')}`
 }
 
-// State for Importing Student List Modal
-const isImportModalOpen = ref(false)
-const importSelectedClassId = ref<number | null>(null)
-const showClassSelectPopover = ref(false)
-const importFileName = ref('')
-const importStudentsFile = ref<any[] | null>(null)
-const isImportLoading = ref(false)
+// Redirect to dynamic check-in page
+const startCheckIn = (cls: any) => {
+  showToast(`เริ่มเช็คชื่อสำหรับ ${cls.name}`, 'success')
+  setTimeout(() => {
+    navigateTo(`/teachers/classroom/${cls.id}`)
+  }, 500)
+}
 
-const importSelectedClassroom = computed(() => {
-  return classrooms.value.find(c => c.id === importSelectedClassId.value)
+// Handle query parameters (e.g. from Dashboard click redirects)
+const handleQuery = () => {
+  const qClassId = route.query.classId
+  if (qClassId) {
+    navigateTo(`/teachers/classroom/${qClassId}`)
+  }
+}
+
+onMounted(async () => {
+  handleQuery()
+  await fetchClassroomsData()
 })
 
-// Thai short date formatter helper (e.g. "19 มิ.ย. 69")
-const formatThaiDateShort = (dateStr: string) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const day = date.getDate()
-  const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
-  const month = months[date.getMonth()]
-  // Short year (e.g. 2569 -> "69")
-  const thaiYear = (date.getFullYear() + 543).toString().slice(-2)
-  return `${day} ${month} ${thaiYear}`
-}
-
-// Format date and time range for display on the card
-const getFormattedDateTime = (dateStr: string, startTime: string, endTime: string) => {
-  const datePart = formatThaiDateShort(dateStr)
-  return `${datePart} • ${startTime} - ${endTime} น.`
-}
-
-const openAddClassModal = () => {
-  newClassName.value = ''
-  newClassSubject.value = ''
-  
-  // Default date to today
-  const today = new Date()
-  const yyyy = today.getFullYear()
-  const mm = String(today.getMonth() + 1).padStart(2, '0')
-  const dd = String(today.getDate()).padStart(2, '0')
-  newClassDate.value = `${yyyy}-${mm}-${dd}`
-  
-  newClassStartTime.value = '08:15'
-  newClassEndTime.value = '09:10'
-  
-  // Reset popovers
-  showDatePickerPopover.value = false
-  showStartTimePopover.value = false
-  showEndTimePopover.value = false
-  
-  isAddClassModalOpen.value = true
-}
-
-const createClassroom = async () => {
-  if (!newClassName.value || !newClassSubject.value || !newClassDate.value || !newClassStartTime.value || !newClassEndTime.value) {
-    showToast('กรุณากรอกข้อมูลห้องเรียนให้ครบถ้วน', 'warning')
-    return
-  }
-  
-  isImporting.value = true
-  
-  // Show mascot loader delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  // Format Thai short date + time range
-  const timeSlot = getFormattedDateTime(newClassDate.value, newClassStartTime.value, newClassEndTime.value)
-  
-  // Append new class details to the shared state (initially 0 students)
-  classrooms.value.push({
-    id: classrooms.value.length + 1,
-    name: newClassName.value,
-    subject: newClassSubject.value,
-    studentsCount: 0,
-    status: 'pending',
-    time: timeSlot,
-    checkedTime: 'ยังไม่ได้เช็คชื่อ',
-    students: []
-  })
-  
-  isImporting.value = false
-  isAddClassModalOpen.value = false
-  showToast('สร้างห้องเรียนสำเร็จ!', 'success')
-}
-
-// Student list import modal functions
-const openImportModal = () => {
-  importSelectedClassId.value = classrooms.value.length > 0 ? classrooms.value[0].id : null
-  showClassSelectPopover.value = false
-  importFileName.value = ''
-  importStudentsFile.value = null
-  isImportModalOpen.value = true
-}
-
-const simulateImportFile = () => {
-  importFileName.value = 'รายชื่อนักเรียน_ม.2_4.xlsx'
-  importStudentsFile.value = [
-    { id: 401, no: 1, prefix: 'ด.ช.', firstName: 'เกรียงไกร', lastName: 'รักสงบ', status: '', details: '' },
-    { id: 402, no: 2, prefix: 'ด.ช.', firstName: 'จตุรภัทร', lastName: 'ทองดี', status: '', details: '' },
-    { id: 403, no: 3, prefix: 'ด.ช.', firstName: 'ณพรรษ', lastName: 'แก้วสว่าง', status: '', details: '' },
-    { id: 404, no: 4, prefix: 'ด.ช.', firstName: 'ทัตเทพ', lastName: 'บุญมี', status: '', details: '' },
-    { id: 405, no: 5, prefix: 'ด.ญ.', firstName: 'กานต์พิชชา', lastName: 'เจริญกรุง', status: '', details: '' },
-    { id: 406, no: 6, prefix: 'ด.ญ.', firstName: 'ชนันชิดา', lastName: 'เดชดำรง', status: '', details: '' },
-    { id: 407, no: 7, prefix: 'ด.ญ.', firstName: 'ณิชารีย์', lastName: 'อินทร์แก้ว', status: '', details: '' },
-    { id: 408, no: 8, prefix: 'ด.ญ.', firstName: 'ปพิชญา', lastName: 'พึ่งพิง', status: '', details: '' },
-    { id: 409, no: 9, prefix: 'ด.ญ.', firstName: 'มนัสนันท์', lastName: 'บุญรักษา', status: '', details: '' },
-    { id: 410, no: 10, prefix: 'ด.ญ.', firstName: 'วรัญญา', lastName: 'รักษ์ไทย', status: '', details: '' }
-  ]
-  showToast('นำเข้ารายชื่อนักเรียน 10 คน สำเร็จ!', 'success')
-}
-
-const removeImportFile = () => {
-  importFileName.value = ''
-  importStudentsFile.value = null
-  showToast('ลบไฟล์รายชื่อเรียบร้อยแล้ว', 'info')
-}
-
-const executeImport = async () => {
-  if (!importSelectedClassId.value) {
-    showToast('กรุณาเลือกห้องเรียนที่ต้องการนำเข้า', 'warning')
-    return
-  }
-  if (!importStudentsFile.value) {
-    showToast('กรุณานำเข้าไฟล์รายชื่อนักเรียนก่อนบันทึก', 'warning')
-    return
-  }
-  
-  isImportLoading.value = true
-  
-  // Show mascot loader delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  const targetClass = classrooms.value.find(c => c.id === importSelectedClassId.value)
-  if (targetClass) {
-    targetClass.students = JSON.parse(JSON.stringify(importStudentsFile.value))
-    targetClass.studentsCount = importStudentsFile.value.length
-    targetClass.status = 'pending'
-    targetClass.checkedTime = 'ยังไม่ได้เช็คชื่อ'
-  }
-  
-  isImportLoading.value = false
-  isImportModalOpen.value = false
-  showToast(`นำเข้ารายชื่อนักเรียนเข้าสู่ห้อง ${targetClass?.name} เรียบร้อยแล้ว!`, 'success')
-}
+watch(() => route.query.classId, () => {
+  handleQuery()
+})
 
 const handleLogout = () => {
   isLogoutModalOpen.value = true
@@ -493,9 +251,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
-  setTimeout(() => {
-    navigateTo('/teachers/login')
-  }, 1000)
+  logout()
 }
 </script>
 
@@ -844,7 +600,7 @@ const confirmLogout = () => {
             <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" @click="isAddClassModalOpen = false"></div>
 
             <!-- Modal Box -->
-            <div class="relative w-full max-w-md bg-white rounded-[2.2rem] border border-slate-100 shadow-2xl p-6 sm:p-8 transform transition-all duration-300 scale-100 flex flex-col z-10 overflow-hidden">
+            <div class="relative w-full max-w-md bg-white rounded-[2.2rem] border border-slate-100 shadow-2xl p-6 sm:p-8 transform transition-all duration-300 scale-100 flex flex-col z-10 overflow-visible">
               
               <!-- Decorative background blurs inside modal -->
               <div class="absolute -top-10 -left-10 w-24 h-24 bg-pink-100/35 rounded-full blur-xl pointer-events-none -z-10"></div>
@@ -1143,7 +899,7 @@ const confirmLogout = () => {
             <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" @click="isImportModalOpen = false"></div>
 
             <!-- Modal Box -->
-            <div class="relative w-full max-w-md bg-white rounded-[2.2rem] border border-slate-100 shadow-2xl p-6 sm:p-8 transform transition-all duration-300 scale-100 flex flex-col z-10 overflow-hidden">
+            <div class="relative w-full max-w-md bg-white rounded-[2.2rem] border border-slate-100 shadow-2xl p-6 sm:p-8 transform transition-all duration-300 scale-100 flex flex-col z-10 overflow-visible">
               
               <!-- Decorative background blurs inside modal -->
               <div class="absolute -top-10 -left-10 w-24 h-24 bg-pink-100/35 rounded-full blur-xl pointer-events-none -z-10"></div>

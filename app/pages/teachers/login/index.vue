@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 
 useHead({
   title: 'เข้าสู่ระบบสำหรับครู | Student Attendance System',
@@ -8,18 +8,8 @@ useHead({
   ]
 })
 
-// Form State
-const form = reactive({
-  emailOrId: '',
-  password: '',
-  rememberMe: false
-})
-
 // UI State
 const isPasswordVisible = ref(false)
-const isLoading = ref(false)
-const hasError = ref(false)
-const isSuccess = ref(false)
 
 // SweetAlert-style Toast Notifications State
 const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' }[]>([])
@@ -29,55 +19,13 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'suc
   const id = toastId++
   toasts.value.push({ id, message, type })
   
-  if (type === 'error') {
-    hasError.value = true
-    setTimeout(() => {
-      hasError.value = false
-    }, 500)
-  }
-
   // Remove toast after 3 seconds
   setTimeout(() => {
     toasts.value = toasts.value.filter(t => t.id !== id)
   }, 3000)
 }
 
-// Handle Form Submission
-const handleLogin = async () => {
-  // Reset error states
-  hasError.value = false
-  
-  // Basic Validation
-  if (!form.emailOrId.trim()) {
-    showToast('กรุณากรอกอีเมลหรือรหัสประจำตัวครู', 'warning')
-    return
-  }
-  
-  if (!form.password) {
-    showToast('กรุณากรอกรหัสผ่าน', 'warning')
-    return
-  }
-  
-  if (form.password.length < 6) {
-    showToast('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร', 'warning')
-    return
-  }
-  
-  // Mock login process
-  isLoading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    isSuccess.value = true
-    showToast('เข้าสู่ระบบสำเร็จ', 'success')
-    setTimeout(() => {
-      navigateTo('/teachers/dashboard')
-    }, 1500)
-  } catch (err) {
-    showToast('อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง', 'error')
-  } finally {
-    isLoading.value = false
-  }
-}
+const { form, isLoading, isSuccess, hasError, handleLogin } = useLoginForm(showToast)
 </script>
 
 <template>

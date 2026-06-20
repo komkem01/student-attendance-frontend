@@ -10,12 +10,7 @@ const emit = defineEmits<{
   (e: 'logout'): void
 }>()
 
-// Mock Teacher Profile Data
-const teacherProfile = {
-  name: 'สมชาย ใจดี',
-  school: 'โรงเรียนสตรีวิทยา',
-  avatarInitials: 'สช'
-}
+const { teacherProfile } = useTeacherSession()
 
 // Navigation Items
 const navItems = [

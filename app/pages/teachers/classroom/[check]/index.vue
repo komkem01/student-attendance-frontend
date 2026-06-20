@@ -9,7 +9,7 @@ useHead({
 })
 
 const route = useRoute()
-const classId = computed(() => parseInt(route.params.check as string))
+const classId = computed(() => route.params.check as string)
 
 // State for Mobile Sidebar Toggle
 const isMobileSidebarOpen = ref(false)
@@ -20,15 +20,8 @@ const isLogoutModalOpen = ref(false)
 // State for Page Loading
 const isLoading = ref(true)
 
-// Mock Teacher Profile Data
-const teacherProfile = ref({
-  name: 'สมชาย ใจดี',
-  title: 'คุณครูประจำวิชาคณิตศาสตร์',
-  school: 'โรงเรียนสตรีวิทยา',
-  subject: 'คณิตศาสตร์',
-  email: 'somchai.jai@email.com',
-  avatarInitials: 'สช'
-})
+const { session, teacherProfile, requireAuth, logout } = useTeacherSession()
+requireAuth()
 
 // Current date display in Thai format
 const currentDateText = computed(() => {
@@ -41,89 +34,8 @@ const currentDateText = computed(() => {
   return new Date().toLocaleDateString('th-TH', options)
 })
 
-// Detailed Classrooms List with Nested Students Data shared globally
-const classrooms = useState('classrooms', () => [
-  {
-    id: 1,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/1',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 15,
-    status: 'completed',
-    time: '08:15 - 09:10 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 08:30 น.',
-    students: [
-      { id: 101, no: 1, prefix: 'ด.ช.', firstName: 'นันทวัฒน์', lastName: 'สมบูรณ์', status: 'absent', details: '' },
-      { id: 102, no: 2, prefix: 'ด.ช.', firstName: 'กิตติพงษ์', lastName: 'แก้วมณี', status: 'present', details: '' },
-      { id: 103, no: 3, prefix: 'ด.ช.', firstName: 'จิรภัทร', lastName: 'ดีใจ', status: 'present', details: '' },
-      { id: 104, no: 4, prefix: 'ด.ช.', firstName: 'ธนากร', lastName: 'รักสงบ', status: 'present', details: '' },
-      { id: 105, no: 5, prefix: 'ด.ช.', firstName: 'ปกรณ์', lastName: 'งามสมบูรณ์', status: 'late', details: '15' },
-      { id: 106, no: 6, prefix: 'ด.ญ.', firstName: 'กรกนก', lastName: 'สุขใจ', status: 'present', details: '' },
-      { id: 107, no: 7, prefix: 'ด.ญ.', firstName: 'ชนิกานต์', lastName: 'รุ่งเรือง', status: 'present', details: '' },
-      { id: 108, no: 8, prefix: 'ด.ญ.', firstName: 'ณิชชา', lastName: 'พาณิชย์', status: 'leave', details: 'sick' },
-      { id: 109, no: 9, prefix: 'ด.ญ.', firstName: 'ธนัญชนก', lastName: 'แสงทอง', status: 'present', details: '' },
-      { id: 110, no: 10, prefix: 'ด.ญ.', firstName: 'ปรียาภรณ์', lastName: 'ทิพย์สุวรรณ', status: 'present', details: '' },
-      { id: 111, no: 11, prefix: 'ด.ญ.', firstName: 'วรินดา', lastName: 'ยอดรัก', status: 'present', details: '' },
-      { id: 112, no: 12, prefix: 'ด.ญ.', firstName: 'สุภัสสรา', lastName: 'ทองคำ', status: 'present', details: '' },
-      { id: 113, no: 13, prefix: 'ด.ช.', firstName: 'พีรพงษ์', lastName: 'มั่นคง', status: 'present', details: '' },
-      { id: 114, no: 14, prefix: 'ด.ช.', firstName: 'อัครพงษ์', lastName: 'เจริญกุล', status: 'present', details: '' },
-      { id: 115, no: 15, prefix: 'ด.ญ.', firstName: 'อารียา', lastName: 'ทิพย์สุวรรณ', status: 'present', details: '' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/2',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 12,
-    status: 'completed',
-    time: '09:10 - 10:05 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 09:20 น.',
-    students: [
-      { id: 201, no: 1, prefix: 'ด.ช.', firstName: 'กิตติพงษ์', lastName: 'รักดี', status: 'late', details: '15' },
-      { id: 202, no: 2, prefix: 'ด.ช.', firstName: 'ชยุต', lastName: 'สุวรรณ', status: 'present', details: '' },
-      { id: 203, no: 3, prefix: 'ด.ช.', firstName: 'ณัฐกร', lastName: 'ใจกว้าง', status: 'present', details: '' },
-      { id: 204, no: 4, prefix: 'ด.ช.', firstName: 'ทศพล', lastName: 'ประเสริฐ', status: 'present', details: '' },
-      { id: 205, no: 5, prefix: 'ด.ช.', firstName: 'นนทพัทธ์', lastName: 'จันทร์โอชา', status: 'present', details: '' },
-      { id: 206, no: 6, prefix: 'ด.ญ.', firstName: 'กมลชนก', lastName: 'พุ่มพวง', status: 'present', details: '' },
-      { id: 207, no: 7, prefix: 'ด.ญ.', firstName: 'จิราภรณ์', lastName: 'เพ็ญดี', status: 'present', details: '' },
-      { id: 208, no: 8, prefix: 'ด.ญ.', firstName: 'ชลดา', lastName: 'ศรีทอง', status: 'leave', details: 'business' },
-      { id: 209, no: 9, prefix: 'ด.ญ.', firstName: 'ณัฐณิชา', lastName: 'สุขเสมอ', status: 'present', details: '' },
-      { id: 210, no: 10, prefix: 'ด.ญ.', firstName: 'ทิพวรรณ', lastName: 'สมควร', status: 'present', details: '' },
-      { id: 211, no: 11, prefix: 'ด.ช.', firstName: 'ภานุเดช', lastName: 'รักไทย', status: 'present', details: '' },
-      { id: 212, no: 12, prefix: 'ด.ญ.', firstName: 'มุทิตา', lastName: 'สง่างาม', status: 'present', details: '' }
-    ]
-  },
-  {
-    id: 3,
-    name: 'ชั้นมัธยมศึกษาปีที่ 2/3',
-    subject: 'คณิตศาสตร์เพิ่มเติม (ค22201)',
-    studentsCount: 15,
-    status: 'pending',
-    time: '13:00 - 13:55 น.',
-    checkedTime: 'ยังไม่ได้เช็คชื่อ',
-    students: [
-      { id: 301, no: 1, prefix: 'ด.ช.', firstName: 'เกริกเกียรติ', lastName: 'มานะดี', status: '', details: '' },
-      { id: 302, no: 2, prefix: 'ด.ช.', firstName: 'จักรกฤษณ์', lastName: 'เรียนเก่ง', status: '', details: '' },
-      { id: 303, no: 3, prefix: 'ด.ช.', firstName: 'ชานนท์', lastName: 'ปัญญาดี', status: '', details: '' },
-      { id: 304, no: 4, prefix: 'ด.ช.', firstName: 'เดชาพล', lastName: 'มั่นคง', status: '', details: '' },
-      { id: 305, no: 5, prefix: 'ด.ช.', firstName: 'ทรงพล', lastName: 'ทองแท้', status: '', details: '' },
-      { id: 306, no: 6, prefix: 'ด.ญ.', firstName: 'กนิษฐา', lastName: 'สวยงาม', status: '', details: '' },
-      { id: 307, no: 7, prefix: 'ด.ญ.', firstName: 'จารุวรรณ', lastName: 'สายสมร', status: '', details: '' },
-      { id: 308, no: 8, prefix: 'ด.ญ.', firstName: 'ชนิตา', lastName: 'พึ่งธรรม', status: '', details: '' },
-      { id: 309, no: 9, prefix: 'ด.ญ.', firstName: 'ณิชนันทน์', lastName: 'เก่งการค้า', status: '', details: '' },
-      { id: 310, no: 10, prefix: 'ด.ญ.', firstName: 'ณิชาภัทร', lastName: 'ว่องไว', status: '', details: '' },
-      { id: 311, no: 11, prefix: 'ด.ญ.', firstName: 'ดลลชา', lastName: 'มีโชค', status: '', details: '' },
-      { id: 312, no: 12, prefix: 'ด.ญ.', firstName: 'ทักษอร', lastName: 'เปี่ยมสุข', status: '', details: '' },
-      { id: 313, no: 13, prefix: 'ด.ช.', firstName: 'นพคุณ', lastName: 'ขยันตั้งใจ', status: '', details: '' },
-      { id: 314, no: 14, prefix: 'ด.ญ.', firstName: 'เบญจวรรณ', lastName: 'สมบัติพูน', status: '', details: '' },
-      { id: 315, no: 15, prefix: 'ด.ญ.', firstName: 'พิมลภัส', lastName: 'วรโชติ', status: '', details: '' }
-    ]
-  }
-])
-
-// Target classroom selected from dynamic param ID
-const selectedClassroom = computed(() => {
-  return classrooms.value.find(cls => cls.id === classId.value) || null
-})
+// Dynamic selected classroom ref populated from database
+const selectedClassroom = ref<any>(null)
 
 // Temporary local copy of students being edited during check-in session
 const editingStudents = ref<any[]>([])
@@ -132,23 +44,149 @@ const editingStudents = ref<any[]>([])
 const studentSearchQuery = ref('')
 const studentFilterStatus = ref<'all' | 'present' | 'absent' | 'late' | 'leave' | 'unchecked'>('all')
 
-// Initial layout rendering & redirection if class doesn't exist
+// Thai short date formatter helper
+const formatThaiDateShort = (dateStr: string) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const day = date.getDate()
+  const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+  const month = months[date.getMonth()]
+  const thaiYear = (date.getFullYear() + 543).toString().slice(-2)
+  return `${day} ${month} ${thaiYear}`
+}
+
+// Initial layout rendering & loading from backend database
 onMounted(async () => {
   isLoading.value = true
-  // Mock loading delay to demonstrate the cute mascot animation
-  await new Promise(resolve => setTimeout(resolve, 800))
   
-  if (!selectedClassroom.value) {
-    showToast('ไม่พบข้อมูลห้องเรียนนี้ กำลังพากลับ...', 'error')
-    setTimeout(() => {
-      navigateTo('/teachers/classroom')
-    }, 1500)
+  try {
+    // Load lookup prefixes
+    const prefixRes: any = await $fetch('http://localhost:8080/api/v1/system/prefix')
+    const prefixes = prefixRes.data || []
+
+    // Fetch data
+    const [classroomsRes, schedulesRes, studentClassroomsRes, studentsRes, attendancesRes]: any = await Promise.all([
+      $fetch('http://localhost:8080/api/v1/classrooms'),
+      $fetch('http://localhost:8080/api/v1/class-schedules'),
+      $fetch('http://localhost:8080/api/v1/student-classrooms'),
+      $fetch('http://localhost:8080/api/v1/students'),
+      $fetch('http://localhost:8080/api/v1/classroom-attendences')
+    ])
+
+    const rawClassrooms = classroomsRes.data || []
+    const rawSchedules = schedulesRes.data || []
+    const rawStudentClassrooms = studentClassroomsRes.data || []
+    const rawStudents = studentsRes.data || []
+    const rawAttendances = attendancesRes.data || []
+
+    const matchedClass = rawClassrooms.find((c: any) => c.id.toString() === classId.value.toString())
+    if (!matchedClass) {
+      showToast('ไม่พบข้อมูลห้องเรียนนี้ กำลังพากลับ...', 'error')
+      setTimeout(() => {
+        navigateTo('/teachers/classroom')
+      }, 1500)
+      isLoading.value = false
+      return
+    }
+
+    // Today's Date YYYY-MM-DD
+    const todayStr = new Date().toISOString().split('T')[0]
+
+    // Find active schedule for today or most recent schedule
+    let activeSchedule = rawSchedules.find((s: any) => s.classroom_id === matchedClass.id && s.date === todayStr)
+    if (!activeSchedule) {
+      // Find latest class schedule to copy the time slot from
+      const latestSchedule = rawSchedules.filter((s: any) => s.classroom_id === matchedClass.id)
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+      let timeSlot = latestSchedule ? latestSchedule.time : '08:15'
+      if (timeSlot.includes('-')) {
+        timeSlot = timeSlot.split('-')[0].trim()
+      }
+
+      // Create a schedule for today
+      const newScheduleRes: any = await $fetch('http://localhost:8080/api/v1/class-schedules', {
+        method: 'POST',
+        body: {
+          classroom_id: matchedClass.id,
+          teacher_id: session.value.teacher_id,
+          date: todayStr,
+          time: timeSlot
+        }
+      })
+      activeSchedule = newScheduleRes.data
+    }
+
+    // Map enrolled students
+    const matchedStudentClassrooms = rawStudentClassrooms.filter((sc: any) => sc.classroom_id === matchedClass.id)
+    const enrolledStudents = matchedStudentClassrooms.map((sc: any) => {
+      const studentInfo = rawStudents.find((s: any) => s.id === sc.student_id)
+      if (!studentInfo) return null
+
+      const matchedPrefixObj = prefixes.find((p: any) => p.id === studentInfo.prefix_id)
+      const prefixName = matchedPrefixObj ? matchedPrefixObj.name : 'ด.ช.'
+
+      // Search attendance record under today's schedule
+      let status = ''
+      let details = ''
+      let attendanceId = ''
+
+      if (activeSchedule) {
+        const matchedAttendance = rawAttendances.find((a: any) => a.student_id === studentInfo.id && a.schedule_id === activeSchedule.id)
+        if (matchedAttendance) {
+          status = matchedAttendance.status
+          details = matchedAttendance.remark || ''
+          attendanceId = matchedAttendance.id
+        }
+      }
+
+      return {
+        id: studentInfo.id,
+        no: parseInt(studentInfo.student_no || '0') || 0,
+        prefix: prefixName,
+        firstName: studentInfo.firstname,
+        lastName: studentInfo.lastname,
+        status,
+        details,
+        attendanceId
+      }
+    }).filter(Boolean)
+
+    enrolledStudents.sort((a: any, b: any) => a.no - b.no)
+
+    const formattedDate = formatThaiDateShort(activeSchedule.date)
+    let displayTime = activeSchedule.time || ''
+    if (displayTime && !displayTime.includes('-')) {
+      const cleanTime = displayTime.slice(0, 5)
+      const [h, m] = cleanTime.split(':').map(Number)
+      if (!isNaN(h) && !isNaN(m)) {
+        const dt = new Date()
+        dt.setHours(h)
+        dt.setMinutes(m + 55)
+        const endH = dt.getHours().toString().padStart(2, '0')
+        const endM = dt.getMinutes().toString().padStart(2, '0')
+        displayTime = `${cleanTime} - ${endH}:${endM} น.`
+      }
+    }
+    const timeText = `${formattedDate} • ${displayTime}`
+
+    selectedClassroom.value = {
+      id: matchedClass.id,
+      name: matchedClass.class,
+      subject: matchedClass.subject,
+      studentsCount: enrolledStudents.length,
+      time: timeText,
+      scheduleId: activeSchedule.id,
+      date: activeSchedule.date,
+      students: enrolledStudents
+    }
+
+    editingStudents.value = JSON.parse(JSON.stringify(enrolledStudents))
+  } catch (err) {
+    console.error(err)
+    showToast('ไม่สามารถดึงข้อมูลเช็คชื่อได้', 'error')
+  } finally {
     isLoading.value = false
-    return
   }
-  // Deep copy student list so edit is not written directly to main state until saved
-  editingStudents.value = JSON.parse(JSON.stringify(selectedClassroom.value.students))
-  isLoading.value = false
 })
 
 // Filtered students inside active check-in
@@ -204,7 +242,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'inf
   }, 3000)
 }
 
-// Thai initial parser (skipping leading vowels)
+// Thai initial parser
 const getThaiInitial = (word: string) => {
   if (!word) return ''
   const leadingVowels = ['เ', 'แ', 'โ', 'ใ', 'ไ']
@@ -235,7 +273,7 @@ const clearAllStatus = () => {
 }
 
 // Status selection actions
-const setStudentStatus = (studentId: number, status: 'present' | 'absent' | 'late' | 'leave') => {
+const setStudentStatus = (studentId: string | number, status: 'present' | 'absent' | 'late' | 'leave') => {
   const student = editingStudents.value.find(s => s.id === studentId)
   if (student) {
     student.status = status
@@ -250,7 +288,7 @@ const setStudentStatus = (studentId: number, status: 'present' | 'absent' | 'lat
 }
 
 // Set late minute helper
-const setLateMinutes = (studentId: number, minutes: string) => {
+const setLateMinutes = (studentId: string | number, minutes: string) => {
   const student = editingStudents.value.find(s => s.id === studentId)
   if (student) {
     student.details = minutes
@@ -258,45 +296,56 @@ const setLateMinutes = (studentId: number, minutes: string) => {
 }
 
 // Set leave reason helper
-const setLeaveReason = (studentId: number, reason: string) => {
+const setLeaveReason = (studentId: string | number, reason: string) => {
   const student = editingStudents.value.find(s => s.id === studentId)
   if (student) {
     student.details = reason
   }
 }
 
-// Save attendance data back to main classrooms state
+// Save attendance data back to backend database
 const isSaving = ref(false)
 const saveAttendance = async () => {
   if (!selectedClassroom.value) return
   
   isSaving.value = true
-  // Mock API Call delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  const clsIndex = classrooms.value.findIndex(c => c.id === classId.value)
-  if (clsIndex !== -1) {
-    const targetClass = classrooms.value[clsIndex]
-    if (targetClass) {
-      // Save state back
-      targetClass.students = JSON.parse(JSON.stringify(editingStudents.value))
-      targetClass.status = 'completed'
-      
-      // Set checked time text
-      const now = new Date()
-      const hours = now.getHours().toString().padStart(2, '0')
-      const mins = now.getMinutes().toString().padStart(2, '0')
-      targetClass.checkedTime = `เช็คชื่อเมื่อ ${hours}:${mins} น.`
+  try {
+    const scheduleId = selectedClassroom.value.scheduleId
+    const dateVal = selectedClassroom.value.date
+
+    for (const s of editingStudents.value) {
+      const payload = {
+        student_id: s.id,
+        schedule_id: scheduleId,
+        date: dateVal,
+        status: s.status || 'present',
+        remark: s.details || ''
+      }
+
+      if (s.attendanceId) {
+        await $fetch(`http://localhost:8080/api/v1/classroom-attendences/${s.attendanceId}`, {
+          method: 'PATCH',
+          body: payload
+        })
+      } else {
+        await $fetch('http://localhost:8080/api/v1/classroom-attendences', {
+          method: 'POST',
+          body: payload
+        })
+      }
     }
+
+    showToast('บันทึกเวลาเรียนเสร็จสมบูรณ์เรียบร้อย', 'success')
+    
+    setTimeout(() => {
+      navigateTo('/teachers/classroom')
+    }, 500)
+  } catch (err) {
+    console.error(err)
+    showToast('เกิดข้อผิดพลาดในการบันทึกเวลาเรียน', 'error')
+  } finally {
+    isSaving.value = false
   }
-  
-  isSaving.value = false
-  showToast('บันทึกเวลาเรียนเสร็จสมบูรณ์เรียบร้อย', 'success')
-  
-  // Return to list view
-  setTimeout(() => {
-    navigateTo('/teachers/classroom')
-  }, 500)
 }
 
 // Cancel editing and return to list view
@@ -314,9 +363,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
-  setTimeout(() => {
-    navigateTo('/teachers/login')
-  }, 1000)
+  logout()
 }
 </script>
 

@@ -14,15 +14,8 @@ const isMobileSidebarOpen = ref(false)
 // State for Logout Confirmation Modal
 const isLogoutModalOpen = ref(false)
 
-// Mock Teacher Profile Data
-const teacherProfile = ref({
-  name: 'สมชาย ใจดี',
-  title: 'คุณครูประจำวิชาคณิตศาสตร์',
-  school: 'โรงเรียนสตรีวิทยา',
-  subject: 'คณิตศาสตร์',
-  email: 'somchai.jai@email.com',
-  avatarInitials: 'สช'
-})
+const { teacherProfile, requireAuth, logout } = useTeacherSession()
+requireAuth()
 
 // Current date display in Thai format
 const currentDateText = computed(() => {
@@ -285,9 +278,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
-  setTimeout(() => {
-    navigateTo('/teachers/login')
-  }, 1000)
+  logout()
 }
 </script>
 

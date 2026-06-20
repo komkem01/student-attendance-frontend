@@ -25,15 +25,8 @@ const isMobileSidebarOpen = ref(false)
 // State for User Profile Dropdown
 const isProfileDropdownOpen = ref(false)
 
-// Mock Teacher Profile Data
-const teacherProfile = ref({
-  name: 'สมชาย ใจดี',
-  title: 'คุณครูประจำวิชาคณิตศาสตร์',
-  school: 'โรงเรียนสตรีวิทยา',
-  subject: 'คณิตศาสตร์',
-  email: 'somchai.jai@email.com',
-  avatarInitials: 'สช'
-})
+const { teacherProfile, requireAuth, logout } = useTeacherSession()
+requireAuth()
 
 // Stats Summary Card Data
 const stats = computed(() => [
@@ -185,9 +178,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
-  setTimeout(() => {
-    navigateTo('/teachers/login')
-  }, 1000)
+  logout()
 }
 </script>
 
@@ -279,7 +270,7 @@ const confirmLogout = () => {
               TEACHER DASHBOARD
             </span>
             <h2 class="font-fredoka text-2xl sm:text-3xl font-extrabold leading-tight">
-              สวัสดีครับ, ครู{{ teacherProfile.name }}
+              สวัสดี, {{ teacherProfile.name }}
             </h2>
             <p class="font-nunito text-xs sm:text-sm text-pink-50/90 font-medium">
               วันนี้มีวิชาคณิตศาสตร์ที่ต้องจัดการเช็คชื่อเข้าแถว 3 คาบเรียน ยอดรวมนักเรียนเข้าข่ายประเมิน 120 คน

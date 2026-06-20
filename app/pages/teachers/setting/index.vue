@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 useHead({
   title: 'ตั้งค่าระบบ | Student Attendance System',
@@ -14,18 +14,8 @@ const isMobileSidebarOpen = ref(false)
 // State for Logout Confirmation Modal
 const isLogoutModalOpen = ref(false)
 
-// Mock Teacher Profile Data
-const teacherProfile = ref({
-  firstName: 'สมชาย',
-  lastName: 'ใจดี',
-  name: 'สมชาย ใจดี',
-  title: 'คุณครูประจำวิชาคณิตศาสตร์',
-  school: 'โรงเรียนสตรีวิทยา',
-  subject: 'คณิตศาสตร์',
-  email: 'somchai.jai@email.com',
-  phone: '081-234-5678',
-  avatarInitials: 'สช'
-})
+const { session, teacherProfile, requireAuth, logout } = useTeacherSession()
+requireAuth()
 
 // Current date display in Thai format
 const currentDateText = computed(() => {
@@ -37,147 +27,6 @@ const currentDateText = computed(() => {
   }
   return new Date().toLocaleDateString('th-TH', options)
 })
-
-// Settings Active Tab state
-const activeTab = ref<'profile' | 'rules' | 'security'>('profile')
-
-// Form States
-const formProfile = ref({
-  firstName: 'สมชาย',
-  lastName: 'ใจดี',
-  title: 'คุณครูประจำวิชาคณิตศาสตร์',
-  school: 'โรงเรียนสตรีวิทยา',
-  email: 'somchai.jai@email.com',
-  phone: '081-234-5678'
-})
-
-// Password change state
-const mockTeacherPassword = ref('123456')
-const formPassword = ref({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-})
-
-// Password visibility toggle states
-const showCurrentPassword = ref(false)
-const showNewPassword = ref(false)
-const showConfirmPassword = ref(false)
-
-// Password complexity/strength computed evaluator
-const passwordStrength = computed(() => {
-  const pw = formPassword.value.newPassword
-  if (!pw) return { score: 0, text: 'ยังไม่ได้ระบุ', color: 'text-slate-400', barColor: 'bg-slate-100', width: '0%' }
-  if (pw.length < 6) return { score: 1, text: 'สั้นเกินไป', color: 'text-rose-500', barColor: 'bg-rose-500', width: '25%' }
-  
-  // Check complexity
-  const hasLetters = /[a-zA-Z]/.test(pw)
-  const hasNumbers = /[0-9]/.test(pw)
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pw)
-  
-  if (hasLetters && hasNumbers && hasSpecial && pw.length >= 8) {
-    return { score: 3, text: 'แข็งแกร่งมาก', color: 'text-emerald-500', barColor: 'bg-emerald-500', width: '100%' }
-  }
-  if ((hasLetters && hasNumbers) || pw.length >= 8) {
-    return { score: 2, text: 'ปานกลาง', color: 'text-amber-500', barColor: 'bg-amber-500', width: '60%' }
-  }
-  return { score: 1, text: 'ง่ายเกินไป', color: 'text-rose-400', barColor: 'bg-rose-400', width: '35%' }
-})
-
-// Detailed validation checking for requirements list
-const isLengthValid = computed(() => formPassword.value.newPassword.length >= 6)
-const hasNumber = computed(() => /[0-9]/.test(formPassword.value.newPassword))
-const hasUppercase = computed(() => /[A-Z]/.test(formPassword.value.newPassword))
-const hasLowercase = computed(() => /[a-z]/.test(formPassword.value.newPassword))
-const hasSpecial = computed(() => /[!@#$%^&*(),.?":{}|<>]/.test(formPassword.value.newPassword))
-
-const passwordStrengthScore = computed(() => {
-  const pw = formPassword.value.newPassword
-  if (!pw) return 0
-  let score = 0
-  if (pw.length >= 6) score++
-  if (/[0-9]/.test(pw)) score++
-  if (/[a-z]/.test(pw)) score++
-  if (/[A-Z]/.test(pw)) score++
-  if (/[!@#$%^&*(),.?":{}|<>]/.test(pw)) score++
-  return score
-})
-
-const passwordStrengthDetails = computed(() => {
-  const score = passwordStrengthScore.value
-  const pw = formPassword.value.newPassword
-  if (!pw) {
-    return {
-      text: 'ยังไม่ได้ระบุรหัสผ่านใหม่',
-      color: 'text-slate-400',
-      bgColor: 'bg-slate-50',
-      borderColor: 'border-slate-200/60',
-      textColor: 'text-slate-500',
-      barColor: 'bg-slate-200',
-      width: '0%',
-      emoji: '🔒'
-    }
-  }
-  if (score <= 2) {
-    return {
-      text: 'ความปลอดภัยต่ำ (ควรปรับปรุง)',
-      color: 'text-rose-500',
-      bgColor: 'bg-rose-50/50',
-      borderColor: 'border-rose-100/70',
-      textColor: 'text-rose-600',
-      barColor: 'bg-rose-500',
-      width: `${score * 20}%`,
-      emoji: '⚠️'
-    }
-  }
-  if (score <= 4) {
-    return {
-      text: 'ความปลอดภัยปานกลาง',
-      color: 'text-[#D08200]',
-      bgColor: 'bg-[#FFF9E6]',
-      borderColor: 'border-[#FFE29A]',
-      textColor: 'text-[#805B00]',
-      barColor: 'bg-[#FFB000]',
-      width: `${score * 20}%`,
-      emoji: '🛡️'
-    }
-  }
-  return {
-    text: 'ความปลอดภัยระดับดีเยี่ยม!',
-    color: 'text-emerald-500',
-    bgColor: 'bg-emerald-50/50',
-    borderColor: 'border-emerald-100/70',
-    textColor: 'text-emerald-600',
-    barColor: 'bg-emerald-500',
-    width: '100%',
-    emoji: '💪✨'
-  }
-})
-
-const lateLimitTime = ref('08:30')
-const passingRateThreshold = ref(80)
-
-// Custom Time Adjustment increments
-const incrementHour = () => {
-  const [h, m] = lateLimitTime.value.split(':').map(Number)
-  const val = (h + 1) % 24
-  lateLimitTime.value = `${String(val).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-}
-const decrementHour = () => {
-  const [h, m] = lateLimitTime.value.split(':').map(Number)
-  const val = (h - 1 + 24) % 24
-  lateLimitTime.value = `${String(val).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-}
-const incrementMinute = () => {
-  const [h, m] = lateLimitTime.value.split(':').map(Number)
-  const val = (m + 5) % 60
-  lateLimitTime.value = `${String(h).padStart(2, '0')}:${String(val).padStart(2, '0')}`
-}
-const decrementMinute = () => {
-  const [h, m] = lateLimitTime.value.split(':').map(Number)
-  const val = (m - 5 + 60) % 60
-  lateLimitTime.value = `${String(h).padStart(2, '0')}:${String(val).padStart(2, '0')}`
-}
 
 // SweetAlert-style Toast Notifications State
 const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' | 'info' }[]>([])
@@ -191,76 +40,44 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'inf
   }, 3000)
 }
 
-const isSaving = ref(false)
+// Settings Form Composable
+const {
+  activeTab,
+  isSaving,
+  formProfile,
+  formPassword,
+  showCurrentPassword,
+  showNewPassword,
+  showConfirmPassword,
+  lateLimitTime,
+  passingRateThreshold,
+  passwordStrength,
+  isLengthValid,
+  hasNumber,
+  hasUppercase,
+  hasLowercase,
+  hasSpecial,
+  passwordStrengthScore,
+  passwordStrengthDetails,
+  incrementHour,
+  decrementHour,
+  incrementMinute,
+  decrementMinute,
+  loadSettings,
+  saveSettings,
+  changePassword
+} = useSettingForm(showToast)
+
+// Fetch settings on load
+onMounted(() => {
+  loadSettings()
+})
 
 const handleSaveSettings = async () => {
-  if (activeTab.value === 'profile') {
-    if (!formProfile.value.firstName.trim() || !formProfile.value.lastName.trim() || !formProfile.value.school.trim()) {
-      showToast('กรุณากรอกข้อมูลโปรไฟล์ส่วนตัวให้ครบถ้วน', 'warning')
-      return
-    }
-  }
-
   if (activeTab.value === 'security') {
-    if (!formPassword.value.currentPassword || !formPassword.value.newPassword || !formPassword.value.confirmPassword) {
-      showToast('กรุณากรอกรหัสผ่านปัจจุบัน รหัสผ่านใหม่ และยืนยันรหัสผ่านใหม่ให้ครบถ้วน', 'warning')
-      return
-    }
-    if (formPassword.value.currentPassword !== mockTeacherPassword.value) {
-      showToast('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error')
-      return
-    }
-    if (formPassword.value.newPassword.length < 6) {
-      showToast('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร', 'warning')
-      return
-    }
-    if (formPassword.value.newPassword !== formPassword.value.confirmPassword) {
-      showToast('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน', 'error')
-      return
-    }
-  }
-
-  isSaving.value = true
-  
-  // Simulate network latency
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  if (activeTab.value === 'profile') {
-    // Update local profile mockup
-    teacherProfile.value.firstName = formProfile.value.firstName
-    teacherProfile.value.lastName = formProfile.value.lastName
-    teacherProfile.value.name = `${formProfile.value.firstName} ${formProfile.value.lastName}`
-    teacherProfile.value.title = formProfile.value.title
-    teacherProfile.value.school = formProfile.value.school
-    teacherProfile.value.email = formProfile.value.email
-    teacherProfile.value.phone = formProfile.value.phone
-    
-    // Generate new initials (extracting leading Thai vowels if any)
-    const getThaiInitial = (word: string) => {
-      if (!word) return ''
-      const leadingVowels = ['เ', 'แ', 'โ', 'ใ', 'ไ']
-      if (leadingVowels.includes(word.charAt(0)) && word.length > 1) {
-        return word.charAt(1)
-      }
-      return word.charAt(0)
-    }
-
-    const firstInitial = getThaiInitial(formProfile.value.firstName)
-    const lastInitial = getThaiInitial(formProfile.value.lastName)
-    teacherProfile.value.avatarInitials = firstInitial + lastInitial
-  }
-
-  if (activeTab.value === 'security') {
-    mockTeacherPassword.value = formPassword.value.newPassword
-    formPassword.value.currentPassword = ''
-    formPassword.value.newPassword = ''
-    formPassword.value.confirmPassword = ''
-    showToast('เปลี่ยนรหัสผ่านสำเร็จ!', 'success')
-  }
-  
-  isSaving.value = false
-  if (activeTab.value !== 'security') {
-    showToast('บันทึกการตั้งค่าระบบเรียบร้อยแล้ว!', 'success')
+    await changePassword()
+  } else {
+    await saveSettings()
   }
 }
 
@@ -271,9 +88,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
-  setTimeout(() => {
-    navigateTo('/teachers/login')
-  }, 1000)
+  logout()
 }
 </script>
 
@@ -599,6 +414,8 @@ const confirmLogout = () => {
                             type="text" 
                             v-model="formProfile.phone"
                             class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-[#FF758F] focus:bg-white focus:ring-4 focus:ring-pink-100/40 rounded-2xl font-nunito text-xs sm:text-sm font-semibold text-slate-700 focus:outline-hidden transition-all duration-300 shadow-2xs"
+                            :maxlength="10"
+                            :minlength="10"
                           />
                         </div>
                       </div>
