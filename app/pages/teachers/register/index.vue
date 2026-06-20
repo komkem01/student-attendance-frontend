@@ -157,8 +157,8 @@ const dpMonth = ref(new Date().getMonth())
 const dpYear = ref(new Date().getFullYear())
 
 // Years array for selector (from 1940 to current year)
-const curstudent-attendanceear = new Date().getFullYear()
-const dpYears = Array.from({ length: curstudent-attendanceear - 1940 + 1 }, (_, i) => curstudent-attendanceear - i)
+const currentYear = new Date().getFullYear()
+const dpYears = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i)
 
 const dpMonths = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
