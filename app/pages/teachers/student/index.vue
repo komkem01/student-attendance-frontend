@@ -11,10 +11,7 @@ useHead({
 // State for Mobile Sidebar Toggle
 const isMobileSidebarOpen = ref(false)
 
-// State for Logout Confirmation Modal
-const isLogoutModalOpen = ref(false)
-
-const { teacherProfile, requireAuth, logout } = useTeacherSession()
+const { teacherProfile, requireAuth } = useTeacherSession()
 requireAuth()
 
 // Current date display in Thai format
@@ -28,375 +25,59 @@ const currentDateText = computed(() => {
   return new Date().toLocaleDateString('th-TH', options)
 })
 
-// Shared Classrooms state
-const classrooms = useState<any[]>('classrooms', () => [
-  {
-    id: 1,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/1',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 15,
-    status: 'completed',
-    time: '08:15 - 09:10 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 08:30 น.',
-    students: [
-      { id: 101, no: 1, prefix: 'ด.ช.', firstName: 'นันทวัฒน์', lastName: 'สมบูรณ์', status: 'absent', details: '' },
-      { id: 102, no: 2, prefix: 'ด.ช.', firstName: 'กิตติพงษ์', lastName: 'แก้วมณี', status: 'present', details: '' },
-      { id: 103, no: 3, prefix: 'ด.ช.', firstName: 'จิรภัทร', lastName: 'ดีใจ', status: 'present', details: '' },
-      { id: 104, no: 4, prefix: 'ด.ช.', firstName: 'ธนากร', lastName: 'รักสงบ', status: 'present', details: '' },
-      { id: 105, no: 5, prefix: 'ด.ช.', firstName: 'ปกรณ์', lastName: 'งามสมบูรณ์', status: 'late', details: '15' },
-      { id: 106, no: 6, prefix: 'ด.ญ.', firstName: 'กรกนก', lastName: 'สุขใจ', status: 'present', details: '' },
-      { id: 107, no: 7, prefix: 'ด.ญ.', firstName: 'ชนิกานต์', lastName: 'รุ่งเรือง', status: 'present', details: '' },
-      { id: 108, no: 8, prefix: 'ด.ญ.', firstName: 'ณิชชา', lastName: 'พาณิชย์', status: 'leave', details: 'sick' },
-      { id: 109, no: 9, prefix: 'ด.ญ.', firstName: 'ธนัญชนก', lastName: 'แสงทอง', status: 'present', details: '' },
-      { id: 110, no: 10, prefix: 'ด.ญ.', firstName: 'ปรียาภรณ์', lastName: 'ทิพย์สุวรรณ', status: 'present', details: '' },
-      { id: 111, no: 11, prefix: 'ด.ญ.', firstName: 'วรินดา', lastName: 'ยอดรัก', status: 'present', details: '' },
-      { id: 112, no: 12, prefix: 'ด.ญ.', firstName: 'สุภัสสรา', lastName: 'ทองคำ', status: 'present', details: '' },
-      { id: 113, no: 13, prefix: 'ด.ช.', firstName: 'พีรพงษ์', lastName: 'มั่นคง', status: 'present', details: '' },
-      { id: 114, no: 14, prefix: 'ด.ช.', firstName: 'อัครพงษ์', lastName: 'เจริญกุล', status: 'present', details: '' },
-      { id: 115, no: 15, prefix: 'ด.ญ.', firstName: 'อารียา', lastName: 'ทิพย์สุวรรณ', status: 'present', details: '' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/2',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 12,
-    status: 'completed',
-    time: '09:10 - 10:05 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 09:20 น.',
-    students: [
-      { id: 201, no: 1, prefix: 'ด.ช.', firstName: 'กิตติพงษ์', lastName: 'รักดี', status: 'late', details: '15' },
-      { id: 202, no: 2, prefix: 'ด.ช.', firstName: 'ชยุต', lastName: 'สุวรรณ', status: 'present', details: '' },
-      { id: 203, no: 3, prefix: 'ด.ช.', firstName: 'ณัฐกร', lastName: 'ใจกว้าง', status: 'present', details: '' },
-      { id: 204, no: 4, prefix: 'ด.ช.', firstName: 'ทศพล', lastName: 'ประเสริฐ', status: 'present', details: '' },
-      { id: 205, no: 5, prefix: 'ด.ช.', firstName: 'นนทพัทธ์', lastName: 'จันทร์โอชา', status: 'present', details: '' },
-      { id: 206, no: 6, prefix: 'ด.ญ.', firstName: 'กมลชนก', lastName: 'พุ่มพวง', status: 'present', details: '' },
-      { id: 207, no: 7, prefix: 'ด.ญ.', firstName: 'จิราภรณ์', lastName: 'เพ็ญดี', status: 'present', details: '' },
-      { id: 208, no: 8, prefix: 'ด.ญ.', firstName: 'ชลดา', lastName: 'ศรีทอง', status: 'leave', details: 'business' },
-      { id: 209, no: 9, prefix: 'ด.ญ.', firstName: 'ณัฐณิชา', lastName: 'สุขเสมอ', status: 'present', details: '' },
-      { id: 210, no: 10, prefix: 'ด.ญ.', firstName: 'ทิพวรรณ', lastName: 'สมควร', status: 'present', details: '' },
-      { id: 211, no: 11, prefix: 'ด.ช.', firstName: 'ภานุเดช', lastName: 'รักไทย', status: 'present', details: '' },
-      { id: 212, no: 12, prefix: 'ด.ญ.', firstName: 'มุทิตา', lastName: 'สง่างาม', status: 'present', details: '' }
-    ]
-  },
-  {
-    id: 3,
-    name: 'ชั้นมัธยมศึกษาปีที่ 2/3',
-    subject: 'คณิตศาสตร์เพิ่มเติม (ค22201)',
-    studentsCount: 15,
-    status: 'pending',
-    time: '13:00 - 13:55 น.',
-    checkedTime: 'ยังไม่ได้เช็คชื่อ',
-    students: [
-      { id: 301, no: 1, prefix: 'ด.ช.', firstName: 'เกริกเกียรติ', lastName: 'มานะดี', status: '', details: '' },
-      { id: 302, no: 2, prefix: 'ด.ช.', firstName: 'จักรกฤษณ์', lastName: 'เรียนเก่ง', status: '', details: '' },
-      { id: 303, no: 3, prefix: 'ด.ช.', firstName: 'ชานนท์', lastName: 'ปัญญาดี', status: '', details: '' },
-      { id: 304, no: 4, prefix: 'ด.ช.', firstName: 'เดชาพล', lastName: 'มั่นคง', status: '', details: '' },
-      { id: 305, no: 5, prefix: 'ด.ช.', firstName: 'ทรงพล', lastName: 'ทองแท้', status: '', details: '' },
-      { id: 306, no: 6, prefix: 'ด.ญ.', firstName: 'กนิษฐา', lastName: 'สวยงาม', status: '', details: '' },
-      { id: 307, no: 7, prefix: 'ด.ญ.', firstName: 'จารุวรรณ', lastName: 'สายสมร', status: '', details: '' },
-      { id: 308, no: 8, prefix: 'ด.ญ.', firstName: 'ชนิตา', lastName: 'พึ่งธรรม', status: '', details: '' },
-      { id: 309, no: 9, prefix: 'ด.ญ.', firstName: 'ณิชนันทน์', lastName: 'เก่งการค้า', status: '', details: '' },
-      { id: 310, no: 10, prefix: 'ด.ญ.', firstName: 'ณิชาภัทร', lastName: 'ว่องไว', status: '', details: '' },
-      { id: 311, no: 11, prefix: 'ด.ญ.', firstName: 'ดลลชา', lastName: 'มีโชค', status: '', details: '' },
-      { id: 312, no: 12, prefix: 'ด.ญ.', firstName: 'ทักษอร', lastName: 'เปี่ยมสุข', status: '', details: '' },
-      { id: 313, no: 13, prefix: 'ด.ช.', firstName: 'นพคุณ', lastName: 'ขยันตั้งใจ', status: '', details: '' },
-      { id: 314, no: 14, prefix: 'ด.ญ.', firstName: 'เบญจวรรณ', lastName: 'สมบัติพูน', status: '', details: '' },
-      { id: 315, no: 15, prefix: 'ด.ญ.', firstName: 'พิมลภัส', lastName: 'วรโชติ', status: '', details: '' }
-    ]
-  }
-])
-
-// Flat student mapper attaching parent metadata
-const allStudentsMapped = computed(() => {
-  return classrooms.value.flatMap(cls => {
-    return cls.students.map(s => ({
-      ...s,
-      classId: cls.id,
-      className: cls.name,
-      classSubject: cls.subject
-    }))
-  })
-})
-
-// Statistics computed helpers
-const totalStudentsCount = computed(() => allStudentsMapped.value.length)
-const boysCount = computed(() => {
-  return allStudentsMapped.value.filter(s => s.prefix === 'ด.ช.' || s.prefix === 'นาย').length
-})
-const girlsCount = computed(() => {
-  return allStudentsMapped.value.filter(s => s.prefix === 'ด.ญ.' || s.prefix === 'น.ส.' || s.prefix === 'นางสาว').length
-})
-const totalClassroomsCount = computed(() => classrooms.value.length)
-
-// Dynamic avatar style based on student name hash
-const getAvatarStyle = (firstName: string, lastName: string) => {
-  const combined = firstName + lastName
-  const palettes = [
-    'bg-[#FFEBEF] text-[#FF4D6D] border-[#FFCCD5]',
-    'bg-[#EBF8FF] text-[#2B6CB0] border-[#BEE3F8]',
-    'bg-[#E6FFFA] text-[#319795] border-[#B2F5EA]',
-    'bg-[#FFFFF0] text-[#B7791F] border-[#FEFCBF]',
-    'bg-[#FAF5FF] text-[#6B46C1] border-[#E9D8FD]',
-    'bg-[#F0FFF4] text-[#2F855A] border-[#C6F6D5]'
-  ]
-  let sum = 0
-  for (let i = 0; i < combined.length; i++) {
-    sum += combined.charCodeAt(i)
-  }
-  return palettes[sum % palettes.length]
-}
-
-// Filters and search states
-const searchQuery = ref('')
-const selectedClassFilterId = ref<number | 'all'>('all')
-const showClassFilterPopover = ref(false)
-
-const selectedClassroomFilterObj = computed(() => {
-  if (selectedClassFilterId.value === 'all') return null
-  return classrooms.value.find(c => c.id === selectedClassFilterId.value)
-})
-
-// Filtered Students List
-const filteredStudents = computed(() => {
-  return allStudentsMapped.value.filter(s => {
-    const matchesSearch = 
-      s.firstName.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-      s.lastName.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-      `${s.prefix}${s.firstName} ${s.lastName}`.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      s.no.toString() === searchQuery.value.trim()
-      
-    const matchesClass = selectedClassFilterId.value === 'all' || s.classId === selectedClassFilterId.value
-    
-    return matchesSearch && matchesClass
-  }).sort((a, b) => {
-    // Sort by class ID first, then by Student No
-    if (a.classId !== b.classId) {
-      return a.classId - b.classId
-    }
-    return a.no - b.no
-  })
-})
-
-// SweetAlert-style Toast Notifications State
-const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' | 'info' }[]>([])
-let toastId = 0
-
-const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
-  const id = toastId++
-  toasts.value.push({ id, message, type })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter(t => t.id !== id)
-  }, 3000)
-}
-
-// Add Student states & logic
-const isAddModalOpen = ref(false)
-const newStudentPrefix = ref('ด.ช.')
-const newStudentFirstName = ref('')
-const newStudentLastName = ref('')
-const newStudentClassId = ref<number | null>(null)
-const newStudentNo = ref<number | null>(null)
-const showAddClassPopover = ref(false)
-const isSubmitting = ref(false)
-
-const newStudentSelectedClass = computed(() => {
-  if (!newStudentClassId.value) return null
-  return classrooms.value.find(c => c.id === newStudentClassId.value)
-})
-
-const openAddModal = () => {
-  newStudentPrefix.value = 'ด.ช.'
-  newStudentFirstName.value = ''
-  newStudentLastName.value = ''
+const {
+  classrooms,
+  isFetching,
+  isSubmitting,
+  toasts,
+  allStudentsMapped,
+  totalStudentsCount,
+  boysCount,
+  girlsCount,
+  totalClassroomsCount,
+  getAvatarStyle,
+  searchQuery,
+  selectedClassFilterId,
+  showClassFilterPopover,
+  selectedClassroomFilterObj,
+  filteredStudents,
   
-  // Default to first class if available
-  newStudentClassId.value = classrooms.value.length > 0 ? classrooms.value[0].id : null
-  
-  // Propose next student number
-  calculateNextStudentNo()
-  
-  showAddClassPopover.value = false
-  isAddModalOpen.value = true
-}
+  // Add student
+  isAddModalOpen,
+  newStudentPrefix,
+  newStudentFirstName,
+  newStudentLastName,
+  newStudentClassId,
+  newStudentNo,
+  showAddClassPopover,
+  newStudentSelectedClass,
+  openAddModal,
+  handleAddStudent,
 
-const calculateNextStudentNo = () => {
-  if (!newStudentClassId.value) {
-    newStudentNo.value = 1
-    return
-  }
-  const targetClass = classrooms.value.find(c => c.id === newStudentClassId.value)
-  if (targetClass && targetClass.students.length > 0) {
-    const maxNo = Math.max(...targetClass.students.map(s => s.no))
-    newStudentNo.value = maxNo + 1
-  } else {
-    newStudentNo.value = 1
-  }
-}
+  // Edit student
+  isEditModalOpen,
+  editingStudentObj,
+  editStudentPrefix,
+  editStudentFirstName,
+  editStudentLastName,
+  editStudentClassId,
+  editStudentNo,
+  showEditClassPopover,
+  editStudentSelectedClass,
+  openEditModal,
+  handleUpdateStudent,
 
-// Watch selected class to update next student no suggestion
-watch(newStudentClassId, () => {
-  calculateNextStudentNo()
-})
+  // Delete student
+  isDeleteModalOpen,
+  deletingStudentObj,
+  confirmDeleteStudent,
+  handleDeleteStudent,
 
-const handleAddStudent = async () => {
-  if (!newStudentFirstName.value.trim() || !newStudentLastName.value.trim() || !newStudentClassId.value || !newStudentNo.value) {
-    showToast('กรุณากรอกข้อมูลส่วนตัวของนักเรียนให้ครบถ้วน', 'warning')
-    return
-  }
-  
-  isSubmitting.value = true
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  const targetClass = classrooms.value.find(c => c.id === newStudentClassId.value)
-  if (targetClass) {
-    // Check if number already taken
-    const noTaken = targetClass.students.some(s => s.no === newStudentNo.value)
-    if (noTaken) {
-      showToast(`เลขที่ ${newStudentNo.value} ถูกใช้งานในห้องเรียนนี้แล้ว`, 'warning')
-      isSubmitting.value = false
-      return
-    }
-
-    const nextId = Math.max(...allStudentsMapped.value.map(s => s.id), 0) + 1
-    targetClass.students.push({
-      id: nextId,
-      no: newStudentNo.value,
-      prefix: newStudentPrefix.value,
-      firstName: newStudentFirstName.value.trim(),
-      lastName: newStudentLastName.value.trim(),
-      status: '', // initially empty status
-      details: ''
-    })
-    
-    // Sort array by student No
-    targetClass.students.sort((a, b) => a.no - b.no)
-    targetClass.studentsCount = targetClass.students.length
-    
-    showToast(`เพิ่ม ${newStudentFirstName.value} เรียบร้อยแล้ว!`, 'success')
-  }
-  
-  isSubmitting.value = false
-  isAddModalOpen.value = false
-}
-
-// Edit Student states & logic
-const isEditModalOpen = ref(false)
-const editingStudentObj = ref<any | null>(null)
-const editStudentPrefix = ref('ด.ช.')
-const editStudentFirstName = ref('')
-const editStudentLastName = ref('')
-const editStudentClassId = ref<number | null>(null)
-const editStudentNo = ref<number | null>(null)
-const showEditClassPopover = ref(false)
-
-const editStudentSelectedClass = computed(() => {
-  if (!editStudentClassId.value) return null
-  return classrooms.value.find(c => c.id === editStudentClassId.value)
-})
-
-const openEditModal = (student: any) => {
-  editingStudentObj.value = student
-  editStudentPrefix.value = student.prefix
-  editStudentFirstName.value = student.firstName
-  editStudentLastName.value = student.lastName
-  editStudentClassId.value = student.classId
-  editStudentNo.value = student.no
-  
-  showEditClassPopover.value = false
-  isEditModalOpen.value = true
-}
-
-const handleUpdateStudent = async () => {
-  if (!editStudentFirstName.value.trim() || !editStudentLastName.value.trim() || !editStudentClassId.value || !editStudentNo.value) {
-    showToast('กรุณากรอกข้อมูลส่วนตัวของนักเรียนให้ครบถ้วน', 'warning')
-    return
-  }
-  
-  isSubmitting.value = true
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  const currentClass = classrooms.value.find(c => c.id === editingStudentObj.value.classId)
-  const targetClass = classrooms.value.find(c => c.id === editStudentClassId.value)
-  
-  if (currentClass && targetClass) {
-    // Check if moving to new class, and number is taken in new class
-    if (editingStudentObj.value.classId !== editStudentClassId.value || editingStudentObj.value.no !== editStudentNo.value) {
-      const noTaken = targetClass.students.some(s => s.id !== editingStudentObj.value.id && s.no === editStudentNo.value)
-      if (noTaken) {
-        showToast(`เลขที่ ${editStudentNo.value} ถูกใช้งานในห้องเรียนนี้แล้ว`, 'warning')
-        isSubmitting.value = false
-        return
-      }
-    }
-
-    // Remove from current class
-    currentClass.students = currentClass.students.filter(s => s.id !== editingStudentObj.value.id)
-    currentClass.studentsCount = currentClass.students.length
-    
-    // Add to target class (with updated details)
-    targetClass.students.push({
-      id: editingStudentObj.value.id,
-      no: editStudentNo.value,
-      prefix: editStudentPrefix.value,
-      firstName: editStudentFirstName.value.trim(),
-      lastName: editStudentLastName.value.trim(),
-      status: editingStudentObj.value.status || '',
-      details: editingStudentObj.value.details || ''
-    })
-    
-    // Sort array by student No
-    targetClass.students.sort((a, b) => a.no - b.no)
-    targetClass.studentsCount = targetClass.students.length
-    
-    showToast(`แก้ไขข้อมูลประวัตินักเรียนเรียบร้อยแล้ว!`, 'success')
-  }
-  
-  isSubmitting.value = false
-  isEditModalOpen.value = false
-}
-
-// Delete Student states & logic
-const isDeleteModalOpen = ref(false)
-const deletingStudentObj = ref<any | null>(null)
-
-const confirmDeleteStudent = (student: any) => {
-  deletingStudentObj.value = student
-  isDeleteModalOpen.value = true
-}
-
-const handleDeleteStudent = async () => {
-  if (!deletingStudentObj.value) return
-  
-  isSubmitting.value = true
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 800))
-  
-  const targetClass = classrooms.value.find(c => c.id === deletingStudentObj.value.classId)
-  if (targetClass) {
-    targetClass.students = targetClass.students.filter(s => s.id !== deletingStudentObj.value.id)
-    targetClass.studentsCount = targetClass.students.length
-    showToast(`ลบข้อมูลนักเรียนออกจากห้อง ${targetClass.name} สำเร็จ`, 'info')
-  }
-  
-  isSubmitting.value = false
-  isDeleteModalOpen.value = false
-}
-
-const handleLogout = () => {
-  isLogoutModalOpen.value = true
-}
-
-const confirmLogout = () => {
-  isLogoutModalOpen.value = false
-  showToast('กำลังออกจากระบบ...', 'success')
-  logout()
-}
+  // Logout
+  isLogoutModalOpen,
+  handleLogout,
+  confirmLogout
+} = useStudentList()
 </script>
 
 <template>
@@ -686,7 +367,7 @@ const confirmLogout = () => {
                           <p class="font-fredoka font-bold text-slate-800 text-sm">
                             {{ student.prefix }} {{ student.firstName }} {{ student.lastName }}
                           </p>
-                          <span class="text-[10px] text-slate-400 block mt-0.5">รหัสประจำตัว: #{{ student.id }}</span>
+                          <span class="text-[10px] text-slate-400 block mt-0.5">รหัสประจำตัวนักเรียน: {{ student.code || '-' }} | เลขที่: {{ student.no }}</span>
                         </div>
                       </div>
                     </td>

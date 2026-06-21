@@ -15,327 +15,9 @@ useHead({
 // State for Mobile Sidebar Toggle
 const isMobileSidebarOpen = ref(false);
 
-// State for Logout Confirmation Modal
-const isLogoutModalOpen = ref(false);
+const { teacherProfile, requireAuth } = useTeacherSession();
+requireAuth();
 
-// Toast notifications
-const toasts = ref<
-  {
-    id: number;
-    message: string;
-    type: "success" | "error" | "warning" | "info";
-  }[]
->([]);
-let toastId = 0;
-const showToast = (
-  message: string,
-  type: "success" | "error" | "warning" | "info" = "success",
-) => {
-  const id = toastId++;
-  toasts.value.push({ id, message, type });
-  setTimeout(() => {
-    toasts.value = toasts.value.filter((t) => t.id !== id);
-  }, 3000);
-};
-
-// Active sidebar item
-const activeTab = ref("prefect");
-
-// Search query
-const searchQuery = ref("");
-
-// Modal states
-const isAddModalOpen = ref(false);
-const isEditModalOpen = ref(false);
-const isDeleteModalOpen = ref(false);
-const selectedPrefect = ref<any>(null);
-
-// Mock classroom data
-const classrooms = [
-  { id: "c1", name: "ม.4/1", grade: "ม.4", room: "1" },
-  { id: "c2", name: "ม.4/2", grade: "ม.4", room: "2" },
-  { id: "c3", name: "ม.5/1", grade: "ม.5", room: "1" },
-  { id: "c4", name: "ม.5/2", grade: "ม.5", room: "2" },
-  { id: "c5", name: "ม.5/3", grade: "ม.5", room: "3" },
-  { id: "c6", name: "ม.6/1", grade: "ม.6", room: "1" },
-  { id: "c7", name: "ม.6/2", grade: "ม.6", room: "2" },
-];
-
-// Mock student data (per classroom)
-const studentsByClass: Record<
-  string,
-  { id: string; firstName: string; lastName: string }[]
-> = {
-  c1: [
-    { id: "s101", firstName: "ธนวัฒน์", lastName: "ศรีสุข" },
-    { id: "s102", firstName: "พัชราภา", lastName: "ทองดี" },
-    { id: "s103", firstName: "ณัฐพงษ์", lastName: "มานะ" },
-  ],
-  c2: [
-    { id: "s201", firstName: "สุทธิดา", lastName: "แสงเพชร" },
-    { id: "s202", firstName: "อภิชาติ", lastName: "รักไทย" },
-  ],
-  c3: [
-    { id: "s301", firstName: "วีรภัทร", lastName: "สุขสวัสดิ์" },
-    { id: "s302", firstName: "ปิยะรัตน์", lastName: "แก้วประเสริฐ" },
-    { id: "s303", firstName: "ชาญวิทย์", lastName: "ดวงดี" },
-  ],
-  c4: [
-    { id: "s401", firstName: "นภัสสร", lastName: "สุวรรณ" },
-    { id: "s402", firstName: "ปรมินทร์", lastName: "วงศ์ใหญ่" },
-  ],
-  c5: [
-    { id: "s501", firstName: "ศุภวิชญ์", lastName: "หมื่นไวย" },
-    { id: "s502", firstName: "จิราภา", lastName: "คงเจริญ" },
-    { id: "s503", firstName: "พีรพัฒน์", lastName: "สุขใจ" },
-  ],
-  c6: [
-    { id: "s601", firstName: "กฤตภัค", lastName: "นิยมดี" },
-    { id: "s602", firstName: "ณัฐวดี", lastName: "มีสุข" },
-  ],
-  c7: [
-    { id: "s701", firstName: "ภูมิพัฒน์", lastName: "เจริญสุข" },
-    { id: "s702", firstName: "อาภัสรา", lastName: "สว่างใจ" },
-  ],
-};
-
-// Add form: selected classroom & student
-const selectedClassroomId = ref("");
-const selectedStudentId = ref("");
-
-// Custom dropdown open states
-const isClassroomDropdownOpen = ref(false);
-const isStudentDropdownOpen = ref(false);
-
-const filteredStudentsForClass = computed(() => {
-  if (!selectedClassroomId.value) return [];
-  return studentsByClass[selectedClassroomId.value] ?? [];
-});
-
-// Computed display labels
-const selectedClassroomLabel = computed(
-  () => classrooms.find((c) => c.id === selectedClassroomId.value)?.name ?? "",
-);
-const selectedStudentLabel = computed(() => {
-  const stu = filteredStudentsForClass.value.find(
-    (s) => s.id === selectedStudentId.value,
-  );
-  return stu ? `${stu.firstName} ${stu.lastName}` : "";
-});
-
-// Click-outside handler
-const closeDropdowns = () => {
-  isClassroomDropdownOpen.value = false;
-  isStudentDropdownOpen.value = false;
-};
-onMounted(() => document.addEventListener("click", closeDropdowns));
-onUnmounted(() => document.removeEventListener("click", closeDropdowns));
-
-const selectClassroom = (cls: {
-  id: string;
-  name: string;
-  grade: string;
-  room: string;
-}) => {
-  selectedClassroomId.value = cls.id;
-  isClassroomDropdownOpen.value = false;
-  // reset student
-  selectedStudentId.value = "";
-  form.value.firstName = "";
-  form.value.lastName = "";
-  form.value.grade = cls.grade;
-  form.value.room = cls.room;
-};
-
-const selectStudent = (stu: {
-  id: string;
-  firstName: string;
-  lastName: string;
-}) => {
-  selectedStudentId.value = stu.id;
-  isStudentDropdownOpen.value = false;
-  form.value.firstName = stu.firstName;
-  form.value.lastName = stu.lastName;
-};
-
-// Form state for add/edit
-const form = ref({
-  firstName: "",
-  lastName: "",
-  inspectorId: "",
-  password: "",
-  confirmPassword: "",
-  grade: "",
-  room: "",
-  phone: "",
-});
-const showFormPassword = ref(false);
-const showFormConfirm = ref(false);
-
-// Mock prefect data
-const prefects = ref([
-  {
-    id: 1,
-    firstName: "วีรภัทร",
-    lastName: "สุขสวัสดิ์",
-    inspectorId: "S55201",
-    grade: "ม.5",
-    room: "2",
-    phone: "082-111-2222",
-    status: "active",
-    lastLogin: "18 มิ.ย. 2569 เวลา 08:30 น.",
-    checksToday: 42,
-  },
-  {
-    id: 2,
-    firstName: "ปิยะรัตน์",
-    lastName: "แก้วประเสริฐ",
-    inspectorId: "S55202",
-    grade: "ม.5",
-    room: "3",
-    phone: "083-222-3333",
-    status: "active",
-    lastLogin: "18 มิ.ย. 2569 เวลา 07:55 น.",
-    checksToday: 38,
-  },
-  {
-    id: 3,
-    firstName: "กฤตภัค",
-    lastName: "นิยมดี",
-    inspectorId: "S55203",
-    grade: "ม.6",
-    room: "1",
-    phone: "084-333-4444",
-    status: "active",
-    lastLogin: "17 มิ.ย. 2569",
-    checksToday: 0,
-  },
-  {
-    id: 4,
-    firstName: "ณัฐวดี",
-    lastName: "มีสุข",
-    inspectorId: "S55204",
-    grade: "ม.6",
-    room: "2",
-    phone: "085-444-5555",
-    status: "inactive",
-    lastLogin: "ยังไม่เคยเข้าสู่ระบบ",
-    checksToday: 0,
-  },
-]);
-
-// Filtered prefects
-const filteredPrefects = computed(() => {
-  if (!searchQuery.value.trim()) return prefects.value;
-  const q = searchQuery.value.toLowerCase();
-  return prefects.value.filter(
-    (p) =>
-      p.firstName.includes(q) ||
-      p.lastName.includes(q) ||
-      p.inspectorId.toLowerCase().includes(q) ||
-      `${p.grade}/${p.room}`.includes(q),
-  );
-});
-
-const totalActive = computed(
-  () => prefects.value.filter((p) => p.status === "active").length,
-);
-const totalToday = computed(() =>
-  prefects.value.reduce((sum, p) => sum + p.checksToday, 0),
-);
-
-// Open Add modal
-const openAddModal = () => {
-  form.value = {
-    firstName: "",
-    lastName: "",
-    inspectorId: "",
-    password: "",
-    confirmPassword: "",
-    grade: "",
-    room: "",
-    phone: "",
-  };
-  selectedClassroomId.value = "";
-  selectedStudentId.value = "";
-  isClassroomDropdownOpen.value = false;
-  isStudentDropdownOpen.value = false;
-  showFormPassword.value = false;
-  showFormConfirm.value = false;
-  isAddModalOpen.value = true;
-};
-
-// Open Edit modal
-const openEditModal = (prefect: any) => {
-  selectedPrefect.value = prefect;
-  form.value = {
-    firstName: prefect.firstName,
-    lastName: prefect.lastName,
-    inspectorId: prefect.inspectorId,
-    password: "",
-    confirmPassword: "",
-    grade: prefect.grade,
-    room: prefect.room,
-    phone: prefect.phone,
-  };
-  showFormPassword.value = false;
-  showFormConfirm.value = false;
-  isEditModalOpen.value = true;
-};
-
-// Open Delete modal
-const openDeleteModal = (prefect: any) => {
-  selectedPrefect.value = prefect;
-  isDeleteModalOpen.value = true;
-};
-
-// Add prefect handler
-const handleAdd = () => {
-  if (!selectedClassroomId.value) {
-    showToast("กรุณาเลือกชั้นเรียน", "warning");
-    return;
-  }
-  if (!selectedStudentId.value) {
-    showToast("กรุณาเลือกนักเรียน", "warning");
-    return;
-  }
-  if (!form.value.inspectorId.trim()) {
-    showToast("กรุณากรอกรหัสประจำตัวสารวัตร", "warning");
-    return;
-  }
-  if (prefects.value.some((p) => p.inspectorId === form.value.inspectorId)) {
-    showToast("รหัสประจำตัวนี้มีอยู่ในระบบแล้ว", "error");
-    return;
-  }
-  if (form.value.password.length < 6) {
-    showToast("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร", "warning");
-    return;
-  }
-  if (form.value.password !== form.value.confirmPassword) {
-    showToast("รหัสผ่านไม่ตรงกัน", "error");
-    return;
-  }
-  const newPrefect = {
-    id: Date.now(),
-    firstName: form.value.firstName,
-    lastName: form.value.lastName,
-    inspectorId: form.value.inspectorId,
-    grade: form.value.grade,
-    room: form.value.room,
-    phone: form.value.phone,
-    status: "active",
-    lastLogin: "ยังไม่เคยเข้าสู่ระบบ",
-    checksToday: 0,
-  };
-  prefects.value.unshift(newPrefect);
-  isAddModalOpen.value = false;
-  showToast(
-    `เพิ่มสารวัตร ${newPrefect.firstName} ${newPrefect.lastName} เรียบร้อยแล้ว`,
-    "success",
-  );
-};
-
-// Computed date and teacher profile for Topbar
 const currentDateText = computed(() => {
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
@@ -346,76 +28,62 @@ const currentDateText = computed(() => {
   return new Date().toLocaleDateString("th-TH", options);
 });
 
-const { teacherProfile, requireAuth, logout } = useTeacherSession()
-requireAuth()
+const {
+  prefects,
+  classrooms,
+  isFetching,
+  isSubmitting,
+  toasts,
+  activeTab,
+  searchQuery,
+  
+  // Dropdowns
+  selectedClassroomId,
+  selectedStudentId,
+  isClassroomDropdownOpen,
+  isStudentDropdownOpen,
+  filteredStudentsForClass,
+  selectedClassroomLabel,
+  selectedStudentLabel,
+  selectClassroom,
+  selectStudent,
 
-// Edit prefect handler
-const handleEdit = () => {
-  if (!form.value.firstName.trim() || !form.value.lastName.trim()) {
-    showToast("กรุณากรอกชื่อและนามสกุล", "warning");
-    return;
-  }
-  if (form.value.password && form.value.password.length < 6) {
-    showToast("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร", "warning");
-    return;
-  }
-  if (
-    form.value.password &&
-    form.value.password !== form.value.confirmPassword
-  ) {
-    showToast("รหัสผ่านไม่ตรงกัน", "error");
-    return;
-  }
-  const idx = prefects.value.findIndex(
-    (p) => p.id === selectedPrefect.value.id,
-  );
-  if (idx >= 0) {
-    const target = prefects.value[idx];
-    if (target) {
-      prefects.value[idx] = {
-        ...target,
-        firstName: form.value.firstName,
-        lastName: form.value.lastName,
-        inspectorId: form.value.inspectorId,
-        grade: form.value.grade,
-        room: form.value.room,
-        phone: form.value.phone,
-      };
-    }
-  }
-  isEditModalOpen.value = false;
-  showToast("อัปเดตข้อมูลสารวัตรเรียบร้อยแล้ว", "success");
-};
+  // Form
+  form,
+  showFormPassword,
+  showFormConfirm,
 
-// Delete prefect handler
-const handleDelete = () => {
-  const name = `${selectedPrefect.value.firstName} ${selectedPrefect.value.lastName}`;
-  prefects.value = prefects.value.filter(
-    (p) => p.id !== selectedPrefect.value.id,
-  );
-  isDeleteModalOpen.value = false;
-  showToast(`ลบบัญชีสารวัตร ${name} เรียบร้อยแล้ว`, "success");
-};
+  // Prefect lists / stats
+  filteredPrefects,
+  totalActive,
+  totalToday,
 
-// Toggle active status
-const toggleStatus = (prefect: any) => {
-  prefect.status = prefect.status === "active" ? "inactive" : "active";
-  showToast(
-    prefect.status === "active"
-      ? `เปิดใช้งานบัญชีของ ${prefect.firstName} แล้ว`
-      : `ระงับบัญชีของ ${prefect.firstName} แล้ว`,
-    prefect.status === "active" ? "success" : "warning",
-  );
-};
+  // Modals
+  isAddModalOpen,
+  isEditModalOpen,
+  isDeleteModalOpen,
+  selectedPrefect,
+  openAddModal,
+  openEditModal,
+  openDeleteModal,
+  handleAdd,
+  handleEdit,
+  handleDelete,
+  toggleStatus,
 
-const handleLogout = () => {
-  isLogoutModalOpen.value = true;
+  // Logout
+  isLogoutModalOpen,
+  handleLogout,
+  confirmLogout
+} = usePrefectList();
+
+// Click-outside handler
+const closeDropdowns = () => {
+  isClassroomDropdownOpen.value = false;
+  isStudentDropdownOpen.value = false;
 };
-const confirmLogout = () => {
-  isLogoutModalOpen.value = false;
-  showToast("กำลังออกจากระบบ...", "success");
-  logout();
-};
+onMounted(() => document.addEventListener("click", closeDropdowns));
+onUnmounted(() => document.removeEventListener("click", closeDropdowns));
 
 const getInitials = (first: string, last: string) =>
   `${first[0] ?? ""}${last[0] ?? ""}`;
@@ -606,7 +274,7 @@ const getInitials = (first: string, last: string) =>
             <div class="hidden sm:grid grid-cols-12 gap-2 px-6 py-4 bg-slate-50/75 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               <div class="col-span-4">สารวัตรนักเรียน</div>
               <div class="col-span-2">รหัสประจำตัว</div>
-              <div class="col-span-2">ชั้น / ห้อง</div>
+              <div class="col-span-2">ชั้น</div>
               <div class="col-span-2">เข้าระบบล่าสุด</div>
               <div class="col-span-1 text-center">สถานะ</div>
               <div class="col-span-1 text-center">จัดการ</div>
@@ -648,7 +316,7 @@ const getInitials = (first: string, last: string) =>
                       {{ prefect.firstName }} {{ prefect.lastName }}
                     </p>
                     <p class="font-nunito text-[10px] text-slate-400 block mt-0.5 sm:hidden">
-                      รหัส: #{{ prefect.inspectorId }} • {{ prefect.grade }}/{{ prefect.room }}
+                      รหัส: #{{ prefect.inspectorId }} • {{ prefect.room ? `${prefect.grade}/${prefect.room}` : prefect.grade }}
                     </p>
                   </div>
                 </div>
@@ -667,7 +335,7 @@ const getInitials = (first: string, last: string) =>
                   <span
                     class="bg-[#EBF8FF] text-[#2B6CB0] text-[10px] font-bold font-fredoka px-2.5 py-1 rounded-full border border-[#BEE3F8]"
                   >
-                    {{ prefect.grade }}/{{ prefect.room }}
+                    {{ prefect.className || (prefect.room ? `${prefect.grade}/${prefect.room}` : prefect.grade) }}
                   </span>
                 </div>
 
@@ -852,9 +520,12 @@ const getInitials = (first: string, last: string) =>
                       class="flex items-center gap-2"
                     >
                       <span
-                        class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 font-fredoka font-extrabold text-xs flex items-center justify-center"
-                        >{{ selectedClassroomLabel }}</span
+                        class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0"
                       >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.902 59.902 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M12 13.49v.01" />
+                        </svg>
+                      </span>
                       <span class="text-slate-700">{{
                         selectedClassroomLabel
                       }}</span>
@@ -900,17 +571,18 @@ const getInitials = (first: string, last: string) =>
                               : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700',
                           ]"
                         >
-                          <span
+                          <div
                             :class="[
-                              'w-8 h-8 rounded-xl font-fredoka font-extrabold text-sm flex items-center justify-center flex-shrink-0',
+                              'px-2 py-1 min-w-[2rem] h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-[10px] font-fredoka font-bold',
                               selectedClassroomId === cls.id
                                 ? 'bg-white/20 text-white'
                                 : 'bg-indigo-100 text-indigo-600',
                             ]"
-                            >{{ cls.name }}</span
                           >
+                            {{ cls.room ? `${cls.grade}/${cls.room}` : cls.grade }}
+                          </div>
                           <span class="font-fredoka font-bold"
-                            >ชั้น {{ cls.name }}</span
+                            >{{ cls.name }}</span
                           >
                           <span
                             :class="[
@@ -920,7 +592,7 @@ const getInitials = (first: string, last: string) =>
                                 : 'text-slate-400',
                             ]"
                           >
-                            {{ studentsByClass[cls.id]?.length ?? 0 }} คน
+                            {{ cls.studentsCount ?? 0 }} คน
                           </span>
                           <svg
                             v-if="selectedClassroomId === cls.id"
@@ -989,7 +661,7 @@ const getInitials = (first: string, last: string) =>
                         class="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-400 to-violet-500 text-white font-fredoka font-extrabold text-[10px] flex items-center justify-center"
                       >
                         {{
-                          (form.firstName[0] ?? "") + (form.lastName[0] ?? "")
+                          getInitials(form.firstName, form.lastName)
                         }}
                       </span>
                       <span class="text-slate-700">{{
@@ -1050,7 +722,7 @@ const getInitials = (first: string, last: string) =>
                             ]"
                           >
                             {{
-                              (stu.firstName[0] ?? "") + (stu.lastName[0] ?? "")
+                              getInitials(stu.firstName, stu.lastName)
                             }}
                           </span>
                           <div class="flex flex-col min-w-0">
@@ -1124,7 +796,7 @@ const getInitials = (first: string, last: string) =>
                 />
               </div>
 
-              <!-- Step 4: รหัสประจำตัวสารวัตร -->
+              <!-- Step 4: รหัสผ่าน -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
@@ -1138,33 +810,6 @@ const getInitials = (first: string, last: string) =>
                       selectedStudentId ? 'bg-indigo-500' : 'bg-slate-200'
                     "
                     >4</span
-                  >
-                  รหัสประจำตัวสารวัตร (ใช้เข้าสู่ระบบ)
-                  <span class="text-rose-400">*</span>
-                </label>
-                <input
-                  v-model="form.inspectorId"
-                  type="text"
-                  placeholder="เช่น S55205"
-                  :disabled="!selectedStudentId"
-                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 placeholder-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:bg-white outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <!-- Step 5: รหัสผ่าน -->
-              <div>
-                <label
-                  class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
-                  :class="
-                    selectedStudentId ? 'text-slate-600' : 'text-slate-300'
-                  "
-                >
-                  <span
-                    class="inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[9px] font-extrabold mr-1"
-                    :class="
-                      selectedStudentId ? 'bg-indigo-500' : 'bg-slate-200'
-                    "
-                    >5</span
                   >
                   รหัสผ่าน <span class="text-rose-400">*</span>
                 </label>
@@ -1367,8 +1012,8 @@ const getInitials = (first: string, last: string) =>
                   แก้ไขข้อมูลสารวัตร
                 </h2>
                 <p class="font-nunito text-slate-400 text-xs">
-                  {{ selectedPrefect?.firstName }}
-                  {{ selectedPrefect?.lastName }}
+                  {{ form.firstName }}
+                  {{ form.lastName }}
                 </p>
               </div>
               <button
@@ -1393,79 +1038,330 @@ const getInitials = (first: string, last: string) =>
             </div>
 
             <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
-                    >ชื่อ <span class="text-rose-400">*</span></label
-                  >
-                  <input
-                    v-model="form.firstName"
-                    type="text"
-                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 focus:bg-white outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label
-                    class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
-                    >นามสกุล <span class="text-rose-400">*</span></label
-                  >
-                  <input
-                    v-model="form.lastName"
-                    type="text"
-                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 focus:bg-white outline-none transition-all"
-                  />
-                </div>
-              </div>
+              <!-- Step 1: เลือกชั้นเรียน (Custom Dropdown) -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
-                  >รหัสประจำตัว</label
+                >
+                  <span
+                    class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] font-extrabold mr-1"
+                    >1</span
+                  >
+                  เลือกชั้นเรียน <span class="text-rose-400">*</span>
+                </label>
+                <div class="relative" @click.stop>
+                  <!-- Trigger -->
+                  <button
+                    type="button"
+                    @click="
+                      isClassroomDropdownOpen = !isClassroomDropdownOpen;
+                      isStudentDropdownOpen = false;
+                    "
+                    :class="[
+                      'w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer',
+                      isClassroomDropdownOpen
+                        ? 'bg-white border-indigo-400 ring-2 ring-indigo-100 text-slate-700'
+                        : selectedClassroomId
+                          ? 'bg-white border-indigo-200 text-slate-700 hover:border-indigo-300'
+                          : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300',
+                    ]"
+                  >
+                    <span
+                      v-if="selectedClassroomLabel"
+                      class="flex items-center gap-2"
+                    >
+                      <span
+                        class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.902 59.902 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M12 13.49v.01" />
+                        </svg>
+                      </span>
+                      <span class="text-slate-700">{{
+                        selectedClassroomLabel
+                      }}</span>
+                    </span>
+                    <span v-else>-- เลือกชั้นเรียน --</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2.5"
+                      stroke="currentColor"
+                      :class="[
+                        'w-4 h-4 transition-transform duration-200 flex-shrink-0',
+                        isClassroomDropdownOpen
+                          ? 'rotate-180 text-indigo-500'
+                          : 'text-slate-400',
+                      ]"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Panel -->
+                  <Transition name="dropdown">
+                    <div
+                      v-if="isClassroomDropdownOpen"
+                      class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-indigo-100 rounded-2xl shadow-xl z-50 overflow-hidden"
+                    >
+                      <div class="p-1.5 max-h-52 overflow-y-auto">
+                        <button
+                          v-for="cls in classrooms"
+                          :key="cls.id"
+                          type="button"
+                          @click="selectClassroom(cls)"
+                          :class="[
+                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer text-left',
+                            selectedClassroomId === cls.id
+                              ? 'bg-indigo-500 text-white'
+                              : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700',
+                          ]"
+                        >
+                          <div
+                            :class="[
+                              'px-2 py-1 min-w-[2rem] h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-[10px] font-fredoka font-bold',
+                              selectedClassroomId === cls.id
+                                ? 'bg-white/20 text-white'
+                                : 'bg-indigo-100 text-indigo-600',
+                            ]"
+                          >
+                            {{ cls.room ? `${cls.grade}/${cls.room}` : cls.grade }}
+                          </div>
+                          <span class="font-fredoka font-bold"
+                            >{{ cls.name }}</span
+                          >
+                          <span
+                            :class="[
+                              'ml-auto text-xs font-nunito',
+                              selectedClassroomId === cls.id
+                                ? 'text-indigo-100'
+                                : 'text-slate-400',
+                            ]"
+                          >
+                            {{ cls.studentsCount ?? 0 }} คน
+                          </span>
+                          <svg
+                            v-if="selectedClassroomId === cls.id"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="3"
+                            stroke="currentColor"
+                            class="w-3.5 h-3.5 text-white flex-shrink-0"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="m4.5 12.75 6 6 9-13.5"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
+              </div>
+
+              <!-- Step 2: เลือกนักเรียน (Custom Dropdown) -->
+              <div>
+                <label
+                  class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
+                  :class="
+                    selectedClassroomId ? 'text-slate-600' : 'text-slate-300'
+                  "
+                >
+                  <span
+                    class="inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[9px] font-extrabold mr-1"
+                    :class="
+                      selectedClassroomId ? 'bg-indigo-500' : 'bg-slate-200'
+                    "
+                    >2</span
+                  >
+                  เลือกนักเรียนในชั้นเรียน <span class="text-rose-400">*</span>
+                </label>
+                <div class="relative" @click.stop>
+                  <!-- Trigger -->
+                  <button
+                    type="button"
+                    :disabled="!selectedClassroomId"
+                    @click="
+                      isStudentDropdownOpen = !isStudentDropdownOpen;
+                      isClassroomDropdownOpen = false;
+                    "
+                    :class="[
+                      'w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200',
+                      !selectedClassroomId
+                        ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed opacity-50'
+                        : isStudentDropdownOpen
+                          ? 'bg-white border-indigo-400 ring-2 ring-indigo-100 text-slate-700 cursor-pointer'
+                          : selectedStudentId
+                            ? 'bg-white border-indigo-200 text-slate-700 hover:border-indigo-300 cursor-pointer'
+                            : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300 cursor-pointer',
+                    ]"
+                  >
+                    <span
+                      v-if="selectedStudentLabel"
+                      class="flex items-center gap-2.5"
+                    >
+                      <span
+                        class="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-400 to-violet-500 text-white font-fredoka font-extrabold text-[10px] flex items-center justify-center"
+                      >
+                        {{
+                          getInitials(form.firstName, form.lastName)
+                        }}
+                      </span>
+                      <span class="text-slate-700">{{
+                        selectedStudentLabel
+                      }}</span>
+                    </span>
+                    <span v-else>{{
+                      selectedClassroomId
+                        ? "-- เลือกนักเรียน --"
+                        : "-- เลือกชั้นเรียนก่อน --"
+                    }}</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2.5"
+                      stroke="currentColor"
+                      :class="[
+                        'w-4 h-4 transition-transform duration-200 flex-shrink-0',
+                        isStudentDropdownOpen
+                          ? 'rotate-180 text-indigo-500'
+                          : 'text-slate-400',
+                      ]"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Panel -->
+                  <Transition name="dropdown">
+                    <div
+                      v-if="isStudentDropdownOpen && selectedClassroomId"
+                      class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-indigo-100 rounded-2xl shadow-xl z-50 overflow-hidden"
+                    >
+                      <div class="p-1.5 max-h-52 overflow-y-auto">
+                        <button
+                          v-for="stu in filteredStudentsForClass"
+                          :key="stu.id"
+                          type="button"
+                          @click="selectStudent(stu)"
+                          :class="[
+                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer text-left',
+                            selectedStudentId === stu.id
+                              ? 'bg-indigo-500 text-white'
+                              : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700',
+                          ]"
+                        >
+                          <span
+                            :class="[
+                              'w-8 h-8 rounded-xl font-fredoka font-extrabold text-xs flex items-center justify-center flex-shrink-0',
+                              selectedStudentId === stu.id
+                                ? 'bg-white/20 text-white'
+                                : 'bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-600',
+                            ]"
+                          >
+                            {{
+                              getInitials(stu.firstName, stu.lastName)
+                            }}
+                          </span>
+                          <div class="flex flex-col min-w-0">
+                            <span class="font-fredoka font-bold leading-tight"
+                              >{{ stu.firstName }} {{ stu.lastName }}</span
+                            >
+                          </div>
+                          <svg
+                            v-if="selectedStudentId === stu.id"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="3"
+                            stroke="currentColor"
+                            class="w-3.5 h-3.5 text-white flex-shrink-0 ml-auto"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="m4.5 12.75 6 6 9-13.5"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
+
+                <!-- Auto-filled name preview -->
+                <div
+                  v-if="form.firstName"
+                  class="mt-2 flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2"
+                >
+                  <div
+                    class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-400 to-violet-500 text-white font-fredoka font-extrabold text-xs flex items-center justify-center flex-shrink-0"
+                  >
+                    {{ (form.firstName[0] ?? "") + (form.lastName[0] ?? "") }}
+                  </div>
+                  <span class="font-fredoka text-indigo-700 text-sm font-bold"
+                    >{{ form.firstName }} {{ form.lastName }}</span
+                  >
+                  <span class="text-indigo-400 text-xs ml-auto"
+                    >{{ form.grade }}/{{ form.room }}</span
+                  >
+                </div>
+              </div>
+
+              <!-- รหัสประจำตัว (ใช้เข้าสู่ระบบ) (อ่านอย่างเดียว) -->
+              <div>
+                <label
+                  class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
+                  >รหัสประจำตัว (ใช้เข้าสู่ระบบ)</label
                 >
                 <input
                   v-model="form.inspectorId"
                   type="text"
-                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 focus:bg-white outline-none transition-all"
+                  disabled
+                  class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 cursor-not-allowed outline-none transition-all"
                 />
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
-                    >ระดับชั้น</label
-                  >
-                  <select
-                    v-model="form.grade"
-                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 focus:bg-white outline-none transition-all"
-                  >
-                    <option>ม.4</option>
-                    <option>ม.5</option>
-                    <option>ม.6</option>
-                  </select>
-                </div>
-                <div>
-                  <label
-                    class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
-                    >ห้อง</label
-                  >
-                  <input
-                    v-model="form.room"
-                    type="text"
-                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 focus:bg-white outline-none transition-all"
-                  />
-                </div>
-              </div>
+
+              <!-- Step 3: เบอร์โทรศัพท์ -->
               <div>
                 <label
-                  class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
-                  >เบอร์โทรศัพท์</label
+                  class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
+                  :class="
+                    selectedStudentId ? 'text-slate-600' : 'text-slate-300'
+                  "
                 >
+                  <span
+                    class="inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[9px] font-extrabold mr-1"
+                    :class="
+                      selectedStudentId ? 'bg-indigo-500' : 'bg-slate-200'
+                    "
+                    >3</span
+                  >
+                  เบอร์โทรศัพท์
+                </label>
                 <input
                   v-model="form.phone"
                   type="tel"
-                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 focus:bg-white outline-none transition-all"
+                  placeholder="เช่น 081-234-5678"
+                  :disabled="!selectedStudentId"
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 placeholder-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 focus:bg-white outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               </div>
+
+              <!-- เปลี่ยนรหัสผ่าน (ไม่บังคับ) -->
               <div class="bg-amber-50 border border-amber-100 rounded-xl p-3">
                 <p class="font-fredoka text-xs font-bold text-amber-700 mb-2">
                   🔑 เปลี่ยนรหัสผ่าน (ไม่บังคับ)
@@ -1484,6 +1380,22 @@ const getInitials = (first: string, last: string) =>
                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
                     >
                       <svg
+                        v-if="showFormPassword"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        class="w-4 h-4"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.808 7.808 3.192 3.192m-3.192-3.192-2.036-2.036M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                        />
+                      </svg>
+                      <svg
+                        v-else
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1517,6 +1429,22 @@ const getInitials = (first: string, last: string) =>
                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
                     >
                       <svg
+                        v-if="showFormConfirm"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        class="w-4 h-4"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.808 7.808 3.192 3.192m-3.192-3.192-2.036-2.036M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                        />
+                      </svg>
+                      <svg
+                        v-else
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1537,6 +1465,56 @@ const getInitials = (first: string, last: string) =>
                       </svg>
                     </button>
                   </div>
+                </div>
+                <!-- Password match indicator -->
+                <div
+                  v-if="form.password && form.confirmPassword"
+                  class="mt-1.5 flex items-center gap-1.5 pl-1"
+                >
+                  <svg
+                    v-if="form.password === form.confirmPassword"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="3"
+                    stroke="currentColor"
+                    class="w-3.5 h-3.5 text-emerald-500"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m4.5 12.75 6 6 9-13.5"
+                    />
+                  </svg>
+                  <svg
+                    v-else
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="3"
+                    stroke="currentColor"
+                    class="w-3.5 h-3.5 text-rose-400"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6 18 18 6M6 6l12 12"
+                    />
+                  </svg>
+                  <span
+                    class="font-nunito text-xs font-semibold"
+                    :class="
+                      form.password === form.confirmPassword
+                        ? 'text-emerald-500'
+                        : 'text-rose-400'
+                    "
+                  >
+                    {{
+                      form.password === form.confirmPassword
+                        ? "รหัสผ่านตรงกัน"
+                        : "รหัสผ่านไม่ตรงกัน"
+                    }}
+                  </span>
                 </div>
               </div>
             </div>

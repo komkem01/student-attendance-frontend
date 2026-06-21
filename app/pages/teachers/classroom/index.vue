@@ -79,8 +79,41 @@ const {
   openImportModal,
   importSelectedClassroom,
   simulateImportFile,
+  handleFileUpload,
+  downloadTemplate,
   removeImportFile,
-  executeImport
+  executeImport,
+
+  // Editing states & actions
+  isEditClassModalOpen,
+  editClassroomId,
+  editScheduleId,
+  editClassName,
+  editClassSubject,
+  editClassDate,
+  editClassStartTime,
+  editClassEndTime,
+  showEditDatePickerPopover,
+  showEditStartTimePopover,
+  showEditEndTimePopover,
+  openEditClassModal,
+  selectDateFromCalendarEdit,
+  editClassDateFormattedText,
+  incrementEditStartHour,
+  decrementEditStartHour,
+  incrementEditStartMinute,
+  decrementEditStartMinute,
+  incrementEditEndHour,
+  decrementEditEndHour,
+  incrementEditEndMinute,
+  decrementEditEndMinute,
+  updateClassroom,
+
+  // Deleting states & actions
+  isDeleteModalOpen,
+  classToDelete,
+  openDeleteClassModal,
+  confirmDeleteClassroom
 } = useClassroomList(showToast)
 
 // Local UI States for Popovers
@@ -498,16 +531,37 @@ const confirmLogout = () => {
                   >
                     {{ cls.status === 'completed' ? 'เช็คชื่อเสร็จสิ้น' : 'ยังไม่ได้เช็คชื่อ' }}
                   </span>
-                  <span class="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                    {{ cls.time }}
-                  </span>
+                  <div class="flex items-center gap-1">
+                    <button 
+                      @click.stop="openEditClassModal(cls)"
+                      class="p-1 text-slate-400 hover:text-[#FF758F] hover:bg-pink-50 rounded-lg transition-colors cursor-pointer"
+                      title="แก้ไขห้องเรียน"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                      </svg>
+                    </button>
+                    <button 
+                      @click.stop="openDeleteClassModal(cls)"
+                      class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="ลบห้องเรียน"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 
                 <h4 class="font-fredoka text-base font-extrabold text-slate-800 mt-3">{{ cls.name }}</h4>
                 <p class="font-nunito text-xs text-slate-400 font-semibold truncate">{{ cls.subject }}</p>
+                
+                <div class="text-[10px] text-slate-400 font-semibold flex items-center gap-1 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                  <span>{{ cls.time }}</span>
+                </div>
               </div>
 
               <!-- Progress indicators -->
@@ -589,8 +643,20 @@ const confirmLogout = () => {
         @cancel="isLogoutModalOpen = false"
       />
 
+      <!-- Delete Classroom Confirmation Modal -->
+      <ConfirmModal 
+        :isOpen="isDeleteModalOpen"
+        title="ลบห้องเรียน"
+        :message="`คุณครูต้องการลบห้องเรียน '${classToDelete?.name || ''}' ใช่หรือไม่? (การลบห้องเรียนจะไม่สามารถกู้คืนข้อมูลได้)`"
+        confirmText="ลบห้องเรียน"
+        cancelText="ยกเลิก"
+        type="danger"
+        @confirm="confirmDeleteClassroom"
+        @cancel="isDeleteModalOpen = false"
+      />
+
       <!-- Cute Loading Overlay -->
-      <LoadingOverlay :show="isImporting" text="กำลังนำเข้าและสร้างห้องเรียน..." />
+      <LoadingOverlay :show="isImporting" text="กำลังดำเนินการ..." />
 
       <!-- Add Classroom Modal -->
       <Teleport to="body">
@@ -891,6 +957,305 @@ const confirmLogout = () => {
         </transition>
       </Teleport>
 
+      <!-- Edit Classroom Modal -->
+      <Teleport to="body">
+        <transition name="modal-fade">
+          <div v-if="isEditClassModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" @click="isEditClassModalOpen = false"></div>
+
+            <!-- Modal Box -->
+            <div class="relative w-full max-w-md bg-white rounded-[2.2rem] border border-slate-100 shadow-2xl p-6 sm:p-8 transform transition-all duration-300 scale-100 flex flex-col z-10 overflow-visible">
+              
+              <!-- Decorative background blurs inside modal -->
+              <div class="absolute -top-10 -left-10 w-24 h-24 bg-pink-100/35 rounded-full blur-xl pointer-events-none -z-10"></div>
+              <div class="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-100/35 rounded-full blur-xl pointer-events-none -z-10"></div>
+
+              <!-- Header -->
+              <div class="mb-6 text-center flex flex-col items-center">
+                <div class="w-12 h-12 rounded-2xl bg-pink-500/10 text-[#FF758F] flex items-center justify-center mb-3 shadow-inner shadow-pink-200/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                </div>
+                <h4 class="font-fredoka text-lg font-extrabold text-slate-800 leading-snug">แก้ไขข้อมูลห้องเรียน</h4>
+                <p class="font-nunito text-xs text-slate-500 font-semibold mt-1">แก้ไขรายละเอียดห้องเรียนหรือวันเวลาเรียน</p>
+              </div>
+
+              <!-- Form Body -->
+              <div class="space-y-4 mb-6">
+                <!-- Class Name Input -->
+                <div class="space-y-1">
+                  <label class="text-[10px] text-slate-400 font-bold block uppercase tracking-wide">ชื่อชั้นเรียน / ห้องเรียน</label>
+                  <input 
+                    type="text" 
+                    v-model="editClassName"
+                    placeholder="เช่น ชั้นมัธยมศึกษาปีที่ 2/4"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-nunito text-xs sm:text-sm font-semibold text-slate-700 placeholder-slate-400 focus:outline-hidden focus:border-[#FF758F] focus:bg-white transition-all duration-200"
+                  />
+                </div>
+
+                <!-- Subject Name Input -->
+                <div class="space-y-1">
+                  <label class="text-[10px] text-slate-400 font-bold block uppercase tracking-wide">วิชาเรียน</label>
+                  <input 
+                    type="text" 
+                    v-model="editClassSubject"
+                    placeholder="เช่น ภาษาไทยพื้นฐาน (ท22101)"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-nunito text-xs sm:text-sm font-semibold text-slate-700 placeholder-slate-400 focus:outline-hidden focus:border-[#FF758F] focus:bg-white transition-all duration-200"
+                  />
+                </div>
+
+                <!-- Custom Datetime Picker -->
+                <div class="space-y-3">
+                  <label class="text-[10px] text-slate-400 font-bold block uppercase tracking-wide">วันและเวลาเรียน</label>
+                  
+                  <!-- Date Picker Field -->
+                  <div class="relative">
+                    <button 
+                      type="button"
+                      @click="showEditDatePickerPopover = !showEditDatePickerPopover; showEditStartTimePopover = false; showEditEndTimePopover = false"
+                      class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 hover:border-[#FF758F] rounded-xl font-nunito text-xs sm:text-sm font-semibold text-slate-700 focus:outline-hidden focus:bg-white text-left flex items-center transition-all duration-200 cursor-pointer"
+                    >
+                      <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4.5 h-4.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+                        </svg>
+                      </span>
+                      <span>{{ editClassDateFormattedText }}</span>
+                    </button>
+                    
+                    <!-- Cute Custom Calendar Dropdown (Pops Upwards) -->
+                    <transition name="pop-up">
+                      <div 
+                        v-if="showEditDatePickerPopover" 
+                        class="absolute left-0 right-0 bottom-full mb-2 p-4 bg-white border border-slate-100 rounded-3xl shadow-xl z-30 space-y-3"
+                      >
+                        <!-- Month / Year Selector -->
+                        <div class="flex items-center justify-between">
+                          <button 
+                            type="button"
+                            @click="prevMonth"
+                            class="w-7.5 h-7.5 flex items-center justify-center rounded-lg bg-pink-50 hover:bg-pink-100 text-[#FF758F] transition-colors cursor-pointer"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                            </svg>
+                          </button>
+                          
+                          <span class="font-fredoka text-xs sm:text-sm font-extrabold text-slate-700">
+                            {{ thaiMonthNames[currentCalendarMonth] }} {{ currentCalendarYear + 543 }}
+                          </span>
+
+                          <button 
+                            type="button"
+                            @click="nextMonth"
+                            class="w-7.5 h-7.5 flex items-center justify-center rounded-lg bg-pink-50 hover:bg-pink-100 text-[#FF758F] transition-colors cursor-pointer"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <!-- Weekdays Header -->
+                        <div class="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400">
+                          <span>อา.</span>
+                          <span>จ.</span>
+                          <span>อ.</span>
+                          <span>พ.</span>
+                          <span>พฤ.</span>
+                          <span>ศ.</span>
+                          <span>ส.</span>
+                        </div>
+
+                        <!-- Days Grid -->
+                        <div class="grid grid-cols-7 gap-1 text-center">
+                          <button 
+                            v-for="(dayObj, idx) in calendarDays" 
+                            :key="idx"
+                            type="button"
+                            @click="selectDateFromCalendarEdit(dayObj)"
+                            :class="[
+                              'w-8 h-8 rounded-full flex items-center justify-center font-nunito text-[11px] font-bold transition-all cursor-pointer mx-auto',
+                              !dayObj.isCurrentMonth ? 'text-slate-300' : 'text-slate-700 hover:bg-pink-50 hover:text-[#FF758F]',
+                              editClassDate === `${dayObj.year}-${String(dayObj.month + 1).padStart(2, '0')}-${String(dayObj.day).padStart(2, '0')}`
+                                ? 'bg-gradient-to-r from-[#FF758F] to-[#FF4D6D] text-white shadow-xs' 
+                                : ''
+                            ]"
+                          >
+                            {{ dayObj.day }}
+                          </button>
+                        </div>
+                      </div>
+                    </transition>
+                  </div>
+
+                  <!-- Time Range Pickers -->
+                  <div class="grid grid-cols-2 gap-3">
+                    <!-- Start Time -->
+                    <div class="space-y-1">
+                      <label class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">เวลาเริ่มต้น</label>
+                      <div class="relative">
+                        <button 
+                          type="button"
+                          @click="showEditStartTimePopover = !showEditStartTimePopover; showEditDatePickerPopover = false; showEditEndTimePopover = false"
+                          class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-100 hover:border-[#FF758F] rounded-xl font-nunito text-xs sm:text-sm font-semibold text-slate-700 focus:outline-hidden focus:bg-white text-left flex items-center transition-all duration-200 cursor-pointer"
+                        >
+                          <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                          </span>
+                          <span>{{ editClassStartTime }} น.</span>
+                        </button>
+
+                        <!-- Cute Custom Start Time Popover (Pops Upwards) -->
+                        <transition name="pop-up">
+                          <div 
+                            v-if="showEditStartTimePopover"
+                            class="absolute right-0 left-0 sm:left-auto sm:w-44 bottom-full mb-2 p-3 bg-white border border-slate-100 rounded-3xl shadow-xl z-30 flex flex-col items-center gap-2"
+                          >
+                            <div class="flex items-center gap-3">
+                              <!-- Hour Column -->
+                              <div class="flex flex-col items-center">
+                                <button type="button" @click="incrementEditStartHour" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                  </svg>
+                                </button>
+                                <span class="font-fredoka text-lg font-bold text-slate-700 py-1">{{ editClassStartTime.split(':')[0] }}</span>
+                                <button type="button" @click="decrementEditStartHour" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                  </svg>
+                                </button>
+                              </div>
+
+                              <span class="font-fredoka text-lg font-bold text-slate-400 mb-0.5">:</span>
+
+                              <!-- Minute Column -->
+                              <div class="flex flex-col items-center">
+                                <button type="button" @click="incrementEditStartMinute" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                  </svg>
+                                </button>
+                                <span class="font-fredoka text-lg font-bold text-slate-700 py-1">{{ editClassStartTime.split(':')[1] }}</span>
+                                <button type="button" @click="decrementEditStartMinute" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <button 
+                              type="button" 
+                              @click="showEditStartTimePopover = false"
+                              class="mt-1 px-3 py-1 bg-gradient-to-r from-[#FF758F] to-[#FF4D6D] hover:from-[#FF4D6D] hover:to-[#FF335c] text-white text-[9px] font-fredoka font-bold rounded-full transition-all cursor-pointer shadow-xs"
+                            >
+                              ตกลง
+                            </button>
+                          </div>
+                        </transition>
+                      </div>
+                    </div>
+
+                    <!-- End Time -->
+                    <div class="space-y-1">
+                      <label class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">เวลาสิ้นสุด</label>
+                      <div class="relative">
+                        <button 
+                          type="button"
+                          @click="showEditEndTimePopover = !showEditEndTimePopover; showEditDatePickerPopover = false; showEditStartTimePopover = false"
+                          class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-100 hover:border-[#FF758F] rounded-xl font-nunito text-xs sm:text-sm font-semibold text-slate-700 focus:outline-hidden focus:bg-white text-left flex items-center transition-all duration-200 cursor-pointer"
+                        >
+                          <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                          </span>
+                          <span>{{ editClassEndTime }} น.</span>
+                        </button>
+
+                        <!-- Cute Custom End Time Popover (Pops Upwards) -->
+                        <transition name="pop-up">
+                          <div 
+                            v-if="showEditEndTimePopover"
+                            class="absolute right-0 left-0 sm:left-auto sm:w-44 bottom-full mb-2 p-3 bg-white border border-slate-100 rounded-3xl shadow-xl z-30 flex flex-col items-center gap-2"
+                          >
+                            <div class="flex items-center gap-3">
+                              <!-- Hour Column -->
+                              <div class="flex flex-col items-center">
+                                <button type="button" @click="incrementEditEndHour" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                  </svg>
+                                </button>
+                                <span class="font-fredoka text-lg font-bold text-slate-700 py-1">{{ editClassEndTime.split(':')[0] }}</span>
+                                <button type="button" @click="decrementEditEndHour" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                  </svg>
+                                </button>
+                              </div>
+
+                              <span class="font-fredoka text-lg font-bold text-slate-400 mb-0.5">:</span>
+
+                              <!-- Minute Column -->
+                              <div class="flex flex-col items-center">
+                                <button type="button" @click="incrementEditEndMinute" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                  </svg>
+                                </button>
+                                <span class="font-fredoka text-lg font-bold text-slate-700 py-1">{{ editClassEndTime.split(':')[1] }}</span>
+                                <button type="button" @click="decrementEditEndMinute" class="w-7 h-7 flex items-center justify-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#FF758F] cursor-pointer">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <button 
+                              type="button" 
+                              @click="showEditEndTimePopover = false"
+                              class="mt-1 px-3 py-1 bg-gradient-to-r from-[#FF758F] to-[#FF4D6D] hover:from-[#FF4D6D] hover:to-[#FF335c] text-white text-[9px] font-fredoka font-bold rounded-full transition-all cursor-pointer shadow-xs"
+                            >
+                              ตกลง
+                            </button>
+                          </div>
+                        </transition>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Footer Buttons -->
+              <div class="flex gap-3 mt-2">
+                <button 
+                  @click="isEditClassModalOpen = false"
+                  class="flex-1 px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-100 hover:bg-slate-100 text-slate-600 font-fredoka font-bold text-xs sm:text-sm rounded-xl transition-all duration-200 cursor-pointer text-center"
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  @click="updateClassroom"
+                  class="flex-1 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-[#FF758F] to-[#FF4D6D] hover:from-[#FF4D6D] hover:to-[#FF335c] text-white font-fredoka font-bold text-xs sm:text-sm rounded-xl transition-all duration-200 cursor-pointer text-center shadow-md shadow-pink-100"
+                >
+                  บันทึก
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </transition>
+      </Teleport>
+
       <!-- Import Student List Modal -->
       <Teleport to="body">
         <transition name="modal-fade">
@@ -973,23 +1338,53 @@ const confirmLogout = () => {
 
                 <!-- File Import Zone -->
                 <div class="space-y-1.5">
-                  <label class="text-[10px] text-slate-400 font-bold block uppercase tracking-wide">ไฟล์รายชื่อนักเรียน (.xlsx / .csv)</label>
+                  <div class="flex items-center justify-between">
+                    <label class="text-[10px] text-slate-400 font-bold block uppercase tracking-wide">ไฟล์รายชื่อนักเรียน (.xlsx / .csv)</label>
+                    <button 
+                      type="button" 
+                      @click="downloadTemplate" 
+                      class="text-[10px] text-[#FF758F] font-bold hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                      ดาวน์โหลดรูปแบบ Excel
+                    </button>
+                  </div>
+                  
+                  <input 
+                    type="file" 
+                    ref="fileInputRef" 
+                    accept=".xlsx,.csv" 
+                    class="hidden" 
+                    @change="handleFileUpload" 
+                  />
                   
                   <div 
                     v-if="!importFileName"
-                    @click="simulateImportFile"
+                    @click="$refs.fileInputRef.click()"
                     class="border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center hover:border-pink-300 hover:bg-pink-50/10 transition-colors cursor-pointer group"
                   >
                     <!-- Upload icon -->
                     <div class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2.5 group-hover:bg-pink-50 group-hover:text-[#FF758F] transition-all">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 animate-pulse">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 16.5 4.5H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Z" />
                       </svg>
                     </div>
-                    <span class="font-fredoka text-[11px] font-extrabold text-slate-600 group-hover:text-[#FF758F] block">คลิกเพื่อจำลองการอัปโหลดไฟล์</span>
+                    <span class="font-fredoka text-[11px] font-extrabold text-slate-600 group-hover:text-[#FF758F] block">คลิกเพื่อเลือกไฟล์รายชื่อจริง</span>
                     <span class="font-nunito text-[10px] text-slate-400 block mt-1">รองรับเฉพาะนามสกุลไฟล์ Excel หรือ CSV</span>
                   </div>
 
+                  <div class="flex justify-end mt-1" v-if="!importFileName">
+                    <button 
+                      type="button"
+                      @click="simulateImportFile"
+                      class="text-[9px] text-slate-400 hover:text-slate-600 hover:underline cursor-pointer"
+                    >
+                      (คลิกที่นี่หากต้องการทดสอบด้วยข้อมูลจำลอง)
+                    </button>
+                  </div>
+                  
                   <!-- Uploaded File details card -->
                   <div 
                     v-else
@@ -1007,7 +1402,7 @@ const confirmLogout = () => {
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                           </svg>
-                          วิเคราะห์รายชื่อสำเร็จ (10 คน)
+                          วิเคราะห์รายชื่อสำเร็จ ({{ importStudentsFile ? importStudentsFile.length : 0 }} คน)
                         </span>
                       </div>
                     </div>

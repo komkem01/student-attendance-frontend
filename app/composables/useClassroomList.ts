@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { read, utils, write } from 'xlsx'
 
 export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'error' | 'warning' | 'info') => void) => {
   const session = useCookie<any>('teacher_session')
@@ -25,6 +26,25 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
   const showDatePickerPopover = ref(false)
   const showStartTimePopover = ref(false)
   const showEndTimePopover = ref(false)
+
+  // Edit Modal States
+  const isEditClassModalOpen = ref(false)
+  const editClassroomId = ref('')
+  const editScheduleId = ref('')
+  const editClassName = ref('')
+  const editClassSubject = ref('')
+  const editClassDate = ref('')
+  const editClassStartTime = ref('08:15')
+  const editClassEndTime = ref('09:10')
+
+  // Edit Date picker & time popovers
+  const showEditDatePickerPopover = ref(false)
+  const showEditStartTimePopover = ref(false)
+  const showEditEndTimePopover = ref(false)
+
+  // Delete Modal States
+  const isDeleteModalOpen = ref(false)
+  const classToDelete = ref<any>(null)
 
   // Calendar State
   const currentCalendarYear = ref(new Date().getFullYear())
@@ -281,20 +301,9 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
 
         if (activeSchedule) {
           const formattedDate = formatThaiDateShort(activeSchedule.date)
-          let displayTime = activeSchedule.time || ''
-          if (displayTime && !displayTime.includes('-')) {
-            const cleanTime = displayTime.slice(0, 5)
-            const [h, m] = cleanTime.split(':').map(Number)
-            if (!isNaN(h) && !isNaN(m)) {
-              const dt = new Date()
-              dt.setHours(h)
-              dt.setMinutes(m + 55)
-              const endH = dt.getHours().toString().padStart(2, '0')
-              const endM = dt.getMinutes().toString().padStart(2, '0')
-              displayTime = `${cleanTime} - ${endH}:${endM} น.`
-            }
-          }
-          timeText = `${formattedDate} • ${displayTime}`
+          const start = (activeSchedule.start_time || '').slice(0, 5)
+          const end = (activeSchedule.end_time || '').slice(0, 5)
+          timeText = `${formattedDate} • ${start} - ${end} น.`
 
           // Find attendance check status for this schedule
           const scheduleAttendances = rawAttendances.filter((a: any) => a.schedule_id === activeSchedule.id)
@@ -331,7 +340,11 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
           status,
           time: timeText,
           checkedTime: checkedTimeText,
-          students: enrolledStudents
+          students: enrolledStudents,
+          scheduleId: activeSchedule?.id || '',
+          rawDate: activeSchedule?.date || '',
+          rawStartTime: (activeSchedule?.start_time || '').slice(0, 5),
+          rawEndTime: (activeSchedule?.end_time || '').slice(0, 5)
         }
       })
 
@@ -389,7 +402,8 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
             classroom_id: classroomId,
             teacher_id: session.value.teacher_id,
             date: newClassDate.value,
-            time: newClassStartTime.value
+            start_time: newClassStartTime.value,
+            end_time: newClassEndTime.value
           }
         })
 
@@ -401,6 +415,169 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
       }
     } catch (err: any) {
       const msg = err.data?.message || 'ไม่สามารถสร้างห้องเรียนในฐานข้อมูลได้'
+      showToast(msg, 'error')
+    } finally {
+      isImporting.value = false
+    }
+  }
+
+  // Edit Classroom actions
+  const openEditClassModal = (cls: any) => {
+    editClassroomId.value = cls.id
+    editScheduleId.value = cls.scheduleId || ''
+    editClassName.value = cls.name
+    editClassSubject.value = cls.subject
+    editClassDate.value = cls.rawDate || ''
+    editClassStartTime.value = cls.rawStartTime || '08:15'
+    editClassEndTime.value = cls.rawEndTime || '09:10'
+    
+    showEditDatePickerPopover.value = false
+    showEditStartTimePopover.value = false
+    showEditEndTimePopover.value = false
+    isEditClassModalOpen.value = true
+  }
+
+  const selectDateFromCalendarEdit = (dayObj: { day: number; month: number; year: number }) => {
+    const yyyy = dayObj.year
+    const mm = String(dayObj.month + 1).padStart(2, '0')
+    const dd = String(dayObj.day).padStart(2, '0')
+    editClassDate.value = `${yyyy}-${mm}-${dd}`
+    showEditDatePickerPopover.value = false
+  }
+
+  const editClassDateFormattedText = computed(() => {
+    if (!editClassDate.value) return 'เลือกวันที่เรียน'
+    const date = new Date(editClassDate.value)
+    const day = date.getDate()
+    const month = thaiMonthNames[date.getMonth()]
+    const year = date.getFullYear() + 543
+    return `${day} ${month} ${year}`
+  })
+
+  // Edit time dials helpers
+  const incrementEditStartHour = () => {
+    const parts = editClassStartTime.value.split(':')
+    let val = (parseInt(parts[0]) + 1) % 24
+    editClassStartTime.value = `${String(val).padStart(2, '0')}:${parts[1]}`
+  }
+  const decrementEditStartHour = () => {
+    const parts = editClassStartTime.value.split(':')
+    let val = (parseInt(parts[0]) - 1 + 24) % 24
+    editClassStartTime.value = `${String(val).padStart(2, '0')}:${parts[1]}`
+  }
+  const incrementEditStartMinute = () => {
+    const parts = editClassStartTime.value.split(':')
+    let val = (parseInt(parts[1]) + 5) % 60
+    editClassStartTime.value = `${parts[0]}:${String(val).padStart(2, '0')}`
+  }
+  const decrementEditStartMinute = () => {
+    const parts = editClassStartTime.value.split(':')
+    let val = (parseInt(parts[1]) - 5 + 60) % 60
+    editClassStartTime.value = `${parts[0]}:${String(val).padStart(2, '0')}`
+  }
+
+  const incrementEditEndHour = () => {
+    const parts = editClassEndTime.value.split(':')
+    let val = (parseInt(parts[0]) + 1) % 24
+    editClassEndTime.value = `${String(val).padStart(2, '0')}:${parts[1]}`
+  }
+  const decrementEditEndHour = () => {
+    const parts = editClassEndTime.value.split(':')
+    let val = (parseInt(parts[0]) - 1 + 24) % 24
+    editClassEndTime.value = `${String(val).padStart(2, '0')}:${parts[1]}`
+  }
+  const incrementEditEndMinute = () => {
+    const parts = editClassEndTime.value.split(':')
+    let val = (parseInt(parts[1]) + 5) % 60
+    editClassEndTime.value = `${parts[0]}:${String(val).padStart(2, '0')}`
+  }
+  const decrementEditEndMinute = () => {
+    const parts = editClassEndTime.value.split(':')
+    let val = (parseInt(parts[1]) - 5 + 60) % 60
+    editClassEndTime.value = `${parts[0]}:${String(val).padStart(2, '0')}`
+  }
+
+  const updateClassroom = async () => {
+    if (!editClassName.value || !editClassSubject.value || !editClassDate.value || !editClassStartTime.value || !editClassEndTime.value) {
+      showToast('กรุณากรอกข้อมูลห้องเรียนให้ครบถ้วน', 'warning')
+      return
+    }
+
+    isImporting.value = true
+    try {
+      // 1. Update Classroom
+      await $fetch(`http://localhost:8080/api/v1/classrooms/${editClassroomId.value}`, {
+        method: 'PATCH',
+        body: {
+          teacher_id: session.value.teacher_id,
+          class: editClassName.value.trim(),
+          subject: editClassSubject.value.trim()
+        }
+      })
+
+      // 2. Update or Create Schedule
+      if (editScheduleId.value) {
+        await $fetch(`http://localhost:8080/api/v1/class-schedules/${editScheduleId.value}`, {
+          method: 'PATCH',
+          body: {
+            classroom_id: editClassroomId.value,
+            teacher_id: session.value.teacher_id,
+            date: editClassDate.value,
+            start_time: editClassStartTime.value,
+            end_time: editClassEndTime.value
+          }
+        })
+      } else {
+        await $fetch('http://localhost:8080/api/v1/class-schedules', {
+          method: 'POST',
+          body: {
+            classroom_id: editClassroomId.value,
+            teacher_id: session.value.teacher_id,
+            date: editClassDate.value,
+            start_time: editClassStartTime.value,
+            end_time: editClassEndTime.value
+          }
+        })
+      }
+
+      showToast('แก้ไขข้อมูลห้องเรียนสำเร็จ!', 'success')
+      isEditClassModalOpen.value = false
+      await fetchClassroomsData()
+    } catch (err: any) {
+      const msg = err.data?.message || 'ไม่สามารถแก้ไขข้อมูลห้องเรียนได้'
+      showToast(msg, 'error')
+    } finally {
+      isImporting.value = false
+    }
+  }
+
+  // Delete Classroom actions
+  const openDeleteClassModal = (cls: any) => {
+    if (cls.studentsCount > 0 || (cls.students && cls.students.length > 0)) {
+      showToast('ไม่สามารถลบห้องเรียนที่มีรายชื่อนักเรียนอยู่ได้', 'warning')
+      return
+    }
+    classToDelete.value = cls
+    isDeleteModalOpen.value = true
+  }
+
+  const confirmDeleteClassroom = async () => {
+    if (!classToDelete.value) return
+    if (classToDelete.value.studentsCount > 0 || (classToDelete.value.students && classToDelete.value.students.length > 0)) {
+      showToast('ไม่สามารถลบห้องเรียนที่มีรายชื่อนักเรียนอยู่ได้', 'warning')
+      return
+    }
+    isImporting.value = true
+    try {
+      await $fetch(`http://localhost:8080/api/v1/classrooms/${classToDelete.value.id}`, {
+        method: 'DELETE'
+      })
+      showToast('ลบห้องเรียนสำเร็จ!', 'success')
+      isDeleteModalOpen.value = false
+      classToDelete.value = null
+      await fetchClassroomsData()
+    } catch (err: any) {
+      const msg = err.data?.message || 'ไม่สามารถลบห้องเรียนได้'
       showToast(msg, 'error')
     } finally {
       isImporting.value = false
@@ -437,6 +614,110 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
     showToast('นำเข้ารายชื่อนักเรียน 10 คน สำเร็จ!', 'success')
   }
 
+  const handleFileUpload = (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+    if (!file) return
+
+    importFileName.value = file.name
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer)
+        const workbook = read(data, { type: 'array' })
+        const sheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[sheetName]
+        
+        const rawRows: any[] = utils.sheet_to_json(worksheet, { header: 1 })
+        
+        if (rawRows.length < 2) {
+          showToast('ไม่พบข้อมูลนักเรียนในไฟล์ หรือไฟล์ไม่มีข้อมูล', 'error')
+          importFileName.value = ''
+          return
+        }
+
+        const headers = rawRows[0].map((h: any) => String(h || '').trim().toLowerCase())
+        
+        const noIdx = headers.findIndex((h: string) => h.includes('เลขที่') || h.includes('no') || h.includes('ลำดับ'))
+        const prefixIdx = headers.findIndex((h: string) => h.includes('คำนำหน้า') || h.includes('prefix'))
+        const firstNameIdx = headers.findIndex((h: string) => h.includes('ชื่อจริง') || h.includes('ชื่อ') || h.includes('name') || h.includes('firstname'))
+        const lastNameIdx = headers.findIndex((h: string) => h.includes('นามสกุล') || h.includes('lastname') || h.includes('สกุล'))
+
+        if (firstNameIdx === -1 || lastNameIdx === -1) {
+          showToast('โครงสร้างไฟล์ไม่ถูกต้อง กรุณาตรวจสอบว่ามีคอลัมน์ ชื่อ และ นามสกุล', 'error')
+          importFileName.value = ''
+          return
+        }
+
+        const studentsList: any[] = []
+        for (let i = 1; i < rawRows.length; i++) {
+          const row = rawRows[i]
+          if (!row || row.length === 0) continue
+
+          const firstName = String(row[firstNameIdx] || '').trim()
+          const lastName = String(row[lastNameIdx] || '').trim()
+          
+          if (!firstName || !lastName) continue
+
+          const noVal = noIdx !== -1 ? parseInt(row[noIdx]) : i
+          const prefixVal = prefixIdx !== -1 ? String(row[prefixIdx] || '').trim() : 'ด.ช.'
+
+          studentsList.push({
+            no: isNaN(noVal) ? i : noVal,
+            prefix: prefixVal || 'ด.ช.',
+            firstName,
+            lastName
+          })
+        }
+
+        if (studentsList.length === 0) {
+          showToast('ไม่พบข้อมูลรายชื่อนักเรียนในไฟล์', 'warning')
+          importFileName.value = ''
+          return
+        }
+
+        importStudentsFile.value = studentsList
+        showToast(`วิเคราะห์ไฟล์รายชื่อนักเรียนสำเร็จ: พบข้อมูล ${studentsList.length} คน`, 'success')
+      } catch (err) {
+        console.error(err)
+        showToast('เกิดข้อผิดพลาดในการอ่านไฟล์ Excel', 'error')
+        importFileName.value = ''
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
+  const downloadTemplate = () => {
+    const headers = ['เลขที่', 'คำนำหน้า', 'ชื่อ', 'นามสกุล']
+    const data = [
+      headers,
+      [1, 'ด.ช.', 'สมชาย', 'ใจดี'],
+      [2, 'ด.ญ.', 'สมศรี', 'รักสนุก']
+    ]
+    const worksheet = utils.aoa_to_sheet(data)
+    const workbook = utils.book_new()
+    utils.book_append_sheet(workbook, worksheet, 'รายชื่อนักเรียน')
+    
+    const wopts: any = { bookType: 'xlsx', bookSST: false, type: 'binary' }
+    const wbout = write(workbook, wopts)
+    
+    const s2ab = (s: string) => {
+      const buf = new ArrayBuffer(s.length)
+      const view = new Uint8Array(buf)
+      for (let i = 0; i !== s.length; ++i) view[i] = s.charCodeAt(i) & 0xff
+      return buf
+    }
+
+    const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'รูปแบบไฟล์รายชื่อนักเรียน.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+    showToast('ดาวน์โหลดรูปแบบไฟล์ Excel สำเร็จ!', 'success')
+  }
+
   const removeImportFile = () => {
     importFileName.value = ''
     importStudentsFile.value = null
@@ -463,7 +744,24 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
       const femaleGender = genders.value.find(g => g.name === 'หญิง' || g.name.toLowerCase().includes('female'))
       const defaultGenderId = maleGender?.id || genders.value[0]?.id
 
+      const targetClassroom = classrooms.value.find(c => c.id === importSelectedClassId.value)
+      const existingStudents = targetClassroom?.students || []
+
+      let importCount = 0
+      let skipCount = 0
+
       for (const st of importStudentsFile.value) {
+        // Check if student already exists in this classroom
+        const isDuplicate = existingStudents.some((s: any) => 
+          s.firstName.trim().toLowerCase() === st.firstName.trim().toLowerCase() &&
+          s.lastName.trim().toLowerCase() === st.lastName.trim().toLowerCase()
+        )
+
+        if (isDuplicate) {
+          skipCount++
+          continue
+        }
+
         // Resolve prefix
         let normalizedPrefix = st.prefix
         if (normalizedPrefix === 'ด.ช.') normalizedPrefix = 'ด.ช.'
@@ -508,9 +806,14 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
             }
           })
         }
+        importCount++
       }
 
-      showToast(`นำเข้ารายชื่อนักเรียนเข้าสู่ห้องสำเร็จเรียบร้อย!`, 'success')
+      if (skipCount > 0) {
+        showToast(`นำเข้ารายชื่อสำเร็จ: นำเข้าใหม่ ${importCount} คน, ข้าม ${skipCount} คน (มีรายชื่ออยู่แล้ว)`, 'success')
+      } else {
+        showToast(`นำเข้ารายชื่อนักเรียนเข้าสู่ห้องสำเร็จเรียบร้อย ${importCount} คน!`, 'success')
+      }
       isImportModalOpen.value = false
       await fetchClassroomsData()
     } catch (err: any) {
@@ -620,7 +923,40 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
     openImportModal,
     importSelectedClassroom,
     simulateImportFile,
+    handleFileUpload,
+    downloadTemplate,
     removeImportFile,
-    executeImport
+    executeImport,
+
+    // Editing states & actions
+    isEditClassModalOpen,
+    editClassroomId,
+    editScheduleId,
+    editClassName,
+    editClassSubject,
+    editClassDate,
+    editClassStartTime,
+    editClassEndTime,
+    showEditDatePickerPopover,
+    showEditStartTimePopover,
+    showEditEndTimePopover,
+    openEditClassModal,
+    selectDateFromCalendarEdit,
+    editClassDateFormattedText,
+    incrementEditStartHour,
+    decrementEditStartHour,
+    incrementEditStartMinute,
+    decrementEditStartMinute,
+    incrementEditEndHour,
+    decrementEditEndHour,
+    incrementEditEndMinute,
+    decrementEditEndMinute,
+    updateClassroom,
+
+    // Deleting states & actions
+    isDeleteModalOpen,
+    classToDelete,
+    openDeleteClassModal,
+    confirmDeleteClassroom
   }
 }
