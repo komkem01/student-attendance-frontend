@@ -68,6 +68,7 @@ export const usePrefectList = () => {
     if (!session.value || !session.value.teacher_id) return;
     isFetching.value = true;
     try {
+      // 🟢 เปลี่ยนมาใช้ useCustomFetch ทั้งหมด
       const [
         classroomsRes,
         studentClassroomsRes,
@@ -76,12 +77,12 @@ export const usePrefectList = () => {
         attendancesRes,
         schedulesRes,
       ]: any = await Promise.all([
-        $fetch("http://localhost:8080/api/v1/classrooms"),
-        $fetch("http://localhost:8080/api/v1/student-classrooms"),
-        $fetch("http://localhost:8080/api/v1/students"),
-        $fetch("http://localhost:8080/api/v1/prefects"),
-        $fetch("http://localhost:8080/api/v1/classroom-attendences"),
-        $fetch("http://localhost:8080/api/v1/class-schedules"),
+        useCustomFetch("/classrooms"),
+        useCustomFetch("/student-classrooms"),
+        useCustomFetch("/students"),
+        useCustomFetch("/prefects"),
+        useCustomFetch("/classroom-attendences"),
+        useCustomFetch("/class-schedules"),
       ]);
 
       const rawClassrooms = classroomsRes.data || [];
@@ -379,7 +380,8 @@ export const usePrefectList = () => {
 
     isSubmitting.value = true;
     try {
-      await $fetch("http://localhost:8080/api/v1/prefects", {
+      // 🟢 เปลี่ยนมาใช้ useCustomFetch (POST)
+      await useCustomFetch("/prefects", {
         method: "POST",
         body: {
           classroom_id: selectedClassroomId.value,
@@ -439,13 +441,11 @@ export const usePrefectList = () => {
         payload.password = form.value.password;
       }
 
-      await $fetch(
-        `http://localhost:8080/api/v1/prefects/${selectedPrefect.value.id}`,
-        {
-          method: "PATCH",
-          body: payload,
-        },
-      );
+      // 🟢 เปลี่ยนมาใช้ useCustomFetch (PATCH)
+      await useCustomFetch(`/prefects/${selectedPrefect.value.id}`, {
+        method: "PATCH",
+        body: payload,
+      });
 
       showToast("อัปเดตข้อมูลสารวัตรเรียบร้อยแล้ว", "success");
       isEditModalOpen.value = false;
@@ -464,12 +464,10 @@ export const usePrefectList = () => {
     if (!selectedPrefect.value) return;
     isSubmitting.value = true;
     try {
-      await $fetch(
-        `http://localhost:8080/api/v1/prefects/${selectedPrefect.value.id}`,
-        {
-          method: "DELETE",
-        },
-      );
+      // 🟢 เปลี่ยนมาใช้ useCustomFetch (DELETE)
+      await useCustomFetch(`/prefects/${selectedPrefect.value.id}`, {
+        method: "DELETE",
+      });
       showToast(`ลบบัญชีสารวัตรเรียบร้อยแล้ว`, "success");
       isDeleteModalOpen.value = false;
       await fetchPrefectsData();
@@ -485,7 +483,8 @@ export const usePrefectList = () => {
   // Toggle active status
   const toggleStatus = async (prefect: any) => {
     try {
-      await $fetch(`http://localhost:8080/api/v1/prefects/${prefect.id}`, {
+      // 🟢 เปลี่ยนมาใช้ useCustomFetch (PATCH)
+      await useCustomFetch(`/prefects/${prefect.id}`, {
         method: "PATCH",
         body: {
           classroom_id: prefect.classroomId,

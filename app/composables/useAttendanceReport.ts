@@ -51,7 +51,7 @@ export const useAttendanceReport = () => {
   const fetchClassrooms = async () => {
     if (!session.value || !session.value.teacher_id) return
     try {
-      const res: any = await $fetch('http://localhost:8080/api/v1/classrooms')
+      const res: any = await useCustomFetch('/classrooms')
       const rawClassrooms = res.data || []
       classrooms.value = rawClassrooms.filter((c: any) => c.teacher_id === session.value.teacher_id).map((c: any) => ({
         id: c.id,
@@ -74,8 +74,7 @@ export const useAttendanceReport = () => {
     if (!selectedClassroomId.value) return
     isFetching.value = true
     try {
-      const url = `http://localhost:8080/api/v1/classrooms/${selectedClassroomId.value}/attendance-report`
-      const res: any = await $fetch(url, {
+      const res: any = await useCustomFetch(`/classrooms/${selectedClassroomId.value}/attendance-report`, {
         query: {
           start_date: startDateStr.value,
           end_date: endDateStr.value
