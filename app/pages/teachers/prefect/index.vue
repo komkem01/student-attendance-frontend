@@ -35,7 +35,7 @@ const {
   toasts,
   activeTab,
   searchQuery,
-  
+
   // Dropdowns
   selectedClassroomId,
   selectedStudentId,
@@ -73,7 +73,7 @@ const {
   // Logout
   isLogoutModalOpen,
   handleLogout,
-  confirmLogout
+  confirmLogout,
 } = usePrefectList();
 
 // Click-outside handler
@@ -86,11 +86,20 @@ onUnmounted(() => document.removeEventListener("click", closeDropdowns));
 
 const getInitials = (first: string, last: string) =>
   `${first[0] ?? ""}${last[0] ?? ""}`;
+
+// ฟังก์ชันตรวจสอบว่าเป็นสารวัตรอยู่แล้วหรือไม่
+const isAlreadyPrefect = (studentId: string) => {
+  // หากอยู่ในโหมดแก้ไข และกำลังตรวจสอบนักเรียนคนเดิมของบัญชีนั้น ให้อนุญาต (return false)
+  if (isEditModalOpen.value && selectedPrefect.value?.studentId === studentId) {
+    return false;
+  }
+  // ค้นหาในรายชื่อสารวัตรทั้งหมดว่ามี studentId นี้อยู่แล้วหรือยัง
+  return prefects.value.some((p: any) => p.studentId === studentId);
+};
 </script>
 
 <template>
   <div class="min-h-screen bg-[#F8FAFC] flex font-sans text-[#2F3E46]">
-    <!-- Toast Notifications -->
     <Teleport to="body">
       <div
         class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none max-w-sm w-full"
@@ -130,20 +139,20 @@ const getInitials = (first: string, last: string) =>
       </div>
     </Teleport>
 
-    <!-- BACKGROUND BLUR DECORATIONS -->
-    <div class="fixed top-0 right-0 w-[400px] h-[400px] bg-[#6C5DD3]/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
-    <div class="fixed bottom-0 left-1/4 w-[500px] h-[500px] bg-indigo-50/20 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div
+      class="fixed top-0 right-0 w-[400px] h-[400px] bg-[#6C5DD3]/5 rounded-full blur-3xl pointer-events-none -z-10"
+    ></div>
+    <div
+      class="fixed bottom-0 left-1/4 w-[500px] h-[500px] bg-indigo-50/20 rounded-full blur-3xl pointer-events-none -z-10"
+    ></div>
 
-    <!-- Sidebar Layout Component -->
     <Sidebar
       v-model:isOpen="isMobileSidebarOpen"
       activeItem="prefect"
       @logout="handleLogout"
     />
 
-    <!-- MAIN PAGE CONTAINER -->
     <div class="flex-1 flex flex-col min-w-0">
-      <!-- Topbar Component -->
       <Topbar
         title="จัดการสารวัตรนักเรียน"
         :currentDateText="currentDateText"
@@ -152,34 +161,58 @@ const getInitials = (first: string, last: string) =>
         @logout="handleLogout"
       />
 
-      <!-- MAIN SCROLLABLE CONTENT -->
-      <main class="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto space-y-6">
+      <main
+        class="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto space-y-6"
+      >
         <div class="space-y-6">
-          <!-- Directory Header Card -->
-          <section class="bg-gradient-to-br from-[#6C5DD3] to-[#4361EE] rounded-[2rem] p-6 sm:p-8 text-white relative overflow-hidden shadow-lg shadow-indigo-100/50">
-            <div class="absolute right-0 top-0 w-80 h-80 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-20 -mt-20"></div>
-            
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <section
+            class="bg-gradient-to-br from-[#6C5DD3] to-[#4361EE] rounded-[2rem] p-6 sm:p-8 text-white relative overflow-hidden shadow-lg shadow-indigo-100/50"
+          >
+            <div
+              class="absolute right-0 top-0 w-80 h-80 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-20 -mt-20"
+            ></div>
+
+            <div
+              class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+            >
               <div class="space-y-2 max-w-2xl">
-                <span class="bg-white/20 text-white text-[10px] font-extrabold tracking-widest px-3 py-1.5 rounded-full uppercase inline-block">
+                <span
+                  class="bg-white/20 text-white text-[10px] font-extrabold tracking-widest px-3 py-1.5 rounded-full uppercase inline-block"
+                >
                   PREFECT MANAGEMENT
                 </span>
-                <h2 class="font-fredoka text-2xl sm:text-3xl font-extrabold leading-tight">
+                <h2
+                  class="font-fredoka text-2xl sm:text-3xl font-extrabold leading-tight"
+                >
                   จัดการบัญชีสารวัตรนักเรียน
                 </h2>
-                <p class="font-nunito text-xs sm:text-sm text-indigo-50/90 font-medium">
-                  คุณครูสามารถจัดการบัญชีผู้ใช้งานสำหรับสารวัตรนักเรียน โดยสามารถเพิ่มบัญชีใหม่ กำหนดรหัสผ่าน แก้ไขข้อมูล หรือเปิด/ปิดการใช้งานบัญชีเพื่อความปลอดภัยในการเช็คชื่อได้จากหน้านี้
+                <p
+                  class="font-nunito text-xs sm:text-sm text-indigo-50/90 font-medium"
+                >
+                  คุณครูสามารถจัดการบัญชีผู้ใช้งานสำหรับสารวัตรนักเรียน
+                  โดยสามารถเพิ่มบัญชีใหม่ กำหนดรหัสผ่าน แก้ไขข้อมูล
+                  หรือเปิด/ปิดการใช้งานบัญชีเพื่อความปลอดภัยในการเช็คชื่อได้จากหน้านี้
                 </p>
               </div>
 
-              <!-- Quick Actions -->
               <div class="flex-shrink-0 w-full lg:w-auto">
-                <button 
+                <button
                   @click="openAddModal"
                   class="w-full lg:w-auto bg-white text-[#4361EE] hover:bg-indigo-50 font-fredoka font-bold text-xs px-5 py-3.5 rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                    class="w-4.5 h-4.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
                   </svg>
                   <span>เพิ่มสารวัตรนักเรียน</span>
                 </button>
@@ -187,68 +220,160 @@ const getInitials = (first: string, last: string) =>
             </div>
           </section>
 
-          <!-- STATS CARDS -->
           <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Total Prefects -->
-            <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5.5 h-5.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            <div
+              class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5"
+            >
+              <div
+                class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center flex-shrink-0"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2.5"
+                  stroke="currentColor"
+                  class="w-5.5 h-5.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+                  />
                 </svg>
               </div>
               <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">สารวัตรทั้งหมด</span>
-                <span class="font-fredoka text-lg font-extrabold text-slate-800 leading-none block mt-0.5">{{ prefects.length }} คน</span>
+                <span
+                  class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide"
+                  >สารวัตรทั้งหมด</span
+                >
+                <span
+                  class="font-fredoka text-lg font-extrabold text-slate-800 leading-none block mt-0.5"
+                  >{{ prefects.length }} คน</span
+                >
               </div>
             </div>
 
-            <!-- Active Prefects -->
-            <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5.5 h-5.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            <div
+              class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5"
+            >
+              <div
+                class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2.5"
+                  stroke="currentColor"
+                  class="w-5.5 h-5.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                  />
                 </svg>
               </div>
               <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">ใช้งานอยู่</span>
-                <span class="font-fredoka text-lg font-extrabold text-emerald-600 leading-none block mt-0.5">{{ totalActive }} คน</span>
+                <span
+                  class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide"
+                  >ใช้งานอยู่</span
+                >
+                <span
+                  class="font-fredoka text-lg font-extrabold text-emerald-600 leading-none block mt-0.5"
+                  >{{ totalActive }} คน</span
+                >
               </div>
             </div>
 
-            <!-- Today's Checks -->
-            <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5.5 h-5.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h3.75a.75.75 0 0 1 .75.75v17.25a.75.75 0 0 1-.75.75h-3.75a.75.75 0 0 1-.75-.75V3a.75.75 0 0 1 .75-.75ZM9 6H5.625a.75.75 0 0 0-.75.75v12a.75.75 0 0 0 .75.75H9V6Zm15 0h-3.375a.75.75 0 0 0-.75.75v12a.75.75 0 0 0 .75.75H24V6Z" />
+            <div
+              class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5"
+            >
+              <div
+                class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center flex-shrink-0"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2.5"
+                  stroke="currentColor"
+                  class="w-5.5 h-5.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10.125 2.25h3.75a.75.75 0 0 1 .75.75v17.25a.75.75 0 0 1-.75.75h-3.75a.75.75 0 0 1-.75-.75V3a.75.75 0 0 1 .75-.75ZM9 6H5.625a.75.75 0 0 0-.75.75v12a.75.75 0 0 0 .75.75H9V6Zm15 0h-3.375a.75.75 0 0 0-.75.75v12a.75.75 0 0 0 .75.75H24V6Z"
+                  />
                 </svg>
               </div>
               <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">เช็คชื่อวันนี้</span>
-                <span class="font-fredoka text-lg font-extrabold text-blue-600 leading-none block mt-0.5">{{ totalToday }} ครั้ง</span>
+                <span
+                  class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide"
+                  >เช็คชื่อวันนี้</span
+                >
+                <span
+                  class="font-fredoka text-lg font-extrabold text-blue-600 leading-none block mt-0.5"
+                  >{{ totalToday }} ครั้ง</span
+                >
               </div>
             </div>
 
-            <!-- Suspended Prefects -->
-            <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5.5 h-5.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+            <div
+              class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5"
+            >
+              <div
+                class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center flex-shrink-0"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2.5"
+                  stroke="currentColor"
+                  class="w-5.5 h-5.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"
+                  />
                 </svg>
               </div>
               <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">ระงับบัญชี</span>
-                <span class="font-fredoka text-lg font-extrabold text-rose-600 leading-none block mt-0.5">{{ prefects.length - totalActive }} คน</span>
+                <span
+                  class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide"
+                  >ระงับบัญชี</span
+                >
+                <span
+                  class="font-fredoka text-lg font-extrabold text-rose-600 leading-none block mt-0.5"
+                  >{{ prefects.length - totalActive }} คน</span
+                >
               </div>
             </div>
           </section>
 
-          <!-- SEARCH AND FILTER CONTROLS -->
-          <section class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
-            <!-- Search bar -->
+          <section
+            class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between"
+          >
             <div class="relative w-full">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              <span
+                class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="w-5 h-5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                  />
                 </svg>
               </span>
               <input
@@ -267,10 +392,12 @@ const getInitials = (first: string, last: string) =>
             </div>
           </section>
 
-          <!-- Prefect Table -->
-          <section class="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
-            <!-- Table Header -->
-            <div class="hidden sm:grid grid-cols-12 gap-2 px-6 py-4 bg-slate-50/75 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <section
+            class="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden"
+          >
+            <div
+              class="hidden sm:grid grid-cols-12 gap-2 px-6 py-4 bg-slate-50/75 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+            >
               <div class="col-span-4">สารวัตรนักเรียน</div>
               <div class="col-span-2">รหัสประจำตัว</div>
               <div class="col-span-2">ชั้น</div>
@@ -279,7 +406,6 @@ const getInitials = (first: string, last: string) =>
               <div class="col-span-1 text-center">จัดการ</div>
             </div>
 
-            <!-- Empty State -->
             <div
               v-if="filteredPrefects.length === 0"
               class="flex flex-col items-center justify-center py-16 text-center"
@@ -293,7 +419,6 @@ const getInitials = (first: string, last: string) =>
               </p>
             </div>
 
-            <!-- Table Rows -->
             <TransitionGroup name="list">
               <div
                 v-for="(prefect, idx) in filteredPrefects"
@@ -303,7 +428,6 @@ const getInitials = (first: string, last: string) =>
                   idx === filteredPrefects.length - 1 ? 'border-b-0' : '',
                 ]"
               >
-                <!-- Name + avatar -->
                 <div class="col-span-4 flex items-center gap-3">
                   <div
                     class="w-9.5 h-9.5 rounded-full bg-gradient-to-tr from-[#6C5DD3] to-[#4361EE] text-white font-fredoka font-extrabold text-[11px] sm:text-xs flex items-center justify-center flex-shrink-0 shadow-xs uppercase"
@@ -311,16 +435,24 @@ const getInitials = (first: string, last: string) =>
                     {{ getInitials(prefect.firstName, prefect.lastName) }}
                   </div>
                   <div class="min-w-0">
-                    <p class="font-fredoka font-bold text-slate-800 text-sm leading-tight">
+                    <p
+                      class="font-fredoka font-bold text-slate-800 text-sm leading-tight"
+                    >
                       {{ prefect.firstName }} {{ prefect.lastName }}
                     </p>
-                    <p class="font-nunito text-[10px] text-slate-400 block mt-0.5 sm:hidden">
-                      รหัส: #{{ prefect.inspectorId }} • {{ prefect.room ? `${prefect.grade}/${prefect.room}` : prefect.grade }}
+                    <p
+                      class="font-nunito text-[10px] text-slate-400 block mt-0.5 sm:hidden"
+                    >
+                      รหัส: #{{ prefect.inspectorId }} •
+                      {{
+                        prefect.room
+                          ? `${prefect.grade}/${prefect.room}`
+                          : prefect.grade
+                      }}
                     </p>
                   </div>
                 </div>
 
-                <!-- Inspector ID -->
                 <div class="hidden sm:block col-span-2">
                   <span
                     class="bg-indigo-50 text-indigo-700 border border-indigo-100 font-fredoka font-bold text-[10px] px-2.5 py-1 rounded-full"
@@ -329,18 +461,23 @@ const getInitials = (first: string, last: string) =>
                   </span>
                 </div>
 
-                <!-- Grade/Room -->
                 <div class="hidden sm:block col-span-2">
                   <span
                     class="bg-[#EBF8FF] text-[#2B6CB0] text-[10px] font-bold font-fredoka px-2.5 py-1 rounded-full border border-[#BEE3F8]"
                   >
-                    {{ prefect.className || (prefect.room ? `${prefect.grade}/${prefect.room}` : prefect.grade) }}
+                    {{
+                      prefect.className ||
+                      (prefect.room
+                        ? `${prefect.grade}/${prefect.room}`
+                        : prefect.grade)
+                    }}
                   </span>
                 </div>
 
-                <!-- Last Login -->
                 <div class="hidden sm:block col-span-2">
-                  <p class="font-nunito text-[11px] text-slate-500 font-semibold">
+                  <p
+                    class="font-nunito text-[11px] text-slate-500 font-semibold"
+                  >
                     {{ prefect.lastLogin }}
                   </p>
                   <p
@@ -351,7 +488,6 @@ const getInitials = (first: string, last: string) =>
                   </p>
                 </div>
 
-                <!-- Status toggle -->
                 <div class="col-span-1 flex justify-start sm:justify-center">
                   <button
                     @click="toggleStatus(prefect)"
@@ -378,7 +514,6 @@ const getInitials = (first: string, last: string) =>
                   </button>
                 </div>
 
-                <!-- Actions -->
                 <div
                   class="col-span-1 flex items-center justify-start sm:justify-center gap-2"
                 >
@@ -427,18 +562,17 @@ const getInitials = (first: string, last: string) =>
             </TransitionGroup>
           </section>
 
-          <!-- Footer note -->
           <p class="text-center font-nunito text-xs text-slate-400">
             แสดง {{ filteredPrefects.length }} จาก {{ prefects.length }} รายการ
             <span v-if="searchQuery">
-              • ผลการค้นหา "<strong>{{ searchQuery }}</strong>"
+              • ผลการค้นหา "<strong>{{ searchQuery }}</strong
+              >"
             </span>
           </p>
         </div>
       </main>
     </div>
 
-    <!-- ======= ADD MODAL ======= -->
     <Teleport to="body">
       <Transition name="modal">
         <div
@@ -449,7 +583,6 @@ const getInitials = (first: string, last: string) =>
           <div
             class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-8 relative animate-pop-up max-h-[92vh] sm:max-h-[90vh] overflow-y-auto"
           >
-            <!-- Header -->
             <div class="flex items-center gap-3 mb-6">
               <div
                 class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-400 to-violet-500 text-white flex items-center justify-center text-lg shadow-md flex-shrink-0"
@@ -486,7 +619,6 @@ const getInitials = (first: string, last: string) =>
             </div>
 
             <div class="space-y-4">
-              <!-- Step 1: เลือกชั้นเรียน (Custom Dropdown) -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
@@ -498,7 +630,6 @@ const getInitials = (first: string, last: string) =>
                   เลือกชั้นเรียน <span class="text-rose-400">*</span>
                 </label>
                 <div class="relative" @click.stop>
-                  <!-- Trigger -->
                   <button
                     type="button"
                     @click="
@@ -521,8 +652,19 @@ const getInitials = (first: string, last: string) =>
                       <span
                         class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.902 59.902 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M12 13.49v.01" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="2.5"
+                          stroke="currentColor"
+                          class="w-3.5 h-3.5"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.902 59.902 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M12 13.49v.01"
+                          />
                         </svg>
                       </span>
                       <span class="text-slate-700">{{
@@ -551,7 +693,6 @@ const getInitials = (first: string, last: string) =>
                     </svg>
                   </button>
 
-                  <!-- Dropdown Panel -->
                   <Transition name="dropdown">
                     <div
                       v-if="isClassroomDropdownOpen"
@@ -578,11 +719,13 @@ const getInitials = (first: string, last: string) =>
                                 : 'bg-indigo-100 text-indigo-600',
                             ]"
                           >
-                            {{ cls.room ? `${cls.grade}/${cls.room}` : cls.grade }}
+                            {{
+                              cls.room ? `${cls.grade}/${cls.room}` : cls.grade
+                            }}
                           </div>
-                          <span class="font-fredoka font-bold"
-                            >{{ cls.name }}</span
-                          >
+                          <span class="font-fredoka font-bold">{{
+                            cls.name
+                          }}</span>
                           <span
                             :class="[
                               'ml-auto text-xs font-nunito',
@@ -615,7 +758,6 @@ const getInitials = (first: string, last: string) =>
                 </div>
               </div>
 
-              <!-- Step 2: เลือกนักเรียน (Custom Dropdown) -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
@@ -633,7 +775,6 @@ const getInitials = (first: string, last: string) =>
                   เลือกนักเรียนในชั้นเรียน <span class="text-rose-400">*</span>
                 </label>
                 <div class="relative" @click.stop>
-                  <!-- Trigger -->
                   <button
                     type="button"
                     :disabled="!selectedClassroomId"
@@ -659,9 +800,7 @@ const getInitials = (first: string, last: string) =>
                       <span
                         class="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-400 to-violet-500 text-white font-fredoka font-extrabold text-[10px] flex items-center justify-center"
                       >
-                        {{
-                          getInitials(form.firstName, form.lastName)
-                        }}
+                        {{ getInitials(form.firstName, form.lastName) }}
                       </span>
                       <span class="text-slate-700">{{
                         selectedStudentLabel
@@ -693,7 +832,6 @@ const getInitials = (first: string, last: string) =>
                     </svg>
                   </button>
 
-                  <!-- Dropdown Panel -->
                   <Transition name="dropdown">
                     <div
                       v-if="isStudentDropdownOpen && selectedClassroomId"
@@ -704,12 +842,17 @@ const getInitials = (first: string, last: string) =>
                           v-for="stu in filteredStudentsForClass"
                           :key="stu.id"
                           type="button"
-                          @click="selectStudent(stu)"
+                          :disabled="isAlreadyPrefect(stu.id)"
+                          @click="
+                            !isAlreadyPrefect(stu.id) && selectStudent(stu)
+                          "
                           :class="[
-                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer text-left',
-                            selectedStudentId === stu.id
-                              ? 'bg-indigo-500 text-white'
-                              : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700',
+                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 text-left',
+                            isAlreadyPrefect(stu.id)
+                              ? 'bg-slate-50 opacity-60 cursor-not-allowed'
+                              : selectedStudentId === stu.id
+                                ? 'bg-indigo-500 text-white cursor-pointer'
+                                : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer',
                           ]"
                         >
                           <span
@@ -717,20 +860,28 @@ const getInitials = (first: string, last: string) =>
                               'w-8 h-8 rounded-xl font-fredoka font-extrabold text-xs flex items-center justify-center flex-shrink-0',
                               selectedStudentId === stu.id
                                 ? 'bg-white/20 text-white'
-                                : 'bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-600',
+                                : isAlreadyPrefect(stu.id)
+                                  ? 'bg-slate-200 text-slate-400'
+                                  : 'bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-600',
                             ]"
                           >
-                            {{
-                              getInitials(stu.firstName, stu.lastName)
-                            }}
+                            {{ getInitials(stu.firstName, stu.lastName) }}
                           </span>
                           <div class="flex flex-col min-w-0">
                             <span class="font-fredoka font-bold leading-tight"
                               >{{ stu.firstName }} {{ stu.lastName }}</span
                             >
                           </div>
+
+                          <span
+                            v-if="isAlreadyPrefect(stu.id)"
+                            class="ml-auto text-[10px] font-fredoka font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100 whitespace-nowrap"
+                          >
+                            เป็นสารวัตรแล้ว
+                          </span>
+
                           <svg
-                            v-if="selectedStudentId === stu.id"
+                            v-else-if="selectedStudentId === stu.id"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -750,7 +901,6 @@ const getInitials = (first: string, last: string) =>
                   </Transition>
                 </div>
 
-                <!-- Auto-filled name preview -->
                 <div
                   v-if="form.firstName"
                   class="mt-2 flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2"
@@ -769,7 +919,6 @@ const getInitials = (first: string, last: string) =>
                 </div>
               </div>
 
-              <!-- Step 3: เบอร์โทรศัพท์ -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
@@ -795,7 +944,6 @@ const getInitials = (first: string, last: string) =>
                 />
               </div>
 
-              <!-- Step 4: รหัสผ่าน -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
@@ -916,7 +1064,6 @@ const getInitials = (first: string, last: string) =>
                     </button>
                   </div>
                 </div>
-                <!-- Password match indicator -->
                 <div
                   v-if="form.password && form.confirmPassword"
                   class="mt-1.5 flex items-center gap-1.5 pl-1"
@@ -969,7 +1116,6 @@ const getInitials = (first: string, last: string) =>
               </div>
             </div>
 
-            <!-- Actions -->
             <div class="flex gap-3 mt-6">
               <button
                 @click="isAddModalOpen = false"
@@ -989,7 +1135,6 @@ const getInitials = (first: string, last: string) =>
       </Transition>
     </Teleport>
 
-    <!-- ======= EDIT MODAL ======= -->
     <Teleport to="body">
       <Transition name="modal">
         <div
@@ -1037,7 +1182,6 @@ const getInitials = (first: string, last: string) =>
             </div>
 
             <div class="space-y-4">
-              <!-- Step 1: เลือกชั้นเรียน (Custom Dropdown) -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
@@ -1049,7 +1193,6 @@ const getInitials = (first: string, last: string) =>
                   เลือกชั้นเรียน <span class="text-rose-400">*</span>
                 </label>
                 <div class="relative" @click.stop>
-                  <!-- Trigger -->
                   <button
                     type="button"
                     @click="
@@ -1072,8 +1215,19 @@ const getInitials = (first: string, last: string) =>
                       <span
                         class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.902 59.902 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M12 13.49v.01" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="2.5"
+                          stroke="currentColor"
+                          class="w-3.5 h-3.5"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.902 59.902 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M12 13.49v.01"
+                          />
                         </svg>
                       </span>
                       <span class="text-slate-700">{{
@@ -1102,7 +1256,6 @@ const getInitials = (first: string, last: string) =>
                     </svg>
                   </button>
 
-                  <!-- Dropdown Panel -->
                   <Transition name="dropdown">
                     <div
                       v-if="isClassroomDropdownOpen"
@@ -1129,11 +1282,13 @@ const getInitials = (first: string, last: string) =>
                                 : 'bg-indigo-100 text-indigo-600',
                             ]"
                           >
-                            {{ cls.room ? `${cls.grade}/${cls.room}` : cls.grade }}
+                            {{
+                              cls.room ? `${cls.grade}/${cls.room}` : cls.grade
+                            }}
                           </div>
-                          <span class="font-fredoka font-bold"
-                            >{{ cls.name }}</span
-                          >
+                          <span class="font-fredoka font-bold">{{
+                            cls.name
+                          }}</span>
                           <span
                             :class="[
                               'ml-auto text-xs font-nunito',
@@ -1166,7 +1321,6 @@ const getInitials = (first: string, last: string) =>
                 </div>
               </div>
 
-              <!-- Step 2: เลือกนักเรียน (Custom Dropdown) -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
@@ -1184,7 +1338,6 @@ const getInitials = (first: string, last: string) =>
                   เลือกนักเรียนในชั้นเรียน <span class="text-rose-400">*</span>
                 </label>
                 <div class="relative" @click.stop>
-                  <!-- Trigger -->
                   <button
                     type="button"
                     :disabled="!selectedClassroomId"
@@ -1210,9 +1363,7 @@ const getInitials = (first: string, last: string) =>
                       <span
                         class="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-400 to-violet-500 text-white font-fredoka font-extrabold text-[10px] flex items-center justify-center"
                       >
-                        {{
-                          getInitials(form.firstName, form.lastName)
-                        }}
+                        {{ getInitials(form.firstName, form.lastName) }}
                       </span>
                       <span class="text-slate-700">{{
                         selectedStudentLabel
@@ -1244,7 +1395,6 @@ const getInitials = (first: string, last: string) =>
                     </svg>
                   </button>
 
-                  <!-- Dropdown Panel -->
                   <Transition name="dropdown">
                     <div
                       v-if="isStudentDropdownOpen && selectedClassroomId"
@@ -1255,12 +1405,17 @@ const getInitials = (first: string, last: string) =>
                           v-for="stu in filteredStudentsForClass"
                           :key="stu.id"
                           type="button"
-                          @click="selectStudent(stu)"
+                          :disabled="isAlreadyPrefect(stu.id)"
+                          @click="
+                            !isAlreadyPrefect(stu.id) && selectStudent(stu)
+                          "
                           :class="[
-                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer text-left',
-                            selectedStudentId === stu.id
-                              ? 'bg-indigo-500 text-white'
-                              : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700',
+                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 text-left',
+                            isAlreadyPrefect(stu.id)
+                              ? 'bg-slate-50 opacity-60 cursor-not-allowed'
+                              : selectedStudentId === stu.id
+                                ? 'bg-indigo-500 text-white cursor-pointer'
+                                : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer',
                           ]"
                         >
                           <span
@@ -1268,20 +1423,28 @@ const getInitials = (first: string, last: string) =>
                               'w-8 h-8 rounded-xl font-fredoka font-extrabold text-xs flex items-center justify-center flex-shrink-0',
                               selectedStudentId === stu.id
                                 ? 'bg-white/20 text-white'
-                                : 'bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-600',
+                                : isAlreadyPrefect(stu.id)
+                                  ? 'bg-slate-200 text-slate-400'
+                                  : 'bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-600',
                             ]"
                           >
-                            {{
-                              getInitials(stu.firstName, stu.lastName)
-                            }}
+                            {{ getInitials(stu.firstName, stu.lastName) }}
                           </span>
                           <div class="flex flex-col min-w-0">
                             <span class="font-fredoka font-bold leading-tight"
                               >{{ stu.firstName }} {{ stu.lastName }}</span
                             >
                           </div>
+
+                          <span
+                            v-if="isAlreadyPrefect(stu.id)"
+                            class="ml-auto text-[10px] font-fredoka font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100 whitespace-nowrap"
+                          >
+                            เป็นสารวัตรแล้ว
+                          </span>
+
                           <svg
-                            v-if="selectedStudentId === stu.id"
+                            v-else-if="selectedStudentId === stu.id"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -1301,7 +1464,6 @@ const getInitials = (first: string, last: string) =>
                   </Transition>
                 </div>
 
-                <!-- Auto-filled name preview -->
                 <div
                   v-if="form.firstName"
                   class="mt-2 flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2"
@@ -1320,7 +1482,6 @@ const getInitials = (first: string, last: string) =>
                 </div>
               </div>
 
-              <!-- รหัสประจำตัว (ใช้เข้าสู่ระบบ) (อ่านอย่างเดียว) -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold text-slate-600 block mb-1.5 pl-1"
@@ -1334,7 +1495,6 @@ const getInitials = (first: string, last: string) =>
                 />
               </div>
 
-              <!-- Step 3: เบอร์โทรศัพท์ -->
               <div>
                 <label
                   class="font-fredoka text-xs font-bold block mb-1.5 pl-1"
@@ -1360,7 +1520,6 @@ const getInitials = (first: string, last: string) =>
                 />
               </div>
 
-              <!-- เปลี่ยนรหัสผ่าน (ไม่บังคับ) -->
               <div class="bg-amber-50 border border-amber-100 rounded-xl p-3">
                 <p class="font-fredoka text-xs font-bold text-amber-700 mb-2">
                   🔑 เปลี่ยนรหัสผ่าน (ไม่บังคับ)
@@ -1465,7 +1624,6 @@ const getInitials = (first: string, last: string) =>
                     </button>
                   </div>
                 </div>
-                <!-- Password match indicator -->
                 <div
                   v-if="form.password && form.confirmPassword"
                   class="mt-1.5 flex items-center gap-1.5 pl-1"
@@ -1537,7 +1695,6 @@ const getInitials = (first: string, last: string) =>
       </Transition>
     </Teleport>
 
-    <!-- ======= DELETE CONFIRM MODAL ======= -->
     <Teleport to="body">
       <Transition name="modal">
         <div
@@ -1586,7 +1743,6 @@ const getInitials = (first: string, last: string) =>
       </Transition>
     </Teleport>
 
-    <!-- ======= LOGOUT MODAL ======= -->
     <Teleport to="body">
       <Transition name="modal">
         <div
