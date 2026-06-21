@@ -914,7 +914,7 @@ const isAlreadyPrefect = (studentId: string) => {
                     >{{ form.firstName }} {{ form.lastName }}</span
                   >
                   <span class="text-indigo-400 text-xs ml-auto"
-                    >{{ form.grade }}/{{ form.room }}</span
+                    >{{ form.grade }}</span
                   >
                 </div>
               </div>
@@ -940,6 +940,8 @@ const isAlreadyPrefect = (studentId: string) => {
                   type="tel"
                   placeholder="เช่น 081-234-5678"
                   :disabled="!selectedStudentId"
+                  :maxlength="10"
+                  :minlength="10"
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 placeholder-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:bg-white outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               </div>
