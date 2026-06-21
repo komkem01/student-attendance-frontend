@@ -11,8 +11,7 @@ useHead({
 // State for Mobile Sidebar Toggle
 const isMobileSidebarOpen = ref(false)
 
-const { teacherProfile, requireAuth } = useTeacherSession()
-requireAuth()
+const { teacherProfile } = useTeacherSession()
 
 // Current date display in Thai format
 const currentDateText = computed(() => {

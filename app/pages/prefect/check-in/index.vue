@@ -1,16 +1,24 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 useHead({
-  title: 'เช็คชื่อนักเรียน | Student Attendance System',
+  title: 'เช็คชื่อนักเรียนสาย | Student Attendance System',
   meta: [
-    { name: 'description', content: 'ระบบเช็คชื่อนักเรียนจากชื่อสำหรับสารวัตรนักเรียน' }
+    { name: 'description', content: 'ระบบเช็คชื่อนักเรียนสายสำหรับสารวัตรนักเรียน' }
   ]
 })
 
 // Current time & date
 const now = ref(new Date())
-setInterval(() => { now.value = new Date() }, 1000)
+let timerId: any = null
+
+onMounted(() => {
+  timerId = setInterval(() => { now.value = new Date() }, 1000)
+})
+
+onUnmounted(() => {
+  if (timerId) clearInterval(timerId)
+})
 
 const currentDateText = computed(() => {
   return now.value.toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -25,185 +33,11 @@ const isLateTime = computed(() => {
 })
 
 // Inspector info
-const inspectorName = ref('กิตติพงษ์ แก้วสะอาด')
-const inspectorId = ref('S55204')
+const { prefectProfile, logout } = usePrefectSession()
 
-// ===== MOCK STUDENT DATABASE =====
-const allStudents = [
-  // ม.1
-  { id: 'STD-1001', prefix: 'เด็กชาย', firstName: 'กิตติศักดิ์', lastName: 'สุขสวัสดิ์', grade: 'ม.1', room: '1' },
-  { id: 'STD-1002', prefix: 'เด็กหญิง', firstName: 'ปาริชาต', lastName: 'แก้วใส', grade: 'ม.1', room: '1' },
-  { id: 'STD-1003', prefix: 'เด็กชาย', firstName: 'ธนกฤต', lastName: 'มีสุข', grade: 'ม.1', room: '2' },
-  { id: 'STD-1004', prefix: 'เด็กหญิง', firstName: 'อรนภา', lastName: 'ดวงดี', grade: 'ม.1', room: '2' },
-  { id: 'STD-1005', prefix: 'เด็กชาย', firstName: 'ณัฐภัทร', lastName: 'ทองคำ', grade: 'ม.1', room: '3' },
-  // ม.2
-  { id: 'STD-2001', prefix: 'เด็กชาย', firstName: 'สมหมาย', lastName: 'ยิ้มแย้ม', grade: 'ม.2', room: '1' },
-  { id: 'STD-2002', prefix: 'เด็กหญิง', firstName: 'อารียา', lastName: 'ใจดี', grade: 'ม.2', room: '1' },
-  { id: 'STD-2003', prefix: 'เด็กชาย', firstName: 'ปกรณ์', lastName: 'สุขใจ', grade: 'ม.2', room: '2' },
-  { id: 'STD-2004', prefix: 'เด็กหญิง', firstName: 'สุภาวดี', lastName: 'เจริญพร', grade: 'ม.2', room: '2' },
-  { id: 'STD-2005', prefix: 'เด็กชาย', firstName: 'ณรงค์ศักดิ์', lastName: 'รักเรียน', grade: 'ม.2', room: '3' },
-  // ม.3
-  { id: 'STD-3001', prefix: 'เด็กชาย', firstName: 'พิพัฒน์', lastName: 'ศรีสุข', grade: 'ม.3', room: '1' },
-  { id: 'STD-3002', prefix: 'เด็กหญิง', firstName: 'นันทิดา', lastName: 'แก้วมณี', grade: 'ม.3', room: '1' },
-  { id: 'STD-3003', prefix: 'เด็กชาย', firstName: 'วรวุฒิ', lastName: 'เพชรงาม', grade: 'ม.3', room: '2' },
-  { id: 'STD-3004', prefix: 'เด็กหญิง', firstName: 'ภาวิณี', lastName: 'สุวรรณ', grade: 'ม.3', room: '2' },
-  { id: 'STD-3005', prefix: 'เด็กชาย', firstName: 'ชัยวัฒน์', lastName: 'สมบูรณ์', grade: 'ม.3', room: '3' },
-  // ม.4
-  { id: 'STD-4001', prefix: 'นาย', firstName: 'ธนวัฒน์', lastName: 'ศรีสุข', grade: 'ม.4', room: '1' },
-  { id: 'STD-4002', prefix: 'นางสาว', firstName: 'พัชราภา', lastName: 'ทองดี', grade: 'ม.4', room: '1' },
-  { id: 'STD-4003', prefix: 'นาย', firstName: 'ณัฐพงษ์', lastName: 'มานะ', grade: 'ม.4', room: '2' },
-  { id: 'STD-4004', prefix: 'นางสาว', firstName: 'สุทธิดา', lastName: 'แสงเพชร', grade: 'ม.4', room: '2' },
-  { id: 'STD-4005', prefix: 'นาย', firstName: 'อภิชาติ', lastName: 'รักไทย', grade: 'ม.4', room: '3' },
-  // ม.5
-  { id: 'STD-5001', prefix: 'นาย', firstName: 'วีรภัทร', lastName: 'สุขสวัสดิ์', grade: 'ม.5', room: '1' },
-  { id: 'STD-5002', prefix: 'นางสาว', firstName: 'ปิยะรัตน์', lastName: 'แก้วประเสริฐ', grade: 'ม.5', room: '1' },
-  { id: 'STD-5003', prefix: 'นาย', firstName: 'ชาญวิทย์', lastName: 'ดวงดี', grade: 'ม.5', room: '2' },
-  { id: 'STD-5004', prefix: 'นางสาว', firstName: 'นภัสสร', lastName: 'สุวรรณ', grade: 'ม.5', room: '2' },
-  { id: 'STD-5005', prefix: 'นาย', firstName: 'ปรมินทร์', lastName: 'วงศ์ใหญ่', grade: 'ม.5', room: '3' },
-  // ม.6
-  { id: 'STD-6001', prefix: 'นาย', firstName: 'กฤตภัค', lastName: 'นิยมดี', grade: 'ม.6', room: '1' },
-  { id: 'STD-6002', prefix: 'นางสาว', firstName: 'ณัฐวดี', lastName: 'มีสุข', grade: 'ม.6', room: '1' },
-  { id: 'STD-6003', prefix: 'นาย', firstName: 'ภูมิพัฒน์', lastName: 'เจริญสุข', grade: 'ม.6', room: '2' },
-  { id: 'STD-6004', prefix: 'นางสาว', firstName: 'อาภัสรา', lastName: 'สว่างใจ', grade: 'ม.6', room: '2' },
-  { id: 'STD-6005', prefix: 'นาย', firstName: 'ศุภวิชญ์', lastName: 'หมื่นไวย', grade: 'ม.6', room: '3' },
-]
-
-// Helper
-const getFullName = (s: typeof allStudents[0]) => `${s.prefix}${s.firstName} ${s.lastName}`
-const getClassLabel = (s: typeof allStudents[0]) => `${s.grade}/${s.room}`
-const getInitials = (s: typeof allStudents[0]) => `${s.firstName[0] ?? ''}${s.lastName[0] ?? ''}`
-
-// ===== SEARCH =====
-const searchQuery = ref('')
-const isSearchFocused = ref(false)
-const searchInputRef = ref<HTMLInputElement | null>(null)
-
-const searchResults = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
-  if (!q) return []
-  return allStudents.filter(s => {
-    const full = `${s.prefix}${s.firstName}${s.lastName}`.toLowerCase()
-    const nameOnly = `${s.firstName}${s.lastName}`.toLowerCase()
-    return full.includes(q) || nameOnly.includes(q) || s.id.toLowerCase().includes(q)
-  }).slice(0, 8)
-})
-
-const showResults = computed(() => isSearchFocused.value && searchQuery.value.trim().length > 0 && searchResults.value.length > 0)
-
-// ===== CHECK-IN HISTORY =====
-const checkedInIds = ref<Set<string>>(new Set(['STD-2001', 'STD-3001']))
-
-interface CheckInRecord {
-  id: number
-  studentId: string
-  fullName: string
-  classLabel: string
-  initials: string
-  time: string
-  status: 'present' | 'late'
-}
-
-const checkInHistory = ref<CheckInRecord[]>([
-  {
-    id: Date.now() - 20000,
-    studentId: 'STD-2001',
-    fullName: 'เด็กชายสมหมาย ยิ้มแย้ม',
-    classLabel: 'ม.2/1',
-    initials: 'สย',
-    time: '07:38',
-    status: 'present'
-  },
-  {
-    id: Date.now() - 10000,
-    studentId: 'STD-3001',
-    fullName: 'เด็กชายพิพัฒน์ ศรีสุข',
-    classLabel: 'ม.3/1',
-    initials: 'พศ',
-    time: '07:52',
-    status: 'present'
-  }
-])
-
-// Stats
-const presentCount = computed(() => checkInHistory.value.filter(r => r.status === 'present').length)
-const lateCount = computed(() => checkInHistory.value.filter(r => r.status === 'late').length)
-
-// ===== CONFIRM MODAL =====
-const confirmStudent = ref<typeof allStudents[0] | null>(null)
-const isConfirmOpen = ref(false)
-
-const openConfirm = (student: typeof allStudents[0]) => {
-  if (checkedInIds.value.has(student.id)) {
-    showToast(`${student.firstName} เช็คชื่อแล้วในวันนี้`, 'warning')
-    return
-  }
-  confirmStudent.value = student
-  isConfirmOpen.value = true
-  searchQuery.value = ''
-  isSearchFocused.value = false
-}
-
-const confirmCheckIn = (status: 'present' | 'late') => {
-  if (!confirmStudent.value) return
-  const s = confirmStudent.value
-  const record = {
-    id: Date.now(),
-    studentId: s.id,
-    fullName: getFullName(s),
-    classLabel: getClassLabel(s),
-    initials: getInitials(s),
-    time: now.value.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-    status
-  }
-  checkInHistory.value.unshift(record)
-  checkedInIds.value.add(s.id)
-  isConfirmOpen.value = false
-  confirmStudent.value = null
-  showToast(
-    status === 'present'
-      ? `✅ บันทึก ${record.fullName} (${record.classLabel}) มาเรียนตรงเวลา`
-      : `⚠️ บันทึก ${record.fullName} (${record.classLabel}) มาสาย`,
-    status === 'present' ? 'success' : 'warning'
-  )
-}
-
-// ===== EDIT RECORD =====
-const editRecord = ref<CheckInRecord | null>(null)
-const isEditModalOpen = ref(false)
-
-const openEditRecord = (record: CheckInRecord) => {
-  editRecord.value = { ...record }
-  isEditModalOpen.value = true
-}
-
-const applyEditStatus = (newStatus: 'present' | 'late') => {
-  if (!editRecord.value) return
-  const idx = checkInHistory.value.findIndex(r => r.id === editRecord.value!.id)
-  if (idx >= 0) {
-    const item = checkInHistory.value[idx]
-    if (item) {
-      item.status = newStatus
-      showToast(
-        newStatus === 'present'
-          ? `✅ แก้ไขเป็น “ตรงเวลา” สำเร็จแล้ว`
-          : `⚠️ แก้ไขเป็น “มาสาย” สำเร็จแล้ว`,
-        newStatus === 'present' ? 'success' : 'warning'
-      )
-    }
-  }
-  isEditModalOpen.value = false
-  editRecord.value = null
-}
-
-const deleteRecord = () => {
-  if (!editRecord.value) return
-  const rec = editRecord.value
-  checkInHistory.value = checkInHistory.value.filter(r => r.id !== rec.id)
-  checkedInIds.value.delete(rec.studentId)
-  isEditModalOpen.value = false
-  editRecord.value = null
-  showToast(`❌ ยกเลิกการเช็คชื่อ ${rec.fullName} แล้ว`, 'warning')
-}
+const inspectorName = computed(() => prefectProfile.value.name)
+const inspectorId = computed(() => prefectProfile.value.code)
+const inspectorInitial = computed(() => (inspectorName.value ? inspectorName.value.charAt(0) : 'ส'))
 
 // ===== TOAST =====
 const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' }[]>([])
@@ -214,6 +48,60 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'suc
   setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 3500)
 }
 
+// ===== USE COMPOSABLE =====
+const {
+  allStudents,
+  checkedInIds,
+  checkInHistory,
+  presentCount,
+  lateCount,
+  totalCheckedCount,
+  isFetching,
+  isSubmitting,
+  isConfirmOpen,
+  confirmStudent,
+  isEditModalOpen,
+  editRecord,
+  openConfirm,
+  confirmCheckIn,
+  openEditRecord,
+  applyEditStatus,
+  deleteRecord
+} = usePrefectCheckIn(showToast)
+
+// UI search states
+const searchQuery = ref('')
+const isSearchFocused = ref(false)
+const searchInputRef = ref<HTMLInputElement | null>(null)
+
+// Local helper to format search data
+const getFullName = (s: any) => `${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}`
+const getClassLabel = (s: any) => s.classLabel || 'ม.ทั่วไป'
+const getInitials = (s: any) => `${s.firstName?.[0] || ''}${s.lastName?.[0] || ''}`
+
+const searchResults = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return allStudents.value.filter(s => {
+    // Filter out students who are already checked in today
+    if (checkedInIds.value.has(s.id)) return false
+
+    const full = `${s.prefix}${s.firstName}${s.lastName}`.toLowerCase()
+    const nameOnly = `${s.firstName}${s.lastName}`.toLowerCase()
+    return full.includes(q) || nameOnly.includes(q) || s.code.toLowerCase().includes(q)
+  }).slice(0, 8)
+})
+
+const showResults = computed(() => isSearchFocused.value && searchQuery.value.trim().length > 0 && searchResults.value.length > 0)
+
+// Helper wrap confirm trigger to clear search
+const handleOpenConfirm = (student: any) => {
+  openConfirm(student)
+  searchQuery.value = ''
+  isSearchFocused.value = false
+}
+
+// Log out modal
 const isLogoutModalOpen = ref(false)
 
 const handleLogout = () => {
@@ -223,7 +111,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutModalOpen.value = false
   showToast('กำลังออกจากระบบ...', 'success')
-  setTimeout(() => navigateTo('/prefect/login'), 1000)
+  setTimeout(() => logout(), 1000)
 }
 
 // Highlight matching text
@@ -267,8 +155,8 @@ const highlight = (text: string, query: string) => {
           🛡️
         </div>
         <div>
-          <h1 class="font-fredoka text-base font-extrabold text-slate-800 leading-tight">ระบบเช็คชื่อนักเรียน</h1>
-          <span class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">PREFECT CHECK-IN</span>
+          <h1 class="font-fredoka text-base font-extrabold text-slate-800 leading-tight">ระบบเช็คชื่อนักเรียนสาย</h1>
+          <span class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">PREFECT LATE CHECK-IN</span>
         </div>
       </div>
 
@@ -286,7 +174,7 @@ const highlight = (text: string, query: string) => {
         <!-- Inspector -->
         <div class="hidden md:flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-1.5">
           <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-400 to-violet-500 text-white font-fredoka font-extrabold text-[10px] flex items-center justify-center">
-            {{ inspectorName[0] }}
+            {{ inspectorInitial }}
           </div>
           <div>
             <p class="text-xs font-bold text-slate-700 leading-none">{{ inspectorName }}</p>
@@ -300,7 +188,7 @@ const highlight = (text: string, query: string) => {
     </header>
 
     <!-- Main -->
-    <main class="flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" @click.stop>
+    <main class="flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 items-start content-start" @click.stop>
 
       <!-- Left: Search Panel -->
       <section class="lg:col-span-5 space-y-4">
@@ -308,8 +196,8 @@ const highlight = (text: string, query: string) => {
         <!-- Search Card -->
         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 space-y-4">
           <div>
-            <h2 class="font-fredoka text-lg font-extrabold text-slate-800 mb-0.5">ค้นหานักเรียน</h2>
-            <p class="font-nunito text-xs text-slate-400 font-semibold">พิมพ์ชื่อ นามสกุล หรือรหัสนักเรียนเพื่อเช็คชื่อ</p>
+            <h2 class="font-fredoka text-lg font-extrabold text-slate-800 mb-0.5">ค้นหานักเรียนสาย</h2>
+            <p class="font-nunito text-xs text-slate-400 font-semibold">พิมพ์ชื่อ นามสกุล หรือรหัสนักเรียนเพื่อบันทึกการเข้าสาย</p>
           </div>
 
           <!-- Search Input -->
@@ -342,14 +230,14 @@ const highlight = (text: string, query: string) => {
                 <!-- Header -->
                 <div class="px-4 py-2 border-b border-slate-50 flex items-center justify-between">
                   <span class="font-fredoka text-xs font-bold text-slate-500">พบ {{ searchResults.length }} รายการ</span>
-                  <span class="text-xs font-nunito text-slate-400">คลิกเพื่อเช็คชื่อ</span>
+                  <span class="text-xs font-nunito text-slate-400">คลิกเพื่อเช็คชื่อสาย</span>
                 </div>
                 <div class="max-h-72 overflow-y-auto p-1.5 space-y-0.5">
                   <button
                     v-for="student in searchResults"
                     :key="student.id"
                     type="button"
-                    @click.stop="openConfirm(student)"
+                    @click.stop="handleOpenConfirm(student)"
                     :class="[
                       'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 cursor-pointer text-left group',
                       checkedInIds.has(student.id)
@@ -375,7 +263,7 @@ const highlight = (text: string, query: string) => {
                       ></p>
                       <div class="flex items-center gap-2 mt-0.5">
                         <span class="bg-indigo-100 text-indigo-700 font-fredoka font-bold text-[10px] px-2 py-0.5 rounded-lg">{{ getClassLabel(student) }}</span>
-                        <span class="text-slate-400 text-[10px] font-nunito font-semibold">{{ student.id }}</span>
+                        <span class="text-slate-400 text-[10px] font-nunito font-semibold">{{ student.code }}</span>
                       </div>
                     </div>
 
@@ -411,7 +299,7 @@ const highlight = (text: string, query: string) => {
             <span class="text-lg flex-shrink-0">💡</span>
             <div>
               <p class="font-fredoka text-xs font-bold text-indigo-700 mb-0.5">วิธีใช้งาน</p>
-              <p class="font-nunito text-[11px] text-indigo-600 leading-relaxed">พิมพ์ชื่อ นามสกุล หรือรหัสนักเรียน ระบบจะค้นหาจากทุกชั้นเรียน คลิกที่ชื่อนักเรียนเพื่อเช็คชื่อ</p>
+              <p class="font-nunito text-[11px] text-indigo-600 leading-relaxed">พิมพ์ชื่อ นามสกุล หรือรหัสนักเรียน ระบบจะค้นหาจากทุกชั้นเรียน คลิกที่ชื่อนักเรียนเพื่อบันทึกการเข้าสาย</p>
             </div>
           </div>
         </div>
@@ -419,7 +307,7 @@ const highlight = (text: string, query: string) => {
         <!-- Stats Card -->
         <div class="grid grid-cols-3 gap-3">
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
-            <p class="font-fredoka text-2xl font-extrabold text-[#2F3E46]">{{ checkInHistory.length }}</p>
+            <p class="font-fredoka text-2xl font-extrabold text-[#2F3E46]">{{ totalCheckedCount }}</p>
             <p class="font-nunito text-slate-500 text-[11px] font-semibold mt-0.5">เช็คแล้ว</p>
           </div>
           <div class="bg-white rounded-2xl border border-emerald-100 shadow-sm p-4 text-center">
@@ -435,11 +323,11 @@ const highlight = (text: string, query: string) => {
       </section>
 
       <!-- Right: Check-in History -->
-      <section class="lg:col-span-7 bg-white rounded-3xl border border-slate-100 shadow-sm p-5">
+      <section class="lg:col-span-7 bg-white rounded-3xl border border-slate-100 shadow-sm p-4 sm:p-5">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-50">
           <div>
-            <h2 class="font-fredoka text-lg font-extrabold text-slate-800">ประวัติการเช็คชื่อวันนี้</h2>
+            <h2 class="font-fredoka text-lg font-extrabold text-slate-800">ประวัติการเช็คชื่อสายวันนี้</h2>
             <p class="font-nunito text-xs text-slate-400 font-semibold">{{ currentDateText }}</p>
           </div>
           <div class="bg-indigo-50 border border-indigo-100 px-3.5 py-2 rounded-xl flex items-center gap-1.5">
@@ -452,8 +340,8 @@ const highlight = (text: string, query: string) => {
         <!-- Empty State -->
         <div v-if="checkInHistory.length === 0" class="py-16 flex flex-col items-center text-center">
           <div class="text-5xl mb-4">📋</div>
-          <p class="font-fredoka text-slate-400 font-bold text-lg">ยังไม่มีการเช็คชื่อ</p>
-          <p class="font-nunito text-slate-400 text-xs mt-1">ใช้ช่องค้นหาด้านซ้ายเพื่อเริ่มเช็คชื่อนักเรียน</p>
+          <p class="font-fredoka text-slate-400 font-bold text-lg">ยังไม่มีประวัติการเช็คชื่อสาย</p>
+          <p class="font-nunito text-slate-400 text-xs mt-1">ใช้ช่องค้นหาด้านซ้ายเพื่อเริ่มบันทึกชื่อนักเรียนเข้าสาย</p>
         </div>
 
         <!-- History List -->
@@ -464,14 +352,14 @@ const highlight = (text: string, query: string) => {
               :key="record.id"
               @click="openEditRecord(record)"
               :class="[
-                'flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer active:scale-[0.98] select-none group',
+                'flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer active:scale-[0.98] select-none group',
                 record.status === 'present'
                   ? 'bg-emerald-50/50 border-emerald-100/60 hover:bg-emerald-50 hover:border-emerald-200'
                   : 'bg-amber-50/50 border-amber-100/60 hover:bg-amber-50 hover:border-amber-200'
               ]"
             >
               <!-- Rank -->
-              <div class="w-6 text-center font-fredoka text-xs font-bold text-slate-300 flex-shrink-0">
+              <div class="hidden sm:block w-6 text-center font-fredoka text-xs font-bold text-slate-300 flex-shrink-0">
                 {{ checkInHistory.length - idx }}
               </div>
 
@@ -504,14 +392,14 @@ const highlight = (text: string, query: string) => {
                   'text-[10px] font-fredoka font-bold px-2 py-0.5 rounded-full',
                   record.status === 'present' ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-100'
                 ]">
-                  {{ record.status === 'present' ? 'ตรงเวลา' : 'สาย' }}
+                  {{ record.status === 'present' ? 'ตรงเวลา' : `สาย (${record.lateMinutes || '15'} นาที)` }}
                 </span>
               </div>
 
               <!-- Edit indicator -->
               <div
-                class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 group-hover:text-indigo-600 group-hover:border-indigo-200 group-hover:bg-indigo-50 flex items-center justify-center transition-all duration-200 shadow-sm flex-shrink-0"
-                title="แก้ไขการเช็คชื่อ"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white border border-slate-200 text-slate-400 group-hover:text-indigo-600 group-hover:border-indigo-200 group-hover:bg-indigo-50 flex items-center justify-center transition-all duration-200 shadow-sm flex-shrink-0"
+                title="แก้ไขประวัติการเข้าสาย"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-4 h-4">
                   <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
@@ -612,7 +500,7 @@ const highlight = (text: string, query: string) => {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
               </svg>
-              ยกเลิกการเช็คชื่อนี้
+              ยกเลิกรายการเช็คชื่อสายนี้
             </button>
 
           </div>
@@ -634,13 +522,13 @@ const highlight = (text: string, query: string) => {
               <h2 class="font-fredoka text-xl font-extrabold text-slate-800">{{ getFullName(confirmStudent) }}</h2>
               <div class="flex items-center justify-center gap-2 mt-2">
                 <span class="bg-indigo-100 text-indigo-700 font-fredoka font-bold text-xs px-3 py-1 rounded-xl">{{ getClassLabel(confirmStudent) }}</span>
-                <span class="text-slate-400 text-xs font-nunito font-semibold">{{ confirmStudent.id }}</span>
+                <span class="text-slate-400 text-xs font-nunito font-semibold">{{ confirmStudent.code }}</span>
               </div>
             </div>
 
             <!-- Time display -->
             <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-center mb-5">
-              <p class="font-nunito text-xs text-slate-400 font-semibold mb-0.5">เวลาเช็คชื่อ</p>
+              <p class="font-nunito text-xs text-slate-400 font-semibold mb-0.5">เวลาบันทึกเข้าสาย</p>
               <p class="font-fredoka text-2xl font-extrabold text-slate-800">{{ currentTimeText }}</p>
               <p :class="['font-fredoka text-xs font-bold mt-0.5', isLateTime ? 'text-rose-500' : 'text-emerald-600']">
                 {{ isLateTime ? '⚠️ อยู่ในช่วงเวลาสาย' : '✅ อยู่ในช่วงเวลาปกติ' }}
@@ -689,13 +577,13 @@ const highlight = (text: string, query: string) => {
               คุณสารวัตร <strong class="text-slate-700">{{ inspectorName }}</strong>
             </p>
             <p class="font-nunito text-xs text-slate-400 leading-relaxed mb-5">
-              ต้องการออกจากระบบในตอนนี้ใช่หรือไม่? ข้อมูลที่เช็คชื่อไว้แล้วจะยังคงอยู่ในระบบ
+              ต้องการออกจากระบบในตอนนี้ใช่หรือไม่? ข้อมูลการเข้าสายที่เช็คไว้แล้วจะยังคงอยู่ในระบบ
             </p>
 
             <!-- Stats summary -->
             <div class="flex items-center justify-center gap-3 mb-5">
               <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2.5 text-center">
-                <p class="font-fredoka text-lg font-extrabold text-slate-800">{{ checkInHistory.length }}</p>
+                <p class="font-fredoka text-lg font-extrabold text-slate-800">{{ totalCheckedCount }}</p>
                 <p class="font-nunito text-[10px] text-slate-400 font-semibold">เช็คแล้ว</p>
               </div>
               <div class="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-2.5 text-center">

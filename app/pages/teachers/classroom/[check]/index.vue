@@ -62,6 +62,30 @@ const {
   cancelCheckIn
 } = useClassroomCheck(showToast)
 
+const isPrefectCheckIn = (details: string) => {
+  return details && (details.includes('gate check-in by prefect:') || details.includes('gate check-in updated by prefect:'))
+}
+
+const getPrefectNameFromRemark = (details: string) => {
+  if (!details) return ''
+  const match = details.match(/prefect:\s*([^|]*)/)
+  return match ? match[1].trim() : 'สารวัตรนักเรียน'
+}
+
+const getPrefectMinutesFromRemark = (details: string) => {
+  if (!details) return ''
+  const match = details.match(/late:\s*(\d+)\s*mins/)
+  return match ? match[1] : ''
+}
+
+const getLateMinutesDisplayValue = (details: string) => {
+  if (!details) return ''
+  if (isPrefectCheckIn(details)) {
+    return getPrefectMinutesFromRemark(details)
+  }
+  return details
+}
+
 const handleLogout = () => {
   isLogoutModalOpen.value = true
 }
@@ -374,7 +398,13 @@ const confirmLogout = () => {
                       สถานะ: 
                       <span v-if="student.status === 'present'" class="text-emerald-500 font-extrabold">มาเรียน</span>
                       <span v-else-if="student.status === 'absent'" class="text-rose-500 font-extrabold">ขาดเรียน</span>
-                      <span v-else-if="student.status === 'late'" class="text-sky-500 font-extrabold">มาสาย ({{ student.details }} นาที)</span>
+                      <span v-else-if="student.status === 'late'" class="text-sky-500 font-extrabold">
+                        มาสาย {{ getPrefectMinutesFromRemark(student.details) ? `${getPrefectMinutesFromRemark(student.details)} นาที` : '' }}
+                        <span v-if="isPrefectCheckIn(student.details)" class="text-[10px] text-sky-400 font-normal block sm:inline sm:ml-1">
+                          (เช็คโดยสารวัตร: {{ getPrefectNameFromRemark(student.details) }})
+                        </span>
+                        <span v-else>({{ student.details }} นาที)</span>
+                      </span>
                       <span v-else-if="student.status === 'leave'" class="text-amber-500 font-extrabold">ลา ({{ student.details === 'sick' ? 'ลาป่วย' : 'ลากิจ' }})</span>
                       <span v-else class="text-slate-400 font-semibold">ยังไม่ได้ระบุ</span>
                     </span>
@@ -441,67 +471,79 @@ const confirmLogout = () => {
               <transition name="expand">
                 <div 
                   v-if="student.status === 'late' || student.status === 'leave'"
-                  class="mt-4 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center text-xs font-semibold text-slate-600"
+                  class="mt-4 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3.5 text-xs font-semibold text-slate-600"
                 >
                   <!-- Late Time Inputs -->
                   <template v-if="student.status === 'late'">
-                    <div class="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-sky-500 flex-shrink-0">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    <!-- Prefect Gate Check-in Banner -->
+                    <div v-if="isPrefectCheckIn(student.details)" class="w-full flex items-center gap-2.5 text-sky-600 bg-sky-50 border border-sky-100/70 p-3 rounded-xl text-[11px] font-bold">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-sky-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                       </svg>
-                      <span>ระบุเวลาที่สาย:</span>
-                      <input 
-                        type="number" 
-                        :value="student.details"
-                        @input="e => setLateMinutes(student.id, (e.target as HTMLInputElement).value)"
-                        class="w-16 px-2 py-1 bg-white border border-slate-200 rounded-lg text-center font-fredoka text-xs focus:outline-hidden focus:border-sky-500"
-                      />
-                      <span>นาที</span>
+                      <span>บันทึกมาสายที่หน้าประตูโรงเรียนโดยสารวัตร: <span class="text-sky-700 font-extrabold">{{ getPrefectNameFromRemark(student.details) }}</span> <span class="text-slate-500 font-semibold">(สาย {{ getPrefectMinutesFromRemark(student.details) || '15' }} นาที)</span></span>
                     </div>
-                    <!-- Quick presets -->
-                    <div class="flex items-center gap-1.5">
-                      <button 
-                        @click="setLateMinutes(student.id, '5')"
-                        :class="['px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === '5' ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white border-slate-200 hover:bg-sky-50 text-slate-500']"
-                      >
-                        +5 นาที
-                      </button>
-                      <button 
-                        @click="setLateMinutes(student.id, '15')"
-                        :class="['px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === '15' ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white border-slate-200 hover:bg-sky-50 text-slate-500']"
-                      >
-                        +15 นาที
-                      </button>
-                      <button 
-                        @click="setLateMinutes(student.id, '30')"
-                        :class="['px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === '30' ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white border-slate-200 hover:bg-sky-50 text-slate-500']"
-                      >
-                        +30 นาที
-                      </button>
+
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                      <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-sky-500 flex-shrink-0">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <span>ระบุเวลาที่สาย:</span>
+                        <input 
+                          type="number" 
+                          :value="isPrefectCheckIn(student.details) ? '' : student.details"
+                          @input="e => setLateMinutes(student.id, (e.target as HTMLInputElement).value)"
+                          class="w-16 px-2 py-1 bg-white border border-slate-200 rounded-lg text-center font-fredoka text-xs focus:outline-hidden focus:border-sky-500"
+                        />
+                        <span>นาที</span>
+                      </div>
+                      <!-- Quick presets -->
+                      <div class="flex items-center gap-1.5">
+                        <button 
+                          @click="setLateMinutes(student.id, '5')"
+                          :class="['px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === '5' ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white border-slate-200 hover:bg-sky-50 text-slate-500']"
+                        >
+                          +5 นาที
+                        </button>
+                        <button 
+                          @click="setLateMinutes(student.id, '15')"
+                          :class="['px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === '15' ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white border-slate-200 hover:bg-sky-50 text-slate-500']"
+                        >
+                          +15 นาที
+                        </button>
+                        <button 
+                          @click="setLateMinutes(student.id, '30')"
+                          :class="['px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === '30' ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white border-slate-200 hover:bg-sky-50 text-slate-500']"
+                        >
+                          +30 นาที
+                        </button>
+                      </div>
                     </div>
                   </template>
 
                   <!-- Leave Reason Inputs -->
                   <template v-if="student.status === 'leave'">
-                    <div class="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-amber-500 flex-shrink-0">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.11.786.291 1.13.074.14.16.268.254.386.09.112.194.21.306.298a2.66 2.66 0 0 0 .386.254c.344.18.716.29 1.13.29.23 0 .454-.034.664-.1a3.774 3.774 0 0 1-.664 1.1c-.074.14-.16.268-.254.386a2.66 2.66 0 0 1-.306.298 2.66 2.66 0 0 1-.386.254 3.774 3.774 0 0 1-1.13.29c-.23 0-.454-.034-.664-.1a3.774 3.774 0 0 1 .1 2.314c.065-.21.1-.433.1-.664 0-.414-.11-.786-.291-1.13a2.66 2.66 0 0 0-.254-.386 2.66 2.66 0 0 0-.306-.298 2.66 2.66 0 0 0-.386-.254 3.774 3.774 0 0 0-1.13-.29c-.23 0-.454.034-.664.1a3.774 3.774 0 0 0 .664-1.1c.074-.14.16-.268.254-.386a2.66 2.66 0 0 0 .306-.298c.112-.089.21-.193.298-.306.09-.112.194-.21.306-.298a2.66 2.66 0 0 0 .386-.254 3.774 3.774 0 0 0 1.13-.29c.23 0 .454.035.664.1a3.774 3.774 0 0 0-.1-2.314Z" />
-                      </svg>
-                      <span>ประเภทการลา:</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                      <button 
-                        @click="setLeaveReason(student.id, 'sick')"
-                        :class="['px-3 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === 'sick' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-slate-200 hover:bg-amber-50 text-slate-500']"
-                      >
-                        ลาป่วย (Sick Leave)
-                      </button>
-                      <button 
-                        @click="setLeaveReason(student.id, 'business')"
-                        :class="['px-3 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === 'business' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-slate-200 hover:bg-amber-50 text-slate-500']"
-                      >
-                        ลากิจ (Personal Leave)
-                      </button>
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                      <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-amber-500 flex-shrink-0">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.11.786.291 1.13.074.14.16.268.254.386.09.112.194.21.306.298a2.66 2.66 0 0 0 .386.254c.344.18.716.29 1.13.29.23 0 .454-.034.664-.1a3.774 3.774 0 0 1-.664 1.1c-.074.14-.16.268-.254.386a2.66 2.66 0 0 1-.306.298 2.66 2.66 0 0 1-.386.254 3.774 3.774 0 0 1-1.13.29c-.23 0-.454-.034-.664-.1a3.774 3.774 0 0 1 .1 2.314c.065-.21.1-.433.1-.664 0-.414-.11-.786-.291-1.13a2.66 2.66 0 0 0-.254-.386 2.66 2.66 0 0 0-.306-.298 2.66 2.66 0 0 0-.386-.254 3.774 3.774 0 0 0-1.13-.29c-.23 0-.454.034-.664.1a3.774 3.774 0 0 0 .664-1.1c.074-.14.16-.268.254-.386a2.66 2.66 0 0 0 .306-.298c.112-.089.21-.193.298-.306.09-.112.194-.21.306-.298a2.66 2.66 0 0 0 .386-.254 3.774 3.774 0 0 0 1.13-.29c.23 0 .454.035.664.1a3.774 3.774 0 0 0-.1-2.314Z" />
+                        </svg>
+                        <span>ประเภทการลา:</span>
+                      </div>
+                      <div class="flex items-center gap-1.5">
+                        <button 
+                          @click="setLeaveReason(student.id, 'sick')"
+                          :class="['px-3 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === 'sick' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-slate-200 hover:bg-amber-50 text-slate-500']"
+                        >
+                          ลาป่วย (Sick Leave)
+                        </button>
+                        <button 
+                          @click="setLeaveReason(student.id, 'business')"
+                          :class="['px-3 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer', student.details === 'business' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-slate-200 hover:bg-amber-50 text-slate-500']"
+                        >
+                          ลากิจ (Personal Leave)
+                        </button>
+                      </div>
                     </div>
                   </template>
                 </div>

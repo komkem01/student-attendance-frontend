@@ -15,8 +15,7 @@ useHead({
 // State for Mobile Sidebar Toggle
 const isMobileSidebarOpen = ref(false);
 
-const { teacherProfile, requireAuth } = useTeacherSession();
-requireAuth();
+const { teacherProfile } = useTeacherSession();
 
 const currentDateText = computed(() => {
   const options: Intl.DateTimeFormatOptions = {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 
 useHead({
   title: 'เข้าสู่ระบบสำหรับสารวัตรนักเรียน | Student Attendance System',
@@ -8,20 +8,8 @@ useHead({
   ]
 })
 
-// Form State
-const form = reactive({
-  inspectorId: '',
-  password: '',
-  rememberMe: false
-})
-
 // UI State
 const isPasswordVisible = ref(false)
-const isLoading = ref(false)
-const hasError = ref(false)
-const isSuccess = ref(false)
-
-// SweetAlert-style Toast Notifications State
 const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' }[]>([])
 let toastId = 0
 
@@ -42,47 +30,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'suc
   }, 3000)
 }
 
-// Handle Form Submission
-const handleLogin = async () => {
-  hasError.value = false
-  
-  // Basic Validation
-  if (!form.inspectorId.trim()) {
-    showToast('กรุณากรอกรหัสประจำตัวสารวัตรนักเรียน', 'warning')
-    return
-  }
-  
-  if (!form.password) {
-    showToast('กรุณากรอกรหัสผ่าน', 'warning')
-    return
-  }
-  
-  if (form.password.length < 6) {
-    showToast('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร', 'warning')
-    return
-  }
-  
-  // Mock login process
-  isLoading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Accept mock login (e.g. any inspector ID with mock password '123456' or similar)
-    if (form.password === '123456' || form.password === 'password') {
-      isSuccess.value = true
-      showToast('เข้าสู่ระบบสำเร็จ กำลังเข้าสู่หน้าบันทึกเวลาเรียน...', 'success')
-      setTimeout(() => {
-        navigateTo('/prefect/check-in')
-      }, 1500)
-    } else {
-      throw new Error('Invalid credentials')
-    }
-  } catch (err) {
-    showToast('รหัสประจำตัวหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง', 'error')
-  } finally {
-    isLoading.value = false
-  }
-}
+const { form, isLoading, isSuccess, hasError, handleLogin } = usePrefectLogin(showToast)
 </script>
 
 <template>

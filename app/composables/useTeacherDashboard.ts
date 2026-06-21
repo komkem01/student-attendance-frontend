@@ -185,10 +185,19 @@ export const useTeacherDashboard = () => {
               let statusText = 'ขาดเรียน'
               let badgeClass = 'bg-rose-50 border-rose-100 text-rose-600'
               if (std.status === 'leave') {
-                statusText = std.details ? `ลา (${std.details})` : 'ลา'
+                const reason = std.details === 'sick' ? 'ลาป่วย' : std.details === 'business' ? 'ลากิจ' : std.details
+                statusText = reason ? `ลา (${reason})` : 'ลา'
                 badgeClass = 'bg-amber-50 border-amber-100 text-amber-600'
               } else if (std.status === 'late') {
-                statusText = std.details ? `มาสาย (${std.details})` : 'มาสาย'
+                if (std.details && (std.details.includes('gate check-in by prefect:') || std.details.includes('gate check-in updated by prefect:'))) {
+                  const matchName = std.details.match(/prefect:\s*([^|]*)/)
+                  const matchMins = std.details.match(/late:\s*(\d+)\s*mins/)
+                  const name = matchName ? matchName[1].trim() : 'สารวัตรนักเรียน'
+                  const minsText = matchMins ? `${matchMins[1]} นาที ` : ''
+                  statusText = `มาสาย ${minsText}(สารวัตร: ${name})`
+                } else {
+                  statusText = std.details ? `มาสาย (${std.details} นาที)` : 'มาสาย'
+                }
                 badgeClass = 'bg-sky-50 border-sky-100 text-sky-600'
               }
 

@@ -4,8 +4,7 @@ export const useClassroomCheck = (showToast: (msg: string, type?: 'success' | 'e
   const route = useRoute()
   const classId = computed(() => route.params.check as string)
 
-  const { session, requireAuth } = useTeacherSession()
-  requireAuth()
+  const { session } = useTeacherSession()
 
   // State Variables
   const isLoading = ref(true)
@@ -228,17 +227,22 @@ export const useClassroomCheck = (showToast: (msg: string, type?: 'success' | 'e
     showToast('ล้างรายการบันทึกสถานะทั้งหมดแล้ว', 'warning')
   }
 
-  // Set student check-in status
+  // Set student check-in status (with toggle off if clicking the active status again)
   const setStudentStatus = (studentId: string | number, status: 'present' | 'absent' | 'late' | 'leave') => {
     const student = editingStudents.value.find(s => s.id === studentId)
     if (student) {
-      student.status = status
-      if (status === 'late') {
-        student.details = '15' // default late 15 minutes
-      } else if (status === 'leave') {
-        student.details = 'sick' // default leave reason: sick
-      } else {
+      if (student.status === status) {
+        student.status = ''
         student.details = ''
+      } else {
+        student.status = status
+        if (status === 'late') {
+          student.details = '15' // default late 15 minutes
+        } else if (status === 'leave') {
+          student.details = 'sick' // default leave reason: sick
+        } else {
+          student.details = ''
+        }
       }
     }
   }
@@ -246,7 +250,12 @@ export const useClassroomCheck = (showToast: (msg: string, type?: 'success' | 'e
   const setLateMinutes = (studentId: string | number, minutes: string) => {
     const student = editingStudents.value.find(s => s.id === studentId)
     if (student) {
-      student.details = minutes
+      if (student.details && (student.details.includes('gate check-in by prefect:') || student.details.includes('gate check-in updated by prefect:'))) {
+        const prefixPart = student.details.split(' | ')[0]
+        student.details = `${prefixPart} | late: ${minutes} mins`
+      } else {
+        student.details = minutes
+      }
     }
   }
 
@@ -267,11 +276,21 @@ export const useClassroomCheck = (showToast: (msg: string, type?: 'success' | 'e
       const dateVal = selectedClassroom.value.date
 
       for (const s of editingStudents.value) {
+        if (s.status === '') {
+          // If status is cleared (empty), delete the record from database if it exists
+          if (s.attendanceId) {
+            await $fetch(`http://localhost:8080/api/v1/classroom-attendences/${s.attendanceId}`, {
+              method: 'DELETE'
+            })
+          }
+          continue
+        }
+
         const payload = {
           student_id: s.id,
           schedule_id: scheduleId,
           date: dateVal,
-          status: s.status || 'present',
+          status: s.status,
           remark: s.details || ''
         }
 

@@ -17,8 +17,7 @@ const isMobileSidebarOpen = ref(false)
 // State for Logout Modal
 const isLogoutModalOpen = ref(false)
 
-const { teacherProfile, requireAuth, logout } = useTeacherSession()
-requireAuth()
+const { teacherProfile, logout } = useTeacherSession()
 
 // Current date display in Thai format
 const currentDateText = computed(() => {
