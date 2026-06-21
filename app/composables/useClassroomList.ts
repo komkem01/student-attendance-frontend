@@ -255,7 +255,12 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
 
           // Find prefix string
           const matchedPrefixObj = prefixes.value.find((p: any) => p.id === studentInfo.prefix_id)
-          const prefixName = matchedPrefixObj ? matchedPrefixObj.name : 'ด.ช.'
+          const dbPrefixName = matchedPrefixObj ? matchedPrefixObj.name : 'ด.ช.'
+          
+          let prefixName = dbPrefixName
+          if (dbPrefixName === 'เด็กชาย') prefixName = 'ด.ช.'
+          else if (dbPrefixName === 'เด็กหญิง') prefixName = 'ด.ญ.'
+          else if (dbPrefixName === 'นางสาว') prefixName = 'น.ส.'
 
           // Find today's attendance record
           const todayStr = new Date().toISOString().split('T')[0]
@@ -654,17 +659,61 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
           const row = rawRows[i]
           if (!row || row.length === 0) continue
 
-          const firstName = String(row[firstNameIdx] || '').trim()
+          let firstName = String(row[firstNameIdx] || '').trim()
           const lastName = String(row[lastNameIdx] || '').trim()
           
           if (!firstName || !lastName) continue
 
           const noVal = noIdx !== -1 ? parseInt(row[noIdx]) : i
-          const prefixVal = prefixIdx !== -1 ? String(row[prefixIdx] || '').trim() : 'ด.ช.'
+          let prefixVal = prefixIdx !== -1 ? String(row[prefixIdx] || '').trim() : ''
+
+          const prefixesToTest = [
+            { key: 'เด็กชาย', short: 'ด.ช.', patterns: ['เด็กชาย', 'ด.ช.', 'ด.ช'] },
+            { key: 'เด็กหญิง', short: 'ด.ญ.', patterns: ['เด็กหญิง', 'ด.ญ.', 'ด.ญ'] },
+            { key: 'นางสาว', short: 'น.ส.', patterns: ['นางสาว', 'น.ส.', 'น.ส'] },
+            { key: 'นาย', short: 'นาย', patterns: ['นาย'] },
+            { key: 'นาง', short: 'นาง', patterns: ['นาง'] },
+            { key: 'คุณ', short: 'คุณ', patterns: ['คุณ'] }
+          ]
+
+          // 1. Check if prefix is prepended in firstName
+          for (const item of prefixesToTest) {
+            let matchedPattern = ''
+            for (const pat of item.patterns) {
+              if (firstName.startsWith(pat)) {
+                matchedPattern = pat
+                if (!prefixVal) {
+                  prefixVal = item.short
+                }
+                break
+              }
+            }
+            if (matchedPattern) {
+              firstName = firstName.substring(matchedPattern.length).trim()
+              if (firstName.startsWith('.') || firstName.startsWith('-') || firstName.startsWith(' ')) {
+                firstName = firstName.substring(1).trim()
+              }
+              break
+            }
+          }
+
+          // 2. Normalize prefixVal if it was from a column
+          if (prefixVal) {
+            const cleanPref = prefixVal.replace(/\./g, '').trim()
+            if (cleanPref === 'ดช' || cleanPref === 'เด็กชาย') prefixVal = 'ด.ช.'
+            else if (cleanPref === 'ดญ' || cleanPref === 'เด็กหญิง') prefixVal = 'ด.ญ.'
+            else if (cleanPref === 'นส' || cleanPref === 'นางสาว') prefixVal = 'น.ส.'
+            else if (cleanPref === 'นาย') prefixVal = 'นาย'
+            else if (cleanPref === 'นาง') prefixVal = 'นาง'
+            else if (cleanPref === 'คุณ') prefixVal = 'คุณ'
+          } else {
+            // Default prefix fallback
+            prefixVal = 'ด.ช.'
+          }
 
           studentsList.push({
             no: isNaN(noVal) ? i : noVal,
-            prefix: prefixVal || 'ด.ช.',
+            prefix: prefixVal,
             firstName,
             lastName
           })
@@ -762,18 +811,32 @@ export const useClassroomList = (showToast: (msg: string, type?: 'success' | 'er
           continue
         }
 
-        // Resolve prefix
-        let normalizedPrefix = st.prefix
-        if (normalizedPrefix === 'ด.ช.') normalizedPrefix = 'ด.ช.'
-        if (normalizedPrefix === 'ด.ญ.') normalizedPrefix = 'ด.ญ.'
+        // Resolve prefix using robust mapping logic
+        const prefixClean = String(st.prefix || '').trim().replace(/\./g, '')
+        let targetPrefixName = ''
+        if (prefixClean === 'ดช' || prefixClean === 'เด็กชาย') {
+          targetPrefixName = 'เด็กชาย'
+        } else if (prefixClean === 'ดญ' || prefixClean === 'เด็กหญิง') {
+          targetPrefixName = 'เด็กหญิง'
+        } else if (prefixClean === 'นาย') {
+          targetPrefixName = 'นาย'
+        } else if (prefixClean === 'นางสาว' || prefixClean === 'นส') {
+          targetPrefixName = 'นางสาว'
+        } else if (prefixClean === 'นาง') {
+          targetPrefixName = 'นาง'
+        } else if (prefixClean === 'คุณ') {
+          targetPrefixName = 'คุณ'
+        }
 
-        const matchedPrefix = prefixes.value.find(p => p.name === normalizedPrefix || p.name.includes(normalizedPrefix))
+        const matchedPrefix = prefixes.value.find(p => p.name === targetPrefixName) || 
+                              prefixes.value.find(p => p.name.includes(prefixClean) || prefixClean.includes(p.name))
+        
         const prefixId = matchedPrefix ? matchedPrefix.id : (prefixes.value[0]?.id || '')
         
         let genderId = defaultGenderId
         if (matchedPrefix) {
           genderId = matchedPrefix.gender_id
-        } else if (normalizedPrefix.includes('ญ') || normalizedPrefix.includes('หญิง') || normalizedPrefix.includes('นาง')) {
+        } else if (prefixClean.includes('ญ') || prefixClean.includes('หญิง') || prefixClean.includes('นาง') || prefixClean.includes('นางสาว')) {
           genderId = femaleGender?.id || defaultGenderId
         }
 

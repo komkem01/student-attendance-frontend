@@ -92,7 +92,12 @@ export const useClassroomCheck = (showToast: (msg: string, type?: 'success' | 'e
         if (!studentInfo) return null
 
         const matchedPrefixObj = prefixes.find((p: any) => p.id === studentInfo.prefix_id)
-        const prefixName = matchedPrefixObj ? matchedPrefixObj.name : 'ด.ช.'
+        const dbPrefixName = matchedPrefixObj ? matchedPrefixObj.name : 'ด.ช.'
+        
+        let prefixName = dbPrefixName
+        if (dbPrefixName === 'เด็กชาย') prefixName = 'ด.ช.'
+        else if (dbPrefixName === 'เด็กหญิง') prefixName = 'ด.ญ.'
+        else if (dbPrefixName === 'นางสาว') prefixName = 'น.ส.'
 
         // Search attendance record under today's schedule
         let status = ''

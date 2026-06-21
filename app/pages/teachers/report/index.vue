@@ -121,16 +121,18 @@ const confirmLogout = () => {
 
     <!-- Sidebar Layout Component -->
     <Sidebar 
+      class="print:hidden"
       v-model:isOpen="isMobileSidebarOpen" 
       activeItem="reports" 
       @logout="handleLogout" 
     />
 
     <!-- MAIN PAGE CONTAINER -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 print:p-0 print:m-0 print:w-full print:bg-white">
       
       <!-- Topbar Component -->
       <Topbar 
+        class="print:hidden"
         title="รายงานการเข้าเรียน" 
         :currentDateText="currentDateText" 
         :teacherProfile="teacherProfile" 
@@ -139,12 +141,48 @@ const confirmLogout = () => {
       />
 
       <!-- MAIN SCROLLABLE CONTENT -->
-      <main class="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto space-y-6">
+      <main class="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto space-y-6 print:p-0 print:m-0 print:max-w-full print:space-y-4 print:overflow-visible">
 
-        <div class="space-y-6">
+        <div class="space-y-6 print:space-y-4">
           
+          <!-- PRINT-ONLY REPORT HEADER -->
+          <div class="hidden print:block border-b-2 border-slate-800 pb-4 mb-4">
+            <h1 class="text-[20pt] font-bold text-center mb-1">รายงานสรุปรายชื่อและการเข้าเรียนของนักเรียน</h1>
+            <div class="text-center text-[14pt] font-semibold mb-3">ห้องเรียน {{ selectedClassroom ? selectedClassroom.name : '-' }} | วิชา {{ selectedClassroom ? selectedClassroom.subject : '-' }}</div>
+            <div class="grid grid-cols-3 gap-y-2 mt-4 text-[14pt] font-semibold text-slate-700">
+              <div><strong>ครูผู้สอน:</strong> {{ teacherProfile ? teacherProfile.name : '-' }}</div>
+              <div><strong>โรงเรียน:</strong> {{ teacherProfile && teacherProfile.school ? teacherProfile.school : '-' }}</div>
+              <div><strong>วันที่ออกรายงาน:</strong> {{ currentDateText }}</div>
+              <div class="col-span-3"><strong>ช่วงเวลารายงาน:</strong> {{ formatDateThaiShort(startDateStr) }} ถึง {{ formatDateThaiShort(endDateStr) }}</div>
+            </div>
+          </div>
+
+          <!-- PRINT-ONLY SUMMARY TABLE -->
+          <div class="hidden print:block mb-4">
+            <table class="w-full border-collapse border border-slate-800 text-center text-[14pt] font-semibold">
+              <thead>
+                <tr class="bg-slate-100/80">
+                  <th class="border border-slate-800 py-1.5 px-3">อัตราเข้าเรียนเฉลี่ย</th>
+                  <th class="border border-slate-800 py-1.5 px-3 text-emerald-700">มาเรียน (ร้อยละ)</th>
+                  <th class="border border-slate-800 py-1.5 px-3 text-amber-600">สาย (ร้อยละ)</th>
+                  <th class="border border-slate-800 py-1.5 px-3 text-indigo-700">ลา (ร้อยละ)</th>
+                  <th class="border border-slate-800 py-1.5 px-3 text-rose-700">ขาดเรียน (ร้อยละ)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="border border-slate-800 py-1.5 px-3 font-bold">{{ aggregateStats.avgRate }}%</td>
+                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-emerald-700">{{ aggregateStats.presentPct }}%</td>
+                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-amber-600">{{ aggregateStats.latePct }}%</td>
+                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-indigo-700">{{ aggregateStats.leavePct }}%</td>
+                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-rose-700">{{ aggregateStats.absentPct }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
           <!-- Welcome Header Card -->
-          <section class="bg-gradient-to-br from-[#10B981] to-[#059669] rounded-[2rem] p-6 sm:p-8 text-white relative overflow-hidden shadow-lg shadow-emerald-100/50">
+          <section class="bg-gradient-to-br from-[#10B981] to-[#059669] rounded-[2rem] p-6 sm:p-8 text-white relative overflow-hidden shadow-lg shadow-emerald-100/50 print:hidden">
             <div class="absolute right-0 top-0 w-80 h-80 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-20 -mt-20"></div>
             
             <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -179,7 +217,7 @@ const confirmLogout = () => {
           </section>
 
           <!-- FILTERS PANEL -->
-          <section class="bg-white p-5 rounded-3xl border border-slate-100 shadow-xs flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <section class="bg-white p-5 rounded-3xl border border-slate-100 shadow-xs flex flex-col lg:flex-row gap-4 items-center justify-between print:hidden">
             <div class="flex flex-col sm:flex-row gap-4 w-full items-center">
               
               <!-- Custom Classroom Selector -->
@@ -313,10 +351,10 @@ const confirmLogout = () => {
           </section>
 
           <!-- OVERVIEW PROGRESS SVG CHART -->
-          <section class="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <section class="grid grid-cols-1 md:grid-cols-12 gap-6 print:hidden">
             
             <!-- Circular Progress Card -->
-            <div class="md:col-span-4 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-center text-center space-y-4">
+            <div class="md:col-span-4 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-center text-center space-y-4 print:col-span-4 print:border print:border-slate-100 print:shadow-none print:p-4 print:rounded-2xl">
               <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">อัตราเข้าเรียนเฉลี่ย</span>
               
               <!-- Circular Progress SVG -->
@@ -343,7 +381,7 @@ const confirmLogout = () => {
             </div>
 
             <!-- Breakdown Bars Card -->
-            <div class="md:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+            <div class="md:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col justify-between print:col-span-8 print:border print:border-slate-100 print:shadow-none print:p-4 print:rounded-2xl">
               <div>
                 <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-4">สัดส่วนสรุปเวลารวม</span>
                 
@@ -398,8 +436,8 @@ const confirmLogout = () => {
           </section>
 
           <!-- DETAILED ATTENDANCE BREAKDOWN TABLE -->
-          <section class="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
-            <div class="p-5 border-b border-slate-50 flex items-center justify-between">
+          <section class="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden print:border-none print:shadow-none print:overflow-visible">
+            <div class="p-5 border-b border-slate-50 flex items-center justify-between print:hidden">
               <h4 class="font-fredoka text-sm sm:text-base font-extrabold text-slate-800">
                 รายละเอียดการเข้าเรียนรายบุคคล
               </h4>
@@ -539,5 +577,64 @@ const confirmLogout = () => {
 .pop-up-enter-from, .pop-up-leave-to {
   opacity: 0;
   transform: translateY(10px) scale(0.95);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/font-th-sarabun-new@1.0.0/css/font-th-sarabun-new.css');
+
+@media print {
+  /* Set layout parameters */
+  @page {
+    size: A4 landscape;
+    margin: 10mm 15mm 10mm 15mm;
+  }
+  
+  /* Reset page backgrounds and text colors */
+  body, html, #__nuxt, #main-wrapper, main {
+    background: #ffffff !important;
+    color: #0F172A !important;
+  }
+
+  /* Force TH Sarabun font and background colors during printing */
+  * {
+    font-family: 'THSarabunNew', 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  h1 {
+    font-size: 20pt !important;
+    font-weight: bold !important;
+  }
+
+  .text-[14pt], th, td {
+    font-size: 14pt !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Table layout and borders for high quality prints */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+  }
+  
+  th, td {
+    border: 1px solid #475569 !important; /* Darker border for clean print grid lines */
+    padding: 6px 8px !important;
+    font-size: 13pt !important;
+  }
+  
+  th {
+    background-color: #f1f5f9 !important;
+    color: #0F172A !important;
+    font-weight: bold !important;
+    text-align: center !important;
+  }
+
+  /* Hide custom background blur circles */
+  div.fixed.top-0, div.fixed.bottom-0 {
+    display: none !important;
+  }
 }
 </style>

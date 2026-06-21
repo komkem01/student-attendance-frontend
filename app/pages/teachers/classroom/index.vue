@@ -1388,33 +1388,62 @@ const confirmLogout = () => {
                   <!-- Uploaded File details card -->
                   <div 
                     v-else
-                    class="bg-emerald-50/30 border-2 border-emerald-100 rounded-2xl p-4 flex items-center justify-between gap-3"
+                    class="space-y-3"
                   >
-                    <div class="flex items-center gap-3 min-w-0">
-                      <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4.5 h-4.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                        </svg>
-                      </div>
-                      <div class="min-w-0">
-                        <p class="font-nunito text-xs font-bold text-slate-700 truncate">{{ importFileName }}</p>
-                        <span class="text-[9px] text-emerald-600 font-extrabold flex items-center gap-1 block mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    <div class="bg-emerald-50/30 border-2 border-emerald-100 rounded-2xl p-4 flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4.5 h-4.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                           </svg>
-                          วิเคราะห์รายชื่อสำเร็จ ({{ importStudentsFile ? importStudentsFile.length : 0 }} คน)
-                        </span>
+                        </div>
+                        <div class="min-w-0">
+                          <p class="font-nunito text-xs font-bold text-slate-700 truncate">{{ importFileName }}</p>
+                          <span class="text-[9px] text-emerald-600 font-extrabold flex items-center gap-1 block mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                            วิเคราะห์รายชื่อสำเร็จ ({{ importStudentsFile ? importStudentsFile.length : 0 }} คน)
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        @click="removeImportFile"
+                        class="w-7.5 h-7.5 rounded-lg bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-500 border border-slate-100 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Scrollable student preview list inside modal -->
+                    <div v-if="importStudentsFile && importStudentsFile.length > 0" class="border border-slate-100 rounded-2xl p-3.5 bg-slate-50/50 max-h-48 overflow-y-auto">
+                      <p class="text-[10px] text-slate-400 font-bold block mb-2 uppercase tracking-wide">ตัวอย่างข้อมูลที่จะนำเข้า</p>
+                      <div class="space-y-1.5">
+                        <div 
+                          v-for="st in importStudentsFile" 
+                          :key="st.no" 
+                          class="flex justify-between items-center text-xs font-nunito font-semibold text-slate-600 border-b border-slate-100/50 last:border-0 pb-1.5 last:pb-0"
+                        >
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-slate-400 font-bold">เลขที่ {{ st.no }}</span>
+                            <span class="truncate font-fredoka">{{ st.prefix }}{{ st.firstName }} {{ st.lastName }}</span>
+                          </div>
+                          <span 
+                            :class="[
+                              'px-2 py-0.5 rounded-lg text-[9px] font-bold font-fredoka shadow-xs',
+                              st.prefix === 'ด.ญ.' || st.prefix === 'เด็กหญิง' || st.prefix === 'นางสาว' || st.prefix === 'นาง' 
+                                ? 'bg-pink-50 text-pink-500 border border-pink-100' 
+                                : 'bg-blue-50 text-blue-500 border border-blue-100'
+                            ]"
+                          >
+                            {{ st.prefix }}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <button 
-                      @click="removeImportFile"
-                      class="w-7.5 h-7.5 rounded-lg bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-500 border border-slate-100 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                      </svg>
-                    </button>
                   </div>
                 </div>
 

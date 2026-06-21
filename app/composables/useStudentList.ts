@@ -79,7 +79,12 @@ export const useStudentList = () => {
           if (!studentInfo) return null
 
           const matchedPrefixObj = prefixes.value.find((p: any) => p.id === studentInfo.prefix_id)
-          const prefixName = matchedPrefixObj ? matchedPrefixObj.name : 'ด.ช.'
+          const dbPrefixName = matchedPrefixObj ? matchedPrefixObj.name : 'ด.ช.'
+          
+          let prefixName = dbPrefixName
+          if (dbPrefixName === 'เด็กชาย') prefixName = 'ด.ช.'
+          else if (dbPrefixName === 'เด็กหญิง') prefixName = 'ด.ญ.'
+          else if (dbPrefixName === 'นางสาว') prefixName = 'น.ส.'
 
           // Find today's attendance status
           const todayStr = new Date().toISOString().split('T')[0]
@@ -182,10 +187,24 @@ export const useStudentList = () => {
   // Statistics computed helpers
   const totalStudentsCount = computed(() => allStudentsMapped.value.length)
   const boysCount = computed(() => {
-    return allStudentsMapped.value.filter((s: any) => s.prefix === 'ด.ช.' || s.prefix === 'นาย').length
+    const maleGender = genders.value.find((g: any) => g.name === 'ชาย' || g.name.toLowerCase().includes('male'))
+    if (maleGender) {
+      return allStudentsMapped.value.filter((s: any) => s.genderId === maleGender.id).length
+    }
+    return allStudentsMapped.value.filter((s: any) => {
+      const p = s.prefix || ''
+      return p === 'ด.ช.' || p === 'นาย' || p === 'เด็กชาย' || p.includes('ด.ช') || p.includes('เด็กชาย')
+    }).length
   })
   const girlsCount = computed(() => {
-    return allStudentsMapped.value.filter((s: any) => s.prefix === 'ด.ญ.' || s.prefix === 'น.ส.' || s.prefix === 'นางสาว').length
+    const femaleGender = genders.value.find((g: any) => g.name === 'หญิง' || g.name.toLowerCase().includes('female'))
+    if (femaleGender) {
+      return allStudentsMapped.value.filter((s: any) => s.genderId === femaleGender.id).length
+    }
+    return allStudentsMapped.value.filter((s: any) => {
+      const p = s.prefix || ''
+      return p === 'ด.ญ.' || p === 'น.ส.' || p === 'นางสาว' || p === 'เด็กหญิง' || p.includes('ด.ญ') || p.includes('เด็กหญิง') || p.includes('นางสาว')
+    }).length
   })
   const totalClassroomsCount = computed(() => classrooms.value.length)
 
@@ -304,8 +323,26 @@ export const useStudentList = () => {
         }
       }
 
-      // Map prefix and gender
-      const matchedPrefix = prefixes.value.find(p => p.name === newStudentPrefix.value)
+      // Map prefix and gender using robust mapping
+      const prefixClean = String(newStudentPrefix.value || '').trim().replace(/\./g, '')
+      let targetPrefixName = ''
+      if (prefixClean === 'ดช' || prefixClean === 'เด็กชาย') {
+        targetPrefixName = 'เด็กชาย'
+      } else if (prefixClean === 'ดญ' || prefixClean === 'เด็กหญิง') {
+        targetPrefixName = 'เด็กหญิง'
+      } else if (prefixClean === 'นาย') {
+        targetPrefixName = 'นาย'
+      } else if (prefixClean === 'นางสาว' || prefixClean === 'นส') {
+        targetPrefixName = 'นางสาว'
+      } else if (prefixClean === 'นาง') {
+        targetPrefixName = 'นาง'
+      } else if (prefixClean === 'คุณ') {
+        targetPrefixName = 'คุณ'
+      }
+
+      const matchedPrefix = prefixes.value.find(p => p.name === targetPrefixName) ||
+                            prefixes.value.find(p => p.name.includes(prefixClean) || prefixClean.includes(p.name))
+                            
       const prefixId = matchedPrefix ? matchedPrefix.id : (prefixes.value[0]?.id || '')
       const genderId = matchedPrefix ? matchedPrefix.gender_id : (genders.value[0]?.id || '')
       const randomCode = `ST-${Math.floor(100000 + Math.random() * 900000)}`
@@ -396,8 +433,26 @@ export const useStudentList = () => {
         }
       }
 
-      // Map prefix and gender
-      const matchedPrefix = prefixes.value.find(p => p.name === editStudentPrefix.value)
+      // Map prefix and gender using robust mapping
+      const prefixClean = String(editStudentPrefix.value || '').trim().replace(/\./g, '')
+      let targetPrefixName = ''
+      if (prefixClean === 'ดช' || prefixClean === 'เด็กชาย') {
+        targetPrefixName = 'เด็กชาย'
+      } else if (prefixClean === 'ดญ' || prefixClean === 'เด็กหญิง') {
+        targetPrefixName = 'เด็กหญิง'
+      } else if (prefixClean === 'นาย') {
+        targetPrefixName = 'นาย'
+      } else if (prefixClean === 'นางสาว' || prefixClean === 'นส') {
+        targetPrefixName = 'นางสาว'
+      } else if (prefixClean === 'นาง') {
+        targetPrefixName = 'นาง'
+      } else if (prefixClean === 'คุณ') {
+        targetPrefixName = 'คุณ'
+      }
+
+      const matchedPrefix = prefixes.value.find(p => p.name === targetPrefixName) ||
+                            prefixes.value.find(p => p.name.includes(prefixClean) || prefixClean.includes(p.name))
+                            
       const prefixId = matchedPrefix ? matchedPrefix.id : (prefixes.value[0]?.id || '')
       const genderId = matchedPrefix ? matchedPrefix.gender_id : (genders.value[0]?.id || '')
 
@@ -409,7 +464,8 @@ export const useStudentList = () => {
           prefix_id: prefixId,
           firstname: editStudentFirstName.value.trim(),
           lastname: editStudentLastName.value.trim(),
-          student_no: editStudentNo.value.toString()
+          student_no: editStudentNo.value.toString(),
+          code: editingStudentObj.value.code
         }
       })
 

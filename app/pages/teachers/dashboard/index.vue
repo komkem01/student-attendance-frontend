@@ -25,150 +25,21 @@ const isMobileSidebarOpen = ref(false)
 // State for User Profile Dropdown
 const isProfileDropdownOpen = ref(false)
 
-const { teacherProfile, requireAuth, logout } = useTeacherSession()
-requireAuth()
-
-// Stats Summary Card Data
-const stats = computed(() => [
-  {
-    title: 'อัตราการเข้าเรียนเฉลี่ย',
-    value: '94.2%',
-    desc: 'เพิ่มขึ้น 1.5% จากสัปดาห์ที่แล้ว',
-    trend: 'up',
-    colorClass: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    iconBg: 'bg-emerald-500/10 text-emerald-600',
-    iconPath: 'M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z'
-  },
-  {
-    title: 'เช็คชื่อนักเรียนวันนี้',
-    value: '80 / 120 คน',
-    desc: 'เช็คชื่อแล้ว 2 จาก 3 ห้องเรียน',
-    trend: 'neutral',
-    colorClass: 'text-sky-600 bg-sky-50 border-sky-100',
-    iconBg: 'bg-sky-500/10 text-sky-600',
-    iconPath: 'M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.11.786.291 1.13.074.14.16.268.254.386.09.112.194.21.306.298a2.66 2.66 0 0 0 .386.254c.344.18.716.29 1.13.29.23 0 .454-.034.664-.1a3.774 3.774 0 0 1-.664 1.1c-.074.14-.16.268-.254.386a2.66 2.66 0 0 1-.306.298 2.66 2.66 0 0 1-.386.254 3.774 3.774 0 0 1-1.13.29c-.23 0-.454-.034-.664-.1a3.774 3.774 0 0 1 .1 2.314c.065-.21.1-.433.1-.664 0-.414-.11-.786-.291-1.13a2.66 2.66 0 0 0-.254-.386 2.66 2.66 0 0 0-.306-.298 2.66 2.66 0 0 0-.386-.254 3.774 3.774 0 0 0-1.13-.29c-.23 0-.454.034-.664.1a3.774 3.774 0 0 0 .664-1.1c.074-.14.16-.268.254-.386a2.66 2.66 0 0 0 .306-.298c.112-.089.21-.193.298-.306.09-.112.194-.21.306-.298a2.66 2.66 0 0 0 .386-.254 3.774 3.774 0 0 0 1.13-.29c.23 0 .454.035.664.1a3.774 3.774 0 0 0-.1-2.314Z'
-  },
-  {
-    title: 'ขาดเรียนวันนี้',
-    value: '5 คน',
-    desc: 'ม.1/1 (2 คน), ม.2/3 (3 คน)',
-    trend: 'down',
-    colorClass: 'text-rose-600 bg-rose-50 border-rose-100',
-    iconBg: 'bg-rose-500/10 text-rose-600',
-    iconPath: 'M22 10.5h-6m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.11A5.98 5.98 0 0 1 10.375 21 5.98 5.98 0 0 1 4 19.235Z'
-  },
-  {
-    title: 'สาย / ลาเรียน',
-    value: '2 คน',
-    desc: 'มาสาย 1 คน, ลาป่วย 1 คน',
-    trend: 'warning',
-    colorClass: 'text-amber-600 bg-amber-50 border-amber-100',
-    iconBg: 'bg-amber-500/10 text-amber-600',
-    iconPath: 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'
-  }
-])
-
-// Classrooms details list
-const classrooms = ref([
-  {
-    id: 1,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/1',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 40,
-    checkedCount: 40,
-    status: 'completed',
-    attendanceRate: 95.0,
-    time: '08:15 - 09:10 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 08:30 น.'
-  },
-  {
-    id: 2,
-    name: 'ชั้นมัธยมศึกษาปีที่ 1/2',
-    subject: 'คณิตศาสตร์พื้นฐาน (ค21101)',
-    studentsCount: 40,
-    checkedCount: 40,
-    status: 'completed',
-    attendanceRate: 97.5,
-    time: '09:10 - 10:05 น.',
-    checkedTime: 'เช็คชื่อเมื่อ 09:20 น.'
-  },
-  {
-    id: 3,
-    name: 'ชั้นมัธยมศึกษาปีที่ 2/3',
-    subject: 'คณิตศาสตร์เพิ่มเติม (ค22201)',
-    studentsCount: 40,
-    checkedCount: 0,
-    status: 'pending',
-    attendanceRate: 0,
-    time: '13:00 - 13:55 น.',
-    checkedTime: 'ยังไม่ได้เช็คชื่อ'
-  }
-])
-
-// Today exceptions logs (Absentees / Leaves)
-const exceptions = ref([
-  {
-    id: 1,
-    name: 'ด.ช. นันทวัฒน์ สมบูรณ์',
-    room: 'ม.1/1',
-    status: 'absent',
-    statusText: 'ขาดเรียน',
-    badgeClass: 'bg-rose-50 border-rose-100 text-rose-600',
-    time: '08:15 น.'
-  },
-  {
-    id: 2,
-    name: 'ด.ญ. วรินดา แก้วมณี',
-    room: 'ม.2/3',
-    status: 'leave',
-    statusText: 'ลาป่วย',
-    badgeClass: 'bg-amber-50 border-amber-100 text-amber-600',
-    time: '08:20 น.'
-  },
-  {
-    id: 3,
-    name: 'ด.ช. กิตติพงษ์ รักดี',
-    room: 'ม.1/2',
-    status: 'late',
-    statusText: 'มาสาย (15 นาที)',
-    badgeClass: 'bg-sky-50 border-sky-100 text-sky-600',
-    time: '09:25 น.'
-  },
-  {
-    id: 4,
-    name: 'ด.ช. พีรพงษ์ สุขใจ',
-    room: 'ม.1/1',
-    status: 'absent',
-    statusText: 'ขาดเรียน',
-    badgeClass: 'bg-rose-50 border-rose-100 text-rose-600',
-    time: '08:15 น.'
-  }
-])
+const { 
+  teacherProfile, 
+  classrooms, 
+  exceptions, 
+  isFetching, 
+  stats, 
+  todayClassesCount,
+  todayStudentsCount,
+  toasts, 
+  showToast, 
+  handleStartCheck, 
+  logout 
+} = useTeacherDashboard()
 
 const activeTab = ref('dashboard')
-
-// SweetAlert-style Toast Notifications State
-const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' | 'info' }[]>([])
-let toastId = 0
-
-const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
-  const id = toastId++
-  toasts.value.push({ id, message, type })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter(t => t.id !== id)
-  }, 3000)
-}
-
-const handleStartCheck = (cls: any) => {
-  showToast(`กำลังเข้าสู่ระบบเช็คชื่อสำหรับ ${cls.name}`, 'success')
-  setTimeout(() => {
-    navigateTo({
-      path: '/teachers/classroom',
-      query: { classId: cls.id }
-    })
-  }, 800)
-}
-
 const isLogoutModalOpen = ref(false)
 
 const handleLogout = () => {
@@ -273,7 +144,7 @@ const confirmLogout = () => {
               สวัสดี, {{ teacherProfile.name }}
             </h2>
             <p class="font-nunito text-xs sm:text-sm text-pink-50/90 font-medium">
-              วันนี้มีวิชาคณิตศาสตร์ที่ต้องจัดการเช็คชื่อเข้าแถว 3 คาบเรียน ยอดรวมนักเรียนเข้าข่ายประเมิน 120 คน
+              วันนี้มีวิชา{{ teacherProfile.subject || 'เรียน' }}ที่ต้องจัดการเช็คชื่อเข้าแถว {{ todayClassesCount }} คาบเรียน ยอดรวมนักเรียนเข้าข่ายประเมิน {{ todayStudentsCount }} คน
             </p>
           </div>
         </section>
@@ -424,7 +295,7 @@ const confirmLogout = () => {
                       'bg-sky-100/50 text-sky-600'
                     ]"
                   >
-                    {{ exp.name.charAt(4) }}
+                    {{ exp.name.replace('ด.ช. ', '').replace('ด.ญ. ', '').replace('นาย ', '').replace('น.ส. ', '').charAt(0) }}
                   </div>
                   <div class="min-w-0">
                     <p class="text-[11px] font-bold text-slate-700 truncate leading-snug">{{ exp.name }}</p>
@@ -474,6 +345,9 @@ const confirmLogout = () => {
         @confirm="confirmLogout"
         @cancel="isLogoutModalOpen = false"
       />
+
+      <!-- Cute Loading Overlay -->
+      <LoadingOverlay :show="isFetching" text="กำลังโหลดข้อมูลแดชบอร์ด..." />
     </div>
   </div>
 </template>
