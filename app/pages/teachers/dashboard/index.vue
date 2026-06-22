@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 
 useHead({
   title: "แดชบอร์ดคุณครู - Student Attendance System",
@@ -45,6 +45,19 @@ const {
 
 const activeTab = ref("dashboard");
 const isLogoutModalOpen = ref(false);
+
+// Export Modal State
+const isExportModalOpen = ref(false);
+const selectedExportClassroom = ref<{ id: string; name: string; subject?: string } | null>(null);
+
+const openExportModal = (classroom: any) => {
+  selectedExportClassroom.value = {
+    id: classroom.id,
+    name: classroom.name,
+    subject: classroom.subject
+  };
+  isExportModalOpen.value = true;
+};
 
 const handleLogout = () => {
   isLogoutModalOpen.value = true;
@@ -383,18 +396,16 @@ const confirmLogout = () => {
                   </div>
                 </div>
 
-                <div class="mt-5 pt-3 border-t border-slate-50 flex gap-2">
+                <div
+                  class="mt-5 pt-3 border-t border-slate-50 flex gap-2 relative"
+                >
                   <button
-                    @click="
-                      showToast(
-                        'กำลังดาวน์โหลดรายงานเช็คชื่อรายวิชา',
-                        'success',
-                      )
-                    "
-                    class="flex-1 bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-600 font-fredoka font-bold text-xs py-2 px-3 rounded-lg transition-colors cursor-pointer"
+                    @click="openExportModal(cls)"
+                    class="flex-1 bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-600 font-fredoka font-bold text-xs py-2 px-3 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     รายงาน
                   </button>
+
                   <button
                     @click="handleStartCheck(cls)"
                     :class="[
@@ -534,6 +545,14 @@ const confirmLogout = () => {
         @cancel="isLogoutModalOpen = false"
       />
 
+      <ExportReportModal
+        :isOpen="isExportModalOpen"
+        :classroomName="selectedExportClassroom?.name || ''"
+        :classroomSubject="selectedExportClassroom?.subject || ''"
+        :classroomId="selectedExportClassroom?.id || ''"
+        @close="isExportModalOpen = false"
+      />
+
       <LoadingOverlay :show="isFetching" text="กำลังโหลดข้อมูลแดชบอร์ด..." />
     </div>
   </div>
@@ -587,5 +606,16 @@ const confirmLogout = () => {
 .drawer-enter-from,
 .drawer-leave-to {
   transform: translateX(-100%);
+}
+
+/* Pop-up animation */
+.pop-up-enter-active,
+.pop-up-leave-active {
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pop-up-enter-from,
+.pop-up-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
 }
 </style>

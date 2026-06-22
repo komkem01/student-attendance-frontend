@@ -17,6 +17,19 @@ const isMobileSidebarOpen = ref(false)
 // State for Logout Modal
 const isLogoutModalOpen = ref(false)
 
+// Export Modal State
+const isExportModalOpen = ref(false)
+const selectedExportClassroom = ref<{ id: string; name: string; subject?: string } | null>(null)
+
+const openExportModal = (classroom: any) => {
+  selectedExportClassroom.value = {
+    id: classroom.id,
+    name: classroom.name,
+    subject: classroom.subject
+  }
+  isExportModalOpen.value = true
+}
+
 const { teacherProfile, logout } = useTeacherSession()
 
 // Current date display in Thai format
@@ -595,7 +608,7 @@ const confirmLogout = () => {
               <!-- Details & Actions -->
               <div class="mt-6 pt-4 border-t border-slate-50 flex gap-2">
                 <button 
-                  @click="showToast('กำลังดาวน์โหลดรายงานข้อมูลชั้นเรียน...', 'info')"
+                  @click="openExportModal(cls)"
                   class="flex-1 bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-600 font-fredoka font-bold text-xs py-2.5 px-3 rounded-xl transition-colors cursor-pointer"
                 >
                   รายงาน
@@ -642,7 +655,7 @@ const confirmLogout = () => {
         @cancel="isLogoutModalOpen = false"
       />
 
-      <!-- Delete Classroom Confirmation Modal -->
+       <!-- Delete Classroom Confirmation Modal -->
       <ConfirmModal 
         :isOpen="isDeleteModalOpen"
         title="ลบห้องเรียน"
@@ -652,6 +665,15 @@ const confirmLogout = () => {
         type="danger"
         @confirm="confirmDeleteClassroom"
         @cancel="isDeleteModalOpen = false"
+      />
+
+      <!-- Export Report Modal -->
+      <ExportReportModal
+        :isOpen="isExportModalOpen"
+        :classroomName="selectedExportClassroom?.name || ''"
+        :classroomSubject="selectedExportClassroom?.subject || ''"
+        :classroomId="selectedExportClassroom?.id || ''"
+        @close="isExportModalOpen = false"
       />
 
       <!-- Cute Loading Overlay -->
