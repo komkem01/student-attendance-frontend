@@ -165,6 +165,7 @@ export const useClassroomCheck = (
 
           return {
             id: studentInfo.id,
+            code: studentInfo.code || "",
             no: parseInt(studentInfo.student_no || "0") || 0,
             prefix: prefixName,
             firstName: studentInfo.firstname,

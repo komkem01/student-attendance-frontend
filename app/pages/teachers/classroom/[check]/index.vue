@@ -112,6 +112,17 @@ const confirmLogout = () => {
   showToast("กำลังออกจากระบบ...", "success");
   logout();
 };
+
+const isQrScannerOpen = ref(false);
+const isStudentQrCardsOpen = ref(false);
+
+const handleQrMarkPresent = (studentId: string | number) => {
+  const student = editingStudents.value.find((s) => s.id === studentId);
+  if (student) {
+    student.status = "present";
+    student.details = "";
+  }
+};
 </script>
 
 <template>
@@ -285,6 +296,26 @@ const confirmLogout = () => {
             </div>
 
             <div class="flex flex-wrap gap-2.5">
+              <button
+                @click="isQrScannerOpen = true"
+                class="bg-indigo-50 hover:bg-indigo-100/70 border border-indigo-100 text-indigo-600 font-fredoka font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                </svg>
+                <span>เช็คชื่อด้วย QR Code</span>
+              </button>
+              <button
+                @click="isStudentQrCardsOpen = true"
+                class="bg-pink-50/70 hover:bg-pink-100/70 border border-pink-100 text-pink-600 font-fredoka font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 12v1.5m0 0v1.5m0-1.5h1.5m-1.5 0h-1.5M13.5 17.25h.008v.008H13.5v-.008Zm3.75 0h.008v.008H17.25v-.008ZM13.5 13.5h.008v.008H13.5V13.5Z" />
+                </svg>
+                <span>การ์ด QR Code</span>
+              </button>
               <button
                 @click="markAllPresent"
                 class="bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-100 text-emerald-600 font-fredoka font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer"
@@ -937,6 +968,23 @@ const confirmLogout = () => {
         type="danger"
         @confirm="confirmLogout"
         @cancel="isLogoutModalOpen = false"
+      />
+
+      <!-- QR Scanner Modal -->
+      <QrScannerModal
+        :isOpen="isQrScannerOpen"
+        :students="editingStudents"
+        @close="isQrScannerOpen = false"
+        @markPresent="handleQrMarkPresent"
+      />
+
+      <!-- Student QR Cards printing modal -->
+      <StudentQrCardsModal
+        :isOpen="isStudentQrCardsOpen"
+        :classroomName="selectedClassroom ? selectedClassroom.name : ''"
+        :subjectName="selectedClassroom ? selectedClassroom.subject : ''"
+        :students="editingStudents"
+        @close="isStudentQrCardsOpen = false"
       />
     </div>
   </div>
