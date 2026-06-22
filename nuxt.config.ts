@@ -8,13 +8,15 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: import.meta.env.NUXT_PUBLIC_API_BASE || "http://localhost:8080",
+      apiBase:
+        process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8080/api/v1",
     },
   },
 
   app: {
     head: {
       link: [
+        { rel: "icon", type: "image/png", href: "/favicon.png" },
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
         {
           rel: "preconnect",
