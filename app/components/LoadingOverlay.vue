@@ -13,7 +13,7 @@ withDefaults(defineProps<Props>(), {
 <template>
   <Teleport to="body">
     <transition name="fade">
-      <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div v-if="show" class="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         <!-- Backdrop with soft blur -->
         <div class="fixed inset-0 bg-slate-900/20 backdrop-blur-md"></div>
 
