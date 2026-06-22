@@ -49,9 +49,11 @@ const {
   formatDateThaiShort,
   studentsReportData,
   aggregateStats,
+  activeReports,
   toasts,
   showToast,
-  handleExport
+  handleExport,
+  handleExportAllClassrooms
 } = useAttendanceReport()
 
 const handleLogout = () => {
@@ -143,42 +145,7 @@ const confirmLogout = () => {
       <main class="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto space-y-6 print:p-0 print:m-0 print:max-w-full print:space-y-4 print:overflow-visible">
 
         <div class="space-y-6 print:space-y-4">
-          
-          <!-- PRINT-ONLY REPORT HEADER -->
-          <div class="hidden print:block border-b-2 border-slate-800 pb-4 mb-4">
-            <h1 class="text-[20pt] font-bold text-center mb-1">รายงานสรุปรายชื่อและการเข้าเรียนของนักเรียน</h1>
-            <div class="text-center text-[14pt] font-semibold mb-3">ห้องเรียน {{ selectedClassroom ? selectedClassroom.name : '-' }} | วิชา {{ selectedClassroom ? selectedClassroom.subject : '-' }}</div>
-            <div class="grid grid-cols-3 gap-y-2 mt-4 text-[14pt] font-semibold text-slate-700">
-              <div><strong>ครูผู้สอน:</strong> {{ teacherProfile ? teacherProfile.name : '-' }}</div>
-              <div><strong>โรงเรียน:</strong> {{ teacherProfile && teacherProfile.school ? teacherProfile.school : '-' }}</div>
-              <div><strong>วันที่ออกรายงาน:</strong> {{ currentDateText }}</div>
-              <div class="col-span-3"><strong>ช่วงเวลารายงาน:</strong> {{ formatDateThaiShort(startDateStr) }} ถึง {{ formatDateThaiShort(endDateStr) }}</div>
-            </div>
-          </div>
 
-          <!-- PRINT-ONLY SUMMARY TABLE -->
-          <div class="hidden print:block mb-4">
-            <table class="w-full border-collapse border border-slate-800 text-center text-[14pt] font-semibold">
-              <thead>
-                <tr class="bg-slate-100/80">
-                  <th class="border border-slate-800 py-1.5 px-3">อัตราเข้าเรียนเฉลี่ย</th>
-                  <th class="border border-slate-800 py-1.5 px-3 text-emerald-700">มาเรียน (ร้อยละ)</th>
-                  <th class="border border-slate-800 py-1.5 px-3 text-amber-600">สาย (ร้อยละ)</th>
-                  <th class="border border-slate-800 py-1.5 px-3 text-indigo-700">ลา (ร้อยละ)</th>
-                  <th class="border border-slate-800 py-1.5 px-3 text-rose-700">ขาดเรียน (ร้อยละ)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="border border-slate-800 py-1.5 px-3 font-bold">{{ aggregateStats.avgRate }}%</td>
-                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-emerald-700">{{ aggregateStats.presentPct }}%</td>
-                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-amber-600">{{ aggregateStats.latePct }}%</td>
-                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-indigo-700">{{ aggregateStats.leavePct }}%</td>
-                  <td class="border border-slate-800 py-1.5 px-3 font-bold text-rose-700">{{ aggregateStats.absentPct }}%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
 
           <!-- Welcome Header Card -->
           <section class="bg-gradient-to-br from-[#10B981] to-[#059669] rounded-[2rem] p-6 sm:p-8 text-white relative overflow-hidden shadow-lg shadow-emerald-100/50 print:hidden">
@@ -200,10 +167,16 @@ const confirmLogout = () => {
               <!-- Quick Actions -->
               <div class="flex flex-wrap gap-2.5 flex-shrink-0 w-full lg:w-auto">
                 <button 
+                  @click="handleExportAllClassrooms"
+                  class="flex-1 lg:flex-initial bg-white/15 hover:bg-white/25 border border-white/20 text-white font-fredoka font-bold text-xs px-4 py-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>ส่งออก Excel ทุกห้องเรียน</span>
+                </button>
+                <button 
                   @click="handleExport('excel')"
                   class="flex-1 lg:flex-initial bg-white/15 hover:bg-white/25 border border-white/20 text-white font-fredoka font-bold text-xs px-4 py-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <span>ส่งออก Excel</span>
+                  <span>ส่งออก Excel ห้องนี้</span>
                 </button>
                 <button 
                   @click="handleExport('pdf')"
@@ -238,6 +211,26 @@ const confirmLogout = () => {
                     v-if="showClassSelectPopover" 
                     class="absolute left-0 right-0 z-30 mt-2 max-h-60 overflow-y-auto bg-white border border-slate-100/80 rounded-2xl shadow-xl p-1.5 space-y-1"
                   >
+                    <!-- ทุกห้องเรียน Option -->
+                    <button
+                      type="button"
+                      @click="selectedClassroomId = 'all'; showClassSelectPopover = false"
+                      :class="[
+                        'w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer border-b border-slate-100 pb-2.5 mb-1',
+                        selectedClassroomId === 'all' 
+                          ? 'bg-[#EAFDF8] text-[#059669]' 
+                          : 'hover:bg-slate-50 text-slate-700'
+                      ]"
+                    >
+                      <span class="flex flex-col">
+                        <span class="font-fredoka font-bold text-xs sm:text-sm" :class="selectedClassroomId === 'all' ? 'text-[#059669]' : 'text-slate-800'">ทุกห้องเรียน</span>
+                        <span class="text-[10px]" :class="selectedClassroomId === 'all' ? 'text-emerald-400' : 'text-slate-400'">แสดงรายงานและสถิติสรุปของทุกห้องเรียน</span>
+                      </span>
+                      <svg v-if="selectedClassroomId === 'all'" class="w-4.5 h-4.5 text-[#059669]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                      </svg>
+                    </button>
+
                     <button
                       v-for="cls in classrooms"
                       :key="cls.id"
@@ -349,177 +342,229 @@ const confirmLogout = () => {
             </div>
           </section>
 
-          <!-- OVERVIEW PROGRESS SVG CHART -->
-          <section class="grid grid-cols-1 md:grid-cols-12 gap-6 print:hidden">
-            
-            <!-- Circular Progress Card -->
-            <div class="md:col-span-4 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-center text-center space-y-4 print:col-span-4 print:border print:border-slate-100 print:shadow-none print:p-4 print:rounded-2xl">
-              <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">อัตราเข้าเรียนเฉลี่ย</span>
-              
-              <!-- Circular Progress SVG -->
-              <div class="relative w-36 h-36 flex items-center justify-center">
-                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <!-- Background Track -->
-                  <circle cx="50" cy="50" r="40" stroke="#F1F5F9" stroke-width="8" fill="transparent" />
-                  <!-- Progress Path -->
-                  <circle cx="50" cy="50" r="40" stroke="#10B981" stroke-width="8" fill="transparent" 
-                          stroke-dasharray="251.2" 
-                          :stroke-dashoffset="251.2 - (251.2 * aggregateStats.avgRate) / 100" 
-                          stroke-linecap="round"
-                          class="transition-all duration-1000" />
-                </svg>
-                <div class="absolute flex flex-col items-center justify-center">
-                  <span class="font-fredoka text-3xl font-extrabold text-slate-800 leading-none">{{ aggregateStats.avgRate }}%</span>
-                  <span class="text-[9px] text-emerald-600 font-extrabold tracking-wide uppercase mt-1">Excellent</span>
-                </div>
-              </div>
-
-              <div class="text-xs text-slate-400 font-semibold leading-relaxed">
-                ภาพรวมอัตราการเข้าแถวและคาบเรียนของนักเรียนห้อง {{ selectedClassroom?.name }}
+          <!-- Loop over activeReports to render each classroom report section -->
+          <div 
+            v-for="report in activeReports" 
+            :key="report.classId" 
+            class="classroom-report-section space-y-6 print:space-y-4 print:mb-0 print:break-after-page"
+          >
+            <!-- PRINT-ONLY REPORT HEADER -->
+            <div class="hidden print:block border-b-2 border-slate-800 pb-4 mb-4">
+              <h1 class="print-title text-[20pt] font-bold text-center mb-1">รายงานสรุปรายชื่อและการเข้าเรียนของนักเรียน</h1>
+              <div class="print-subtitle text-center text-[14pt] font-semibold mb-3">ห้องเรียน {{ report.className }} | วิชา {{ report.subjectName }}</div>
+              <div class="grid grid-cols-3 gap-y-2 mt-4 text-[14pt] font-semibold text-slate-700">
+                <div><strong>ครูผู้สอน:</strong> {{ teacherProfile ? teacherProfile.name : '-' }}</div>
+                <div><strong>โรงเรียน:</strong> {{ teacherProfile && teacherProfile.school ? teacherProfile.school : '-' }}</div>
+                <div><strong>วันที่ออกรายงาน:</strong> {{ currentDateText }}</div>
+                <div class="col-span-3"><strong>ช่วงเวลารายงาน:</strong> {{ formatDateThaiShort(startDateStr) }} ถึง {{ formatDateThaiShort(endDateStr) }}</div>
               </div>
             </div>
 
-            <!-- Breakdown Bars Card -->
-            <div class="md:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col justify-between print:col-span-8 print:border print:border-slate-100 print:shadow-none print:p-4 print:rounded-2xl">
-              <div>
-                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-4">สัดส่วนสรุปเวลารวม</span>
-                
-                <div class="space-y-4.5">
-                  <!-- Present Bar -->
-                  <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs font-bold text-slate-700">
-                      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>มาเรียน</span>
-                      <span>{{ aggregateStats.presentPct }}%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                      <div class="h-full bg-emerald-500 rounded-full transition-all duration-700" :style="{ width: `${aggregateStats.presentPct}%` }"></div>
-                    </div>
-                  </div>
-
-                  <!-- Late Bar -->
-                  <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs font-bold text-slate-700">
-                      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>สาย</span>
-                      <span>{{ aggregateStats.latePct }}%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                      <div class="h-full bg-amber-400 rounded-full transition-all duration-700" :style="{ width: `${aggregateStats.latePct}%` }"></div>
-                    </div>
-                  </div>
-
-                  <!-- Leave Bar -->
-                  <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs font-bold text-slate-700">
-                      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>ลา</span>
-                      <span>{{ aggregateStats.leavePct }}%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                      <div class="h-full bg-indigo-400 rounded-full transition-all duration-700" :style="{ width: `${aggregateStats.leavePct}%` }"></div>
-                    </div>
-                  </div>
-
-                  <!-- Absent Bar -->
-                  <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs font-bold text-slate-700">
-                      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>ขาดเรียน</span>
-                      <span>{{ aggregateStats.absentPct }}%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                      <div class="h-full bg-rose-500 rounded-full transition-all duration-700" :style="{ width: `${aggregateStats.absentPct}%` }"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </section>
-
-          <!-- DETAILED ATTENDANCE BREAKDOWN TABLE -->
-          <section class="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden print:border-none print:shadow-none print:overflow-visible">
-            <div class="p-5 border-b border-slate-50 flex items-center justify-between print:hidden">
-              <h4 class="font-fredoka text-sm sm:text-base font-extrabold text-slate-800">
-                รายละเอียดการเข้าเรียนรายบุคคล
-              </h4>
-              <span class="text-[10px] text-slate-400 font-bold">ห้องเรียน: {{ selectedClassroom?.name }}</span>
-            </div>
-
-            <div class="overflow-x-auto w-full">
-              <table class="w-full border-collapse text-left text-slate-600">
-                <thead class="bg-slate-50/75 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <tr>
-                    <th scope="col" class="py-4 px-6 text-center w-20">เลขที่</th>
-                    <th scope="col" class="py-4 px-4">ชื่อ - นามสกุล</th>
-                    <th scope="col" class="py-4 px-4 text-center w-24 text-emerald-600">มาเรียน (วัน)</th>
-                    <th scope="col" class="py-4 px-4 text-center w-24 text-amber-500">สาย (วัน)</th>
-                    <th scope="col" class="py-4 px-4 text-center w-24 text-indigo-500">ลา (วัน)</th>
-                    <th scope="col" class="py-4 px-4 text-center w-24 text-rose-500">ขาด (วัน)</th>
-                    <th scope="col" class="py-4 px-4 text-center w-36">คิดเป็นเปอร์เซ็นต์</th>
-                    <th scope="col" class="py-4 px-6 text-center w-28">ผลการประเมิน</th>
+            <!-- PRINT-ONLY SUMMARY TABLE -->
+            <div class="hidden print:block mb-4">
+              <table class="w-full border-collapse border border-slate-800 text-center text-[14pt] font-semibold">
+                <thead>
+                  <tr class="bg-slate-100/80">
+                    <th class="border border-slate-800 py-1.5 px-3">อัตราเข้าเรียนเฉลี่ย</th>
+                    <th class="border border-slate-800 py-1.5 px-3 text-emerald-700">มาเรียน (ร้อยละ)</th>
+                    <th class="border border-slate-800 py-1.5 px-3 text-amber-600">สาย (ร้อยละ)</th>
+                    <th class="border border-slate-800 py-1.5 px-3 text-indigo-700">ลา (ร้อยละ)</th>
+                    <th class="border border-slate-800 py-1.5 px-3 text-rose-700">ขาดเรียน (ร้อยละ)</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50 text-xs sm:text-sm font-semibold">
-                  <tr 
-                    v-for="student in studentsReportData" 
-                    :key="student.id"
-                    class="hover:bg-slate-50/40 transition-colors"
-                  >
-                    <!-- Student No -->
-                    <td class="py-4 px-6 text-center font-fredoka font-bold text-slate-800">
-                      {{ student.no }}
-                    </td>
-
-                    <!-- Student Name -->
-                    <td class="py-4 px-4">
-                      <div class="font-fredoka font-bold text-slate-800 text-sm">
-                        {{ student.prefix }}{{ student.firstName }} {{ student.lastName }}
-                      </div>
-                      <span class="text-[9px] text-slate-400 font-bold block mt-0.5">รหัสนักเรียน: {{ student.studentCode }}</span>
-                    </td>
-
-                    <!-- Present -->
-                    <td class="py-4 px-4 text-center text-emerald-600 font-bold font-fredoka">
-                      {{ student.presentCount }}
-                    </td>
-
-                    <!-- Late -->
-                    <td class="py-4 px-4 text-center text-amber-500 font-bold font-fredoka">
-                      {{ student.lateCount }}
-                    </td>
-
-                    <!-- Leave -->
-                    <td class="py-4 px-4 text-center text-indigo-500 font-bold font-fredoka">
-                      {{ student.leaveCount }}
-                    </td>
-
-                    <!-- Absent -->
-                    <td class="py-4 px-4 text-center text-rose-500 font-bold font-fredoka">
-                      {{ student.absentCount }}
-                    </td>
-
-                    <!-- Percent rate -->
-                    <td class="py-4 px-4 text-center font-fredoka font-bold text-slate-800">
-                      {{ student.attendanceRate }}%
-                    </td>
-
-                    <!-- Result assessment based on 80% threshold -->
-                    <td class="py-4 px-6 text-center">
-                      <span 
-                        :class="[
-                          'text-[10px] font-bold px-2.5 py-0.5 rounded-full border inline-block w-20',
-                          student.attendanceRate >= 80 
-                            ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
-                            : 'bg-rose-50 border-rose-100 text-rose-500'
-                        ]"
-                      >
-                        {{ student.attendanceRate >= 80 ? 'ผ่านเกณฑ์' : 'ต่ำกว่าเกณฑ์' }}
-                      </span>
-                    </td>
-
+                <tbody>
+                  <tr>
+                    <td class="border border-slate-800 py-1.5 px-3 font-bold">{{ report.aggregateStats.avgRate }}%</td>
+                    <td class="border border-slate-800 py-1.5 px-3 font-bold text-emerald-700">{{ report.aggregateStats.presentPct }}%</td>
+                    <td class="border border-slate-800 py-1.5 px-3 font-bold text-amber-600">{{ report.aggregateStats.latePct }}%</td>
+                    <td class="border border-slate-800 py-1.5 px-3 font-bold text-indigo-700">{{ report.aggregateStats.leavePct }}%</td>
+                    <td class="border border-slate-800 py-1.5 px-3 font-bold text-rose-700">{{ report.aggregateStats.absentPct }}%</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </section>
+
+            <!-- Heading badge for Screen UI when showing all classrooms -->
+            <div v-if="selectedClassroomId === 'all'" class="bg-emerald-50 border border-emerald-100/60 rounded-2xl px-5 py-3.5 print:hidden">
+              <h3 class="font-fredoka text-sm sm:text-base font-extrabold text-emerald-800 flex items-center gap-2">
+                <span>📚 รายงานสรุปสำหรับ:</span>
+                <span class="bg-emerald-600 text-white font-fredoka px-3 py-1 rounded-full text-xs font-extrabold">{{ report.className }}</span>
+                <span class="text-slate-400 text-xs font-nunito font-semibold">วิชา: {{ report.subjectName }}</span>
+              </h3>
+            </div>
+
+            <!-- OVERVIEW PROGRESS SVG CHART -->
+            <section class="grid grid-cols-1 md:grid-cols-12 gap-6 print:hidden">
+              
+              <!-- Circular Progress Card -->
+              <div class="md:col-span-4 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-center text-center space-y-4 print:col-span-4 print:border print:border-slate-100 print:shadow-none print:p-4 print:rounded-2xl">
+                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">อัตราเข้าเรียนเฉลี่ย</span>
+                
+                <!-- Circular Progress SVG -->
+                <div class="relative w-36 h-36 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <!-- Background Track -->
+                    <circle cx="50" cy="50" r="40" stroke="#F1F5F9" stroke-width="8" fill="transparent" />
+                    <!-- Progress Path -->
+                    <circle cx="50" cy="50" r="40" stroke="#10B981" stroke-width="8" fill="transparent" 
+                            stroke-dasharray="251.2" 
+                            :stroke-dashoffset="251.2 - (251.2 * report.aggregateStats.avgRate) / 100" 
+                            stroke-linecap="round"
+                            class="transition-all duration-1000" />
+                  </svg>
+                  <div class="absolute flex flex-col items-center justify-center">
+                    <span class="font-fredoka text-3xl font-extrabold text-slate-800 leading-none">{{ report.aggregateStats.avgRate }}%</span>
+                    <span class="text-[9px] text-emerald-600 font-extrabold tracking-wide uppercase mt-1">Excellent</span>
+                  </div>
+                </div>
+
+                <div class="text-xs text-slate-400 font-semibold leading-relaxed">
+                  ภาพรวมอัตราการเข้าแถวและคาบเรียนของนักเรียนห้อง {{ report.className }}
+                </div>
+              </div>
+
+              <!-- Breakdown Bars Card -->
+              <div class="md:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col justify-between print:col-span-8 print:border print:border-slate-100 print:shadow-none print:p-4 print:rounded-2xl">
+                <div>
+                  <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-4">สัดส่วนสรุปเวลารวม</span>
+                  
+                  <div class="space-y-4.5">
+                    <!-- Present Bar -->
+                    <div class="space-y-1.5">
+                      <div class="flex justify-between text-xs font-bold text-slate-700">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>มาเรียน</span>
+                        <span>{{ report.aggregateStats.presentPct }}%</span>
+                      </div>
+                      <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-500 rounded-full transition-all duration-700" :style="{ width: `${report.aggregateStats.presentPct}%` }"></div>
+                      </div>
+                    </div>
+
+                    <!-- Late Bar -->
+                    <div class="space-y-1.5">
+                      <div class="flex justify-between text-xs font-bold text-slate-700">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>สาย</span>
+                        <span>{{ report.aggregateStats.latePct }}%</span>
+                      </div>
+                      <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-400 rounded-full transition-all duration-700" :style="{ width: `${report.aggregateStats.latePct}%` }"></div>
+                      </div>
+                    </div>
+
+                    <!-- Leave Bar -->
+                    <div class="space-y-1.5">
+                      <div class="flex justify-between text-xs font-bold text-slate-700">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>ลา</span>
+                        <span>{{ report.aggregateStats.leavePct }}%</span>
+                      </div>
+                      <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                        <div class="h-full bg-indigo-400 rounded-full transition-all duration-700" :style="{ width: `${report.aggregateStats.leavePct}%` }"></div>
+                      </div>
+                    </div>
+
+                    <!-- Absent Bar -->
+                    <div class="space-y-1.5">
+                      <div class="flex justify-between text-xs font-bold text-slate-700">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>ขาดเรียน</span>
+                        <span>{{ report.aggregateStats.absentPct }}%</span>
+                      </div>
+                      <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                        <div class="h-full bg-rose-500 rounded-full transition-all duration-700" :style="{ width: `${report.aggregateStats.absentPct}%` }"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </section>
+
+            <!-- DETAILED ATTENDANCE BREAKDOWN TABLE -->
+            <section class="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden print:border-none print:shadow-none print:overflow-visible">
+              <div class="p-5 border-b border-slate-50 flex items-center justify-between print:hidden">
+                <h4 class="font-fredoka text-sm sm:text-base font-extrabold text-slate-800">
+                  รายละเอียดการเข้าเรียนรายบุคคล
+                </h4>
+                <span class="text-[10px] text-slate-400 font-bold">ห้องเรียน: {{ report.className }}</span>
+              </div>
+
+              <div class="overflow-x-auto w-full">
+                <table class="w-full border-collapse text-left text-slate-600">
+                  <thead class="bg-slate-50/75 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <tr>
+                      <th scope="col" class="py-4 px-6 text-center w-20">เลขที่</th>
+                      <th scope="col" class="py-4 px-4">ชื่อ - นามสกุล</th>
+                      <th scope="col" class="py-4 px-4 text-center w-24 text-emerald-600">มาเรียน (วัน)</th>
+                      <th scope="col" class="py-4 px-4 text-center w-24 text-amber-500">สาย (วัน)</th>
+                      <th scope="col" class="py-4 px-4 text-center w-24 text-indigo-500">ลา (วัน)</th>
+                      <th scope="col" class="py-4 px-4 text-center w-24 text-rose-500">ขาด (วัน)</th>
+                      <th scope="col" class="py-4 px-4 text-center w-36">คิดเป็นเปอร์เซ็นต์</th>
+                      <th scope="col" class="py-4 px-6 text-center w-28">ผลการประเมิน</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-50 text-xs sm:text-sm font-semibold">
+                    <tr 
+                      v-for="student in report.students" 
+                      :key="student.id"
+                      class="hover:bg-slate-50/40 transition-colors"
+                    >
+                      <!-- Student No -->
+                      <td class="py-4 px-6 text-center font-fredoka font-bold text-slate-800">
+                        {{ student.no }}
+                      </td>
+
+                      <!-- Student Name -->
+                      <td class="py-4 px-4">
+                        <div class="font-fredoka font-bold text-slate-800 text-sm">
+                          {{ student.prefix }}{{ student.firstName }} {{ student.lastName }}
+                        </div>
+                        <span class="text-[9px] text-slate-400 font-bold block mt-0.5">รหัสนักเรียน: {{ student.studentCode }}</span>
+                      </td>
+
+                      <!-- Present -->
+                      <td class="py-4 px-4 text-center text-emerald-600 font-bold font-fredoka">
+                        {{ student.presentCount }}
+                      </td>
+
+                      <!-- Late -->
+                      <td class="py-4 px-4 text-center text-amber-500 font-bold font-fredoka">
+                        {{ student.lateCount }}
+                      </td>
+
+                      <!-- Leave -->
+                      <td class="py-4 px-4 text-center text-indigo-500 font-bold font-fredoka">
+                        {{ student.leaveCount }}
+                      </td>
+
+                      <!-- Absent -->
+                      <td class="py-4 px-4 text-center text-rose-500 font-bold font-fredoka">
+                        {{ student.absentCount }}
+                      </td>
+
+                      <!-- Percent rate -->
+                      <td class="py-4 px-4 text-center font-fredoka font-bold text-slate-800">
+                        {{ student.attendanceRate }}%
+                      </td>
+
+                      <!-- Result assessment based on 80% threshold -->
+                      <td class="py-4 px-6 text-center">
+                        <span 
+                          :class="[
+                            'text-[10px] font-bold px-2.5 py-0.5 rounded-full border inline-block w-20',
+                            student.attendanceRate >= 80 
+                              ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
+                              : 'bg-rose-50 border-rose-100 text-rose-500'
+                          ]"
+                        >
+                          {{ student.attendanceRate >= 80 ? 'ผ่านเกณฑ์' : 'ต่ำกว่าเกณฑ์' }}
+                        </span>
+                      </td>
+
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
 
         </div>
 
@@ -537,6 +582,11 @@ const confirmLogout = () => {
         @cancel="isLogoutModalOpen = false"
       />
 
+      <!-- Preload TH Sarabun PSK font to force browser download on page load -->
+      <div style="font-family: 'TH Sarabun PSK'; position: absolute; visibility: hidden; opacity: 0; pointer-events: none;">
+        Preload TH Sarabun PSK
+      </div>
+
       <!-- Cute Loading Overlay -->
       <LoadingOverlay :show="isFetching || isExporting" :text="isExporting ? 'กำลังสร้างและส่งออกรายงานประมวลผล...' : 'กำลังโหลดข้อมูลรายงานการเข้าเรียน...'" />
 
@@ -546,7 +596,6 @@ const confirmLogout = () => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
-@import url('https://cdn.jsdelivr.net/npm/font-th-sarabun-new@1.0.0/css/font-th-sarabun-new.css');
 
 /* Toast animations (SweetAlert End style slide) */
 .toast-enter-active {
@@ -591,24 +640,41 @@ const confirmLogout = () => {
   /* Reset page backgrounds and text colors */
   body, html, #__nuxt, #main-wrapper, main {
     background: #ffffff !important;
-    color: #0F172A !important;
+    color: #000000 !important;
   }
 
-  /* Force TH Sarabun font and background colors during printing */
-  * {
-    font-family: 'THSarabunNew', 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', sans-serif !important;
+  /* Force TH Sarabun font and background colors during printing (override Tailwind font classes specifically to apply to numbers too) */
+  *, .font-fredoka, .font-nunito, .font-sans, .font-mono, [class*="font-"] {
+    font-family: 'TH Sarabun PSK', 'THSarabunPSK', 'THSarabunNew', 'TH Sarabun New', 'Sarabun', sans-serif !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  h1 {
-    font-size: 20pt !important;
+  /* Document main title size: 14pt bold */
+  .print-title {
+    font-size: 14pt !important;
     font-weight: bold !important;
+    color: #000000 !important;
   }
 
-  .text-[14pt], th, td {
-    font-size: 14pt !important;
+  /* Document subtitle size: 12pt bold */
+  .print-subtitle {
+    font-size: 12pt !important;
+    font-weight: bold !important;
+    color: #000000 !important;
+  }
+
+  /* Force all print text to normal weight by default (not bold) and 10pt size */
+  *, th, td, div, span, p, strong, b, [class*="font-"], .text-\[14pt\], .text-\[20pt\] {
+    font-weight: normal !important;
+    font-size: 10pt !important;
     line-height: 1.25 !important;
+    color: #000000 !important;
+  }
+
+  /* Keep the title and subtitle bold (override the normal weight rule) */
+  .print-title, .print-subtitle {
+    font-weight: bold !important;
   }
 
   /* Table layout and borders for high quality prints */
@@ -620,15 +686,24 @@ const confirmLogout = () => {
   
   th, td {
     border: 1px solid #475569 !important; /* Darker border for clean print grid lines */
-    padding: 6px 8px !important;
-    font-size: 13pt !important;
+    padding: 4px 6px !important; /* Slightly reduced padding to match 10pt text size */
+    font-size: 10pt !important;
   }
   
   th {
     background-color: #f1f5f9 !important;
-    color: #0F172A !important;
-    font-weight: bold !important;
+    color: #000000 !important;
     text-align: center !important;
+  }
+
+  /* Separate classrooms when printing */
+  .classroom-report-section {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .classroom-report-section:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   /* Hide custom background blur circles */

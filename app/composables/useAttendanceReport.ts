@@ -34,6 +34,7 @@ export const useAttendanceReport = () => {
 
   // Report Data
   const reportData = ref<any>(null)
+  const allReports = ref<any[]>([])
 
   // SweetAlert-style Toast State
   const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'warning' | 'info' }[]>([])
@@ -74,14 +75,37 @@ export const useAttendanceReport = () => {
     if (!selectedClassroomId.value) return
     isFetching.value = true
     try {
-      const res: any = await useCustomFetch(`/classrooms/${selectedClassroomId.value}/attendance-report`, {
-        query: {
-          start_date: startDateStr.value,
-          end_date: endDateStr.value
+      if (selectedClassroomId.value === 'all') {
+        const reports: any[] = []
+        for (const cls of classrooms.value) {
+          const res: any = await useCustomFetch(`/classrooms/${cls.id}/attendance-report`, {
+            query: {
+              start_date: startDateStr.value,
+              end_date: endDateStr.value
+            }
+          })
+          if (res.data) {
+            reports.push({
+              classId: cls.id,
+              className: cls.name,
+              subjectName: cls.subject,
+              reportData: res.data
+            })
+          }
         }
-      })
-      if (res.data) {
-        reportData.value = res.data
+        allReports.value = reports
+        reportData.value = null
+      } else {
+        const res: any = await useCustomFetch(`/classrooms/${selectedClassroomId.value}/attendance-report`, {
+          query: {
+            start_date: startDateStr.value,
+            end_date: endDateStr.value
+          }
+        })
+        if (res.data) {
+          reportData.value = res.data
+          allReports.value = []
+        }
       }
     } catch (err: any) {
       console.error(err)
@@ -417,6 +441,9 @@ export const useAttendanceReport = () => {
   }
 
   const selectedClassroom = computed(() => {
+    if (selectedClassroomId.value === 'all') {
+      return { id: 'all', name: 'ทุกห้องเรียน', subject: 'ทุกรายวิชา' }
+    }
     return classrooms.value.find(c => c.id === selectedClassroomId.value) || null
   })
 
@@ -428,49 +455,376 @@ export const useAttendanceReport = () => {
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543}`
   }
 
-  const studentsReportData = computed(() => {
-    if (!reportData.value || !reportData.value.students) return []
-    return reportData.value.students.map((s: any) => {
-      const dbPrefixName = s.prefix || 'ด.ช.'
-      let prefixName = dbPrefixName
-      if (dbPrefixName === 'เด็กชาย') prefixName = 'ด.ช.'
-      else if (dbPrefixName === 'เด็กหญิง') prefixName = 'ด.ญ.'
-      else if (dbPrefixName === 'นางสาว') prefixName = 'น.ส.'
+  // Active Reports loops through either all fetched reports or the selected single report
+  const activeReports = computed(() => {
+    if (selectedClassroomId.value === 'all') {
+      return allReports.value.map(item => {
+        const report = item.reportData
+        const students = (report.students || []).map((s: any) => {
+          const dbPrefixName = s.prefix || 'ด.ช.'
+          let prefixName = dbPrefixName
+          if (dbPrefixName === 'เด็กชาย') prefixName = 'ด.ช.'
+          else if (dbPrefixName === 'เด็กหญิง') prefixName = 'ด.ญ.'
+          else if (dbPrefixName === 'นางสาว') prefixName = 'น.ส.'
 
-      return {
-        id: s.id,
-        no: parseInt(s.student_no) || s.no,
-        studentNo: s.student_no,
-        studentCode: s.student_code || '',
-        prefix: prefixName,
-        firstName: s.first_name,
-        lastName: s.last_name,
-        presentCount: s.present_count,
-        lateCount: s.late_count,
-        absentCount: s.absent_count,
-        leaveCount: s.leave_count,
-        totalDays: s.total_days,
-        attendanceRate: s.attendance_rate
-      }
-    })
+          return {
+            id: s.id,
+            no: parseInt(s.student_no) || s.no,
+            studentNo: s.student_no,
+            studentCode: s.student_code || '',
+            prefix: prefixName,
+            firstName: s.first_name,
+            lastName: s.last_name,
+            presentCount: s.present_count,
+            lateCount: s.late_count,
+            absentCount: s.absent_count,
+            leaveCount: s.leave_count,
+            totalDays: s.total_days,
+            attendanceRate: s.attendance_rate
+          }
+        })
+
+        return {
+          classId: item.classId,
+          className: item.className,
+          subjectName: item.subjectName,
+          students,
+          aggregateStats: {
+            presentPct: report.present_pct,
+            latePct: report.late_pct,
+            absentPct: report.absent_pct,
+            leavePct: report.leave_pct,
+            avgRate: report.avg_rate
+          }
+        }
+      })
+    } else {
+      const cls = classrooms.value.find(c => c.id === selectedClassroomId.value)
+      if (!cls || !reportData.value) return []
+
+      const students = (reportData.value.students || []).map((s: any) => {
+        const dbPrefixName = s.prefix || 'ด.ช.'
+        let prefixName = dbPrefixName
+        if (dbPrefixName === 'เด็กชาย') prefixName = 'ด.ช.'
+        else if (dbPrefixName === 'เด็กหญิง') prefixName = 'ด.ญ.'
+        else if (dbPrefixName === 'นางสาว') prefixName = 'น.ส.'
+
+        return {
+          id: s.id,
+          no: parseInt(s.student_no) || s.no,
+          studentNo: s.student_no,
+          studentCode: s.student_code || '',
+          prefix: prefixName,
+          firstName: s.first_name,
+          lastName: s.last_name,
+          presentCount: s.present_count,
+          lateCount: s.late_count,
+          absentCount: s.absent_count,
+          leaveCount: s.leave_count,
+          totalDays: s.total_days,
+          attendanceRate: s.attendance_rate
+        }
+      })
+
+      return [{
+        classId: cls.id,
+        className: cls.name,
+        subjectName: cls.subject,
+        students,
+        aggregateStats: {
+          presentPct: reportData.value.present_pct,
+          latePct: reportData.value.late_pct,
+          absentPct: reportData.value.absent_pct,
+          leavePct: reportData.value.leave_pct,
+          avgRate: reportData.value.avg_rate
+        }
+      }]
+    }
+  })
+
+  // Backward compatibility fallback pointers
+  const studentsReportData = computed(() => {
+    return activeReports.value[0]?.students || []
   })
 
   const aggregateStats = computed(() => {
-    if (!reportData.value) {
-      return { presentPct: 0, latePct: 0, absentPct: 0, leavePct: 0, avgRate: 0 }
-    }
-    return {
-      presentPct: reportData.value.present_pct,
-      latePct: reportData.value.late_pct,
-      absentPct: reportData.value.absent_pct,
-      leavePct: reportData.value.leave_pct,
-      avgRate: reportData.value.avg_rate
-    }
+    return activeReports.value[0]?.aggregateStats || { presentPct: 0, latePct: 0, absentPct: 0, leavePct: 0, avgRate: 0 }
   })
 
+  // Export report of ALL classrooms into a single Excel workbook
+  const handleExportAllClassrooms = async () => {
+    if (classrooms.value.length === 0) {
+      showToast('ไม่พบข้อมูลห้องเรียนสำหรับคุณครู', 'error')
+      return
+    }
+    isExporting.value = true
+    try {
+      const workbook = utils.book_new()
+      const { teacherProfile } = useTeacherSession()
+      const teacherName = teacherProfile.value ? teacherProfile.value.name : '-'
+      const schoolName = teacherProfile.value ? teacherProfile.value.school : '-'
+
+      const dateOptions: Intl.DateTimeFormatOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }
+      const printDateText = new Date().toLocaleDateString('th-TH', dateOptions)
+
+      // Fetch all reports in sequence
+      for (const cls of classrooms.value) {
+        const res: any = await useCustomFetch(`/classrooms/${cls.id}/attendance-report`, {
+          query: {
+            start_date: startDateStr.value,
+            end_date: endDateStr.value
+          }
+        })
+        if (!res.data) continue
+
+        const report = res.data
+        const students = report.students || []
+        const avgStats = {
+          presentPct: report.present_pct,
+          latePct: report.late_pct,
+          absentPct: report.absent_pct,
+          leavePct: report.leave_pct,
+          avgRate: report.avg_rate
+        }
+
+        const dataRows = [
+          ['รายงานสรุปรายชื่อและการเข้าเรียนของนักเรียน'],
+          [`ห้องเรียน ${cls.name} | วิชา ${cls.subject}`],
+          [
+            `ครูผู้สอน: ${teacherName}`, '', '', 
+            `โรงเรียน: ${schoolName}`, '', '', 
+            `วันที่ออกรายงาน: ${printDateText}`
+          ],
+          [`ช่วงเวลารายงาน: ${formatDateThaiShort(startDateStr.value)} ถึง ${formatDateThaiShort(endDateStr.value)}`],
+          [],
+          ['อัตราเข้าเรียนเฉลี่ย', 'มาเรียน (ร้อยละ)', 'สาย (ร้อยละ)', 'ลา (ร้อยละ)', 'ขาดเรียน (ร้อยละ)'],
+          [
+            `${avgStats.avgRate}%`,
+            `${avgStats.presentPct}%`,
+            `${avgStats.latePct}%`,
+            `${avgStats.leavePct}%`,
+            `${avgStats.absentPct}%`
+          ],
+          [],
+          ['รายละเอียดการเข้าเรียนรายบุคคล'],
+          [
+            'เลขที่',
+            'ชื่อ - นามสกุล',
+            'มาเรียน (วัน)',
+            'สาย (วัน)',
+            'ลา (วัน)',
+            'ขาด (วัน)',
+            'คิดเป็นเปอร์เซ็นต์',
+            'ผลการประเมิน'
+          ]
+        ]
+
+        for (const s of students) {
+          const dbPrefixName = s.prefix || 'ด.ช.'
+          let prefixName = dbPrefixName
+          if (dbPrefixName === 'เด็กชาย') prefixName = 'ด.ช.'
+          else if (dbPrefixName === 'เด็กหญิง') prefixName = 'ด.ญ.'
+          else if (dbPrefixName === 'นางสาว') prefixName = 'น.ส.'
+
+          const fullName = `${prefixName}${s.first_name} ${s.last_name}`
+          const assessmentResult = s.attendance_rate >= 80 ? 'ผ่านเกณฑ์' : 'ต่ำกว่าเกณฑ์'
+          const studentNo = parseInt(s.student_no) || s.no
+
+          dataRows.push([
+            studentNo.toString(),
+            fullName,
+            s.present_count.toString(),
+            s.late_count.toString(),
+            s.leave_count.toString(),
+            s.absent_count.toString(),
+            `${s.attendance_rate}%`,
+            assessmentResult
+          ])
+        }
+
+        const worksheet = utils.aoa_to_sheet(dataRows)
+
+        worksheet['!merges'] = [
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+          { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+          { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
+          { s: { r: 2, c: 3 }, e: { r: 2, c: 5 } },
+          { s: { r: 2, c: 6 }, e: { r: 2, c: 7 } },
+          { s: { r: 3, c: 0 }, e: { r: 3, c: 7 } },
+          { s: { r: 8, c: 0 }, e: { r: 8, c: 7 } }
+        ]
+
+        const borderThin = {
+          top: { style: 'thin', color: { rgb: '334155' } },
+          bottom: { style: 'thin', color: { rgb: '334155' } },
+          left: { style: 'thin', color: { rgb: '334155' } },
+          right: { style: 'thin', color: { rgb: '334155' } }
+        }
+
+        const fontRegular = { name: 'TH Sarabun PSK', sz: 14 }
+        const fontBold = { name: 'TH Sarabun PSK', sz: 14, bold: true }
+        const fontTitle = { name: 'TH Sarabun PSK', sz: 18, bold: true }
+        const fontHeader = { name: 'TH Sarabun PSK', sz: 14, bold: true }
+
+        for (const cellRef in worksheet) {
+          if (cellRef.startsWith('!')) continue
+          const cell = worksheet[cellRef]
+          const parsedRef = utils.decode_cell(cellRef)
+          const row = parsedRef.r
+          const col = parsedRef.c
+
+          cell.s = {
+            font: { ...fontRegular },
+            alignment: { vertical: 'center' }
+          }
+
+          if (row === 0) {
+            cell.s.font = { ...fontTitle }
+            cell.s.alignment.horizontal = 'center'
+          } else if (row === 1) {
+            cell.s.font = { ...fontHeader }
+            cell.s.alignment.horizontal = 'center'
+          } else if (row === 2 || row === 3) {
+            cell.s.font = { ...fontBold }
+            if (row === 2) {
+              if (col === 0) cell.s.alignment.horizontal = 'left'
+              else if (col === 3) cell.s.alignment.horizontal = 'left'
+              else if (col === 6) cell.s.alignment.horizontal = 'right'
+            } else {
+              cell.s.alignment.horizontal = 'left'
+            }
+          } else if (row === 5) {
+            if (col < 5) {
+              cell.s.font = { ...fontBold }
+              cell.s.fill = { patternType: 'solid', fgColor: { rgb: 'F1F5F9' } }
+              cell.s.border = { ...borderThin }
+              cell.s.alignment.horizontal = 'center'
+              if (col === 1) cell.s.font.color = { rgb: '047857' }
+              else if (col === 2) cell.s.font.color = { rgb: 'D97706' }
+              else if (col === 3) cell.s.font.color = { rgb: '4338CA' }
+              else if (col === 4) cell.s.font.color = { rgb: 'B91C1C' }
+            }
+          } else if (row === 6) {
+            if (col < 5) {
+              cell.s.font = { ...fontBold }
+              cell.s.border = { ...borderThin }
+              cell.s.alignment.horizontal = 'center'
+              if (col === 1) cell.s.font.color = { rgb: '047857' }
+              else if (col === 2) cell.s.font.color = { rgb: 'D97706' }
+              else if (col === 3) cell.s.font.color = { rgb: '4338CA' }
+              else if (col === 4) cell.s.font.color = { rgb: 'B91C1C' }
+            }
+          } else if (row === 8) {
+            cell.s.font = { ...fontHeader }
+            cell.s.alignment.horizontal = 'left'
+          } else if (row === 9) {
+            cell.s.font = { ...fontBold }
+            cell.s.fill = { patternType: 'solid', fgColor: { rgb: 'F1F5F9' } }
+            cell.s.border = { ...borderThin }
+            cell.s.alignment.horizontal = 'center'
+            if (col === 2) cell.s.font.color = { rgb: '047857' }
+            else if (col === 3) cell.s.font.color = { rgb: 'D97706' }
+            else if (col === 4) cell.s.font.color = { rgb: '4338CA' }
+            else if (col === 5) cell.s.font.color = { rgb: 'B91C1C' }
+          } else if (row >= 10) {
+            cell.s.border = { ...borderThin }
+            if (col === 0) {
+              cell.s.alignment.horizontal = 'center'
+            } else if (col === 1) {
+              cell.s.alignment.horizontal = 'left'
+              cell.s.font.bold = true
+            } else if (col >= 2 && col <= 5) {
+              cell.s.alignment.horizontal = 'center'
+              const valNum = parseInt(cell.v || '0')
+              if (valNum > 0) {
+                if (col === 3) cell.s.font.color = { rgb: 'D97706' }
+                else if (col === 4) cell.s.font.color = { rgb: '4338CA' }
+                else if (col === 5) cell.s.font.color = { rgb: 'B91C1C' }
+              }
+            } else if (col === 6) {
+              cell.s.alignment.horizontal = 'center'
+              cell.s.font.bold = true
+            } else if (col === 7) {
+              cell.s.alignment.horizontal = 'center'
+              cell.s.font.bold = true
+              if (cell.v === 'ผ่านเกณฑ์') {
+                cell.s.font.color = { rgb: '047857' }
+                cell.s.fill = { patternType: 'solid', fgColor: { rgb: 'D1FAE5' } }
+              } else {
+                cell.s.font.color = { rgb: 'B91C1C' }
+                cell.s.fill = { patternType: 'solid', fgColor: { rgb: 'FEE2E2' } }
+              }
+            }
+          }
+        }
+
+        const maxColLen = dataRows.reduce((acc: number[], row: any[], rowIdx: number) => {
+          if (rowIdx === 0 || rowIdx === 1 || rowIdx === 2 || rowIdx === 3 || rowIdx === 4 || rowIdx === 7 || rowIdx === 8) {
+            return acc
+          }
+          row.forEach((val, colIdx) => {
+            const len = String(val || '').length
+            const pad = colIdx === 1 ? 10 : 4
+            acc[colIdx] = Math.max(acc[colIdx] || 10, len + pad)
+          })
+          return acc
+        }, [])
+        worksheet['!cols'] = maxColLen.map(w => ({ wch: w }))
+
+        let sheetName = cls.name.replace(/[\/\\\?\*\[\]\:]/g, '')
+        if (sheetName.length > 31) {
+          sheetName = sheetName.substring(0, 31)
+        }
+        utils.book_append_sheet(workbook, worksheet, sheetName || `ห้องเรียน ${cls.id}`)
+      }
+
+      const wbout = write(workbook, { bookType: 'xlsx', bookSST: false, type: 'binary' })
+      const s2ab = (s: string) => {
+        const buf = new ArrayBuffer(s.length)
+        const view = new Uint8Array(buf)
+        for (let i = 0; i !== s.length; ++i) view[i] = s.charCodeAt(i) & 0xff
+        return buf
+      }
+
+      const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `รายงานการเข้าเรียน_ทุกห้องเรียน.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      showToast('ส่งออกไฟล์ Excel ทุกห้องเรียนสำเร็จเรียบร้อยแล้ว!', 'success')
+    } catch (err) {
+      console.error('Failed to export all excel:', err)
+      showToast('เกิดข้อผิดพลาดในการส่งออกไฟล์ Excel ทุกห้องเรียน', 'error')
+    } finally {
+      isExporting.value = false
+    }
+  }
+
   onMounted(async () => {
+    const route = useRoute()
+    if (route.query.classId) {
+      selectedClassroomId.value = route.query.classId as string
+    }
     await fetchClassrooms()
     await fetchReport()
+
+    if (route.query.export) {
+      setTimeout(() => {
+        if (route.query.export === 'excel-all') {
+          handleExportAllClassrooms()
+        } else {
+          handleExport(route.query.export as 'pdf' | 'excel')
+        }
+      }, 800)
+    }
   })
 
   return {
@@ -496,8 +850,10 @@ export const useAttendanceReport = () => {
     reportData,
     studentsReportData,
     aggregateStats,
+    activeReports,
     toasts,
     showToast,
-    handleExport
+    handleExport,
+    handleExportAllClassrooms
   }
 }
