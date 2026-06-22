@@ -1,5 +1,4 @@
 import { ref, computed, watch, onMounted } from 'vue'
-import { utils, write } from 'xlsx-js-style'
 
 export const useAttendanceReport = () => {
   const { session } = useTeacherSession()
@@ -184,6 +183,7 @@ export const useAttendanceReport = () => {
     }
     isExporting.value = true
     try {
+      const { utils, write } = await import('xlsx-js-style')
       await new Promise(resolve => setTimeout(resolve, 1000))
       const { teacherProfile } = useTeacherSession()
 
@@ -559,6 +559,7 @@ export const useAttendanceReport = () => {
     }
     isExporting.value = true
     try {
+      const { utils, write } = await import('xlsx-js-style')
       const workbook = utils.book_new()
       const { teacherProfile } = useTeacherSession()
       const teacherName = teacherProfile.value ? teacherProfile.value.name : '-'

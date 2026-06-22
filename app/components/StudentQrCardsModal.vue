@@ -281,12 +281,12 @@ const handlePrint = () => {
 /* Global print styles */
 @media print {
   /* Hide the entire Nuxt app wrapper and background elements */
-  #__nuxt {
+  body:has(.print-cards-portal) #__nuxt {
     display: none !important;
   }
   
   /* Hide portal backdrops and other teleports on body, except our active print portal */
-  body > *:not(.print-cards-portal) {
+  body:has(.print-cards-portal) > *:not(.print-cards-portal) {
     display: none !important;
   }
 

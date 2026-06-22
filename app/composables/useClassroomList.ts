@@ -1,5 +1,4 @@
 import { ref, computed } from "vue";
-import { read, utils, write } from "xlsx";
 
 export const useClassroomList = (
   showToast: (
@@ -733,8 +732,9 @@ export const useClassroomList = (
 
     importFileName.value = file.name;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const { read, utils } = await import("xlsx");
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = read(data, { type: "array" });
         const sheetName = workbook.SheetNames[0];
@@ -889,7 +889,8 @@ export const useClassroomList = (
     reader.readAsArrayBuffer(file);
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
+    const { utils, write } = await import("xlsx");
     const headers = ["เลขที่", "คำนำหน้า", "ชื่อ", "นามสกุล"];
     const data = [
       headers,
