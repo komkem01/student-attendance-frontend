@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 useHead({
   title: 'ตั้งค่าระบบ | Student Attendance System',
@@ -89,6 +89,20 @@ const confirmLogout = () => {
   showToast('กำลังออกจากระบบ...', 'success')
   logout()
 }
+
+const globalLoading = useState('global-loading', () => false)
+const globalLoadingText = useState('global-loading-text', () => 'กำลังโหลดข้อมูล...')
+
+watch(isSaving, (val) => {
+  if (val) {
+    globalLoadingText.value = "กำลังบันทึกข้อมูลการตั้งค่าเข้าสู่ระบบ..."
+    globalLoading.value = true
+  } else {
+    if (globalLoadingText.value === "กำลังบันทึกข้อมูลการตั้งค่าเข้าสู่ระบบ...") {
+      globalLoading.value = false
+    }
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -738,8 +752,6 @@ const confirmLogout = () => {
       />
 
       <!-- Cute Saving Spinner overlay -->
-      <LoadingOverlay :show="isSaving" text="กำลังบันทึกข้อมูลการตั้งค่าเข้าสู่ระบบ..." />
-
     </div>
   </div>
 </template>

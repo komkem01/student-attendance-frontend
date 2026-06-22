@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 useHead({
   title: 'ระบบรายชื่อนักเรียน | Student Attendance System',
@@ -77,6 +77,20 @@ const {
   handleLogout,
   confirmLogout
 } = useStudentList()
+
+const globalLoading = useState('global-loading', () => false)
+const globalLoadingText = useState('global-loading-text', () => 'กำลังโหลดข้อมูล...')
+
+watch(isSubmitting, (val) => {
+  if (val) {
+    globalLoadingText.value = "กำลังดำเนินการบันทึกข้อมูล..."
+    globalLoading.value = true
+  } else {
+    if (globalLoadingText.value === "กำลังดำเนินการบันทึกข้อมูล...") {
+      globalLoading.value = false
+    }
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -470,7 +484,6 @@ const {
       />
 
       <!-- Cute Loading Overlay -->
-      <LoadingOverlay :show="isSubmitting" text="กำลังดำเนินการบันทึกข้อมูล..." />
 
       <!-- Add Student Modal -->
       <Teleport to="body">
