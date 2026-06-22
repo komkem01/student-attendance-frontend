@@ -101,7 +101,7 @@ const schoolAddress = useAddressSelector();
 
 const fetchGenders = async () => {
   try {
-    const res: any = await $fetch("http://localhost:8080/api/v1/system/gender");
+    const res: any = await useCustomFetch("/system/gender");
     gendersList.value = res.data || [];
   } catch (e) {
     console.error(e);
@@ -110,8 +110,8 @@ const fetchGenders = async () => {
 
 const fetchPrefixes = async (genderID: string) => {
   try {
-    const res: any = await $fetch(
-      `http://localhost:8080/api/v1/system/prefix?gender_id=${genderID}`,
+    const res: any = await useCustomFetch(
+      `/system/prefix?gender_id=${genderID}`,
     );
     prefixesList.value = res.data || [];
   } catch (e) {
@@ -121,9 +121,7 @@ const fetchPrefixes = async (genderID: string) => {
 
 const fetchProvinces = async () => {
   try {
-    const res: any = await $fetch(
-      "http://localhost:8080/api/v1/system/province",
-    );
+    const res: any = await useCustomFetch("/system/province");
     provincesList.value = res.data || [];
   } catch (e) {
     console.error(e);
@@ -286,8 +284,8 @@ const handleRegister = async () => {
 
   isLoading.value = true;
   try {
-    const response: any = await $fetch(
-      "http://localhost:8080/api/v1/auth/register",
+    const response: any = await useCustomFetch(
+      "/auth/register",
       {
         method: "POST",
         body: {
