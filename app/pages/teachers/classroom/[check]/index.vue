@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useClassroomCheck } from "~/composables/useClassroomCheck";
 
 useHead({
@@ -123,6 +123,21 @@ const handleQrMarkPresent = (studentId: string | number) => {
     student.details = "";
   }
 };
+
+const globalLoading = useState('global-loading', () => false)
+const globalLoadingText = useState('global-loading-text', () => 'กำลังโหลดข้อมูล...')
+
+watch([isLoading, isSaving], ([loading, saving]) => {
+  if (loading || saving) {
+    globalLoadingText.value = saving ? 'กำลังบันทึกข้อมูล...' : 'กำลังโหลดข้อมูลห้องเรียน...'
+    globalLoading.value = true
+  } else {
+    const expectedTexts = ['กำลังบันทึกข้อมูล...', 'กำลังโหลดข้อมูลห้องเรียน...']
+    if (expectedTexts.includes(globalLoadingText.value)) {
+      globalLoading.value = false
+    }
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -952,12 +967,7 @@ const handleQrMarkPresent = (studentId: string | number) => {
         </div>
       </main>
 
-      <LoadingOverlay
-        :show="isLoading || isSaving"
-        :text="
-          isSaving ? 'กำลังบันทึกข้อมูล...' : 'กำลังโหลดข้อมูลห้องเรียน...'
-        "
-      />
+      <!-- LoadingOverlay removed since we use the global one -->
 
       <ConfirmModal
         :isOpen="isLogoutModalOpen"

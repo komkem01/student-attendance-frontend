@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 
 useHead({
   title: "แดชบอร์ดคุณครู - Student Attendance System",
@@ -68,6 +68,20 @@ const confirmLogout = () => {
   showToast("กำลังออกจากระบบ...", "success");
   logout();
 };
+
+const globalLoading = useState('global-loading', () => false);
+const globalLoadingText = useState('global-loading-text', () => 'กำลังโหลดข้อมูล...');
+
+watch(isFetching, (val) => {
+  if (val) {
+    globalLoadingText.value = "กำลังโหลดข้อมูลแดชบอร์ด...";
+    globalLoading.value = true;
+  } else {
+    if (globalLoadingText.value === "กำลังโหลดข้อมูลแดชบอร์ด...") {
+      globalLoading.value = false;
+    }
+  }
+}, { immediate: true });
 </script>
 
 <template>
@@ -552,8 +566,6 @@ const confirmLogout = () => {
         :classroomId="selectedExportClassroom?.id || ''"
         @close="isExportModalOpen = false"
       />
-
-      <LoadingOverlay :show="isFetching" text="กำลังโหลดข้อมูลแดชบอร์ด..." />
     </div>
   </div>
 </template>

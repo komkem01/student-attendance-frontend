@@ -298,6 +298,21 @@ const confirmLogout = () => {
   showToast('กำลังออกจากระบบ...', 'success')
   logout()
 }
+
+const globalLoading = useState('global-loading', () => false)
+const globalLoadingText = useState('global-loading-text', () => 'กำลังโหลดข้อมูล...')
+
+watch([isImporting, isImportLoading], ([importing, importLoading]) => {
+  if (importing || importLoading) {
+    globalLoadingText.value = importLoading ? "กำลังนำเข้ารายชื่อนักเรียน..." : "กำลังดำเนินการ..."
+    globalLoading.value = true
+  } else {
+    const expectedTexts = ["กำลังนำเข้ารายชื่อนักเรียน...", "กำลังดำเนินการ..."]
+    if (expectedTexts.includes(globalLoadingText.value)) {
+      globalLoading.value = false
+    }
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -677,7 +692,6 @@ const confirmLogout = () => {
       />
 
       <!-- Cute Loading Overlay -->
-      <LoadingOverlay :show="isImporting" text="กำลังดำเนินการ..." />
 
       <!-- Add Classroom Modal -->
       <Teleport to="body">
@@ -1492,7 +1506,6 @@ const confirmLogout = () => {
       </Teleport>
 
       <!-- Cute Loading Overlay for Import -->
-      <LoadingOverlay :show="isImportLoading" text="กำลังนำเข้ารายชื่อนักเรียน..." />
     </div>
   </div>
 </template>
